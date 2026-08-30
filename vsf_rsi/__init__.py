@@ -1,0 +1,18 @@
+"""
+vsf-rsi — Recursive Self-Improvement for VSM systems
+
+A cybernetic feedback loop that observes, evaluates, and improves
+socratic-engine predicates and trees through parameter drift,
+capability extension, predicate generation, and genetic evolution.
+"""
+
+__version__ = "0.1.0"
+
+from .rsi_observer import RSIObserver, RSIMode
+from .rsi_metrics import RSIMetrics
+
+__all__ = [
+    "RSIObserver",
+    "RSIMode",
+    "RSIMetrics",
+]

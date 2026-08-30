@@ -1,0 +1,7 @@
+{
+  "id": "7b1061dfafe7",
+  "decision": "evaluate(test_rsi_aware, truth=false)",
+  "outcome": "resolved",
+  "correction_path": "threshold_adjusted:0.700\u21920.650",
+  "fault_signature": "test_rsi_aware:error=BLOCKING"
+}
