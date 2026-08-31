@@ -1,5 +1,18 @@
 # Changelog — vsf-rsi
 
+## [0.1.5] — 2026-08-30
+
+### Added
+- **DEBT-004**: Convergence check for genetic algorithm
+- Added `CONVERGENCE_THRESHOLD` (0.001) and `CONVERGENCE_PATIENCE` (3) constants
+- Early stopping when fitness improvement is below threshold for N generations
+- Updated `evolve_forest()` in both v1 and v2 genetic algorithms
+- Added `converged` and `max_generations` to evolution results
+
+### Changed
+- Evolution now stops early when converged (saves compute)
+- Results include whether evolution converged or ran all generations
+
 ## [0.1.4] — 2026-08-30
 
 ### Added

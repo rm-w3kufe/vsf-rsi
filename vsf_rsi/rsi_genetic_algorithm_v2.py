@@ -25,6 +25,10 @@ EVOLUTION_DIR = Path(__file__).parent.parent / "docs"
 FOREST_FILE = EVOLUTION_DIR / "rsi_forest_v2.json"
 EVOLUTION_HISTORY_FILE = EVOLUTION_DIR / "rsi_evolution_history_v2.jsonl"
 
+# DEBT-004: Convergence check configuration
+CONVERGENCE_THRESHOLD: float = 0.001  # Minimum fitness improvement to consider
+CONVERGENCE_PATIENCE: int = 3         # Generations without improvement before stopping
+
 
 @dataclass
 class TreeGenome:
@@ -416,13 +420,22 @@ class RSIGeneticAlgorithmV2:
             generation=0
         )
     
-    def evolve_forest(self, predicate_name: str, generations: int = 10) -> Dict:
+    def evolve_forest(
+        self,
+        predicate_name: str,
+        generations: int = 10,
+        patience: int = CONVERGENCE_PATIENCE,
+        convergence_threshold: float = CONVERGENCE_THRESHOLD,
+    ) -> Dict:
         """
         Evolve forest over multiple generations.
+        DEBT-004: Added convergence check with early stopping.
         
         Args:
             predicate_name: Name of predicate
-            generations: Number of generations
+            generations: Maximum number of generations
+            patience: Generations without improvement before stopping
+            convergence_threshold: Minimum fitness improvement to consider
         
         Returns:
             Evolution results
@@ -431,6 +444,9 @@ class RSIGeneticAlgorithmV2:
         forest = self.create_forest(predicate_name)
         
         evolution_history = []
+        best_fitness = 0.0
+        generations_without_improvement = 0
+        converged = False
         
         for gen in range(generations):
             # Evolve one generation
@@ -450,8 +466,21 @@ class RSIGeneticAlgorithmV2:
             }
             evolution_history.append(gen_record)
             
+            # DEBT-004: Check for convergence
+            improvement = max_fitness - best_fitness
+            if improvement > convergence_threshold:
+                best_fitness = max_fitness
+                generations_without_improvement = 0
+            else:
+                generations_without_improvement += 1
+            
             # Save history
             self._append_history(gen_record)
+            
+            # DEBT-004: Early stopping if converged
+            if generations_without_improvement >= patience:
+                converged = True
+                break
         
         # Save final forest
         self._save_forest(predicate_name, forest)
@@ -460,7 +489,9 @@ class RSIGeneticAlgorithmV2:
         best_tree = max(forest, key=lambda x: x.fitness)
         
         return {
-            "generations": generations,
+            "generations": len(evolution_history),
+            "max_generations": generations,
+            "converged": converged,
             "final_forest": forest,
             "best_tree": best_tree,
             "evolution_history": evolution_history,
