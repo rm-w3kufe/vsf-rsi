@@ -147,11 +147,16 @@ class RSIPatternDetector:
     
     def _detect_latency_pattern(self, pm: Dict) -> Optional[Dict]:
         """Detect latency spikes."""
-        if not pm["latencies"]:
+        # DEBT-003: Collect latencies from threshold-level data
+        all_latencies = []
+        for tm in pm.get("thresholds", {}).values():
+            all_latencies.extend(tm.get("latencies", []))
+        
+        if not all_latencies:
             return None
         
-        avg_latency = sum(pm["latencies"]) / len(pm["latencies"])
-        max_latency = max(pm["latencies"])
+        avg_latency = sum(all_latencies) / len(all_latencies)
+        max_latency = max(all_latencies)
         
         if avg_latency > 10 or max_latency > 50:
             return {

@@ -96,9 +96,13 @@ class RSIGapDetector:
                         "suggestion": "Adjust threshold or add specific branch"
                     })
         
-        # Check for latency issues
-        if pm["latencies"]:
-            avg_latency = sum(pm["latencies"]) / len(pm["latencies"])
+        # Check for latency issues (DEBT-003: latencies at threshold level)
+        all_latencies = []
+        for tm in pm["thresholds"].values():
+            all_latencies.extend(tm.get("latencies", []))
+        
+        if all_latencies:
+            avg_latency = sum(all_latencies) / len(all_latencies)
             
             if avg_latency > 10:  # More than 10ms average
                 gaps["gaps"].append({

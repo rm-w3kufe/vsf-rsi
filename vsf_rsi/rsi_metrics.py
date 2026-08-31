@@ -266,16 +266,23 @@ class RSIMetrics:
                 pass
         return defaults.get(predicate_name, 0.50)
     
+    @property
+    def _metrics_file(self) -> Path:
+        """Resolve metrics file from instance metrics_dir."""
+        return self.metrics_dir / "rsi_metrics.json"
+
     def _load_metrics(self) -> Dict:
         """Load metrics from file."""
-        if METRICS_FILE.exists():
-            with open(METRICS_FILE, 'r') as f:
+        mf = self._metrics_file
+        if mf.exists():
+            with open(mf, 'r') as f:
                 return json.load(f)
         return {}
     
     def _save_metrics(self, metrics: Dict) -> None:
         """Save metrics to file."""
-        with open(METRICS_FILE, 'w') as f:
+        self.metrics_dir.mkdir(parents=True, exist_ok=True)
+        with open(self._metrics_file, 'w') as f:
             json.dump(metrics, f, indent=2)
     
     def rebuild_from_history(self) -> Dict:
@@ -290,10 +297,11 @@ class RSIMetrics:
         """
         metrics = {}
         
-        if not HISTORY_FILE.exists():
+        history_file = self.metrics_dir / "rsi_metrics_history.jsonl"
+        if not history_file.exists():
             return metrics
         
-        with open(HISTORY_FILE, 'r') as f:
+        with open(history_file, 'r') as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -347,13 +355,14 @@ class RSIMetrics:
         
         # Log rebuild
         total_entries = sum(pm["total_classifications"] for pm in metrics.values())
-        print(f"Rebuilt metrics from {HISTORY_FILE.name}: {len(metrics)} predicates, {total_entries} classifications")
+        print(f"Rebuilt metrics from {history_file.name}: {len(metrics)} predicates, {total_entries} classifications")
         
         return metrics
     
     def _append_history(self, entry: Dict) -> None:
         """Append entry to history file."""
-        with open(HISTORY_FILE, 'a') as f:
+        self.metrics_dir.mkdir(parents=True, exist_ok=True)
+        with open(self.metrics_dir / "rsi_metrics_history.jsonl", 'a') as f:
             f.write(json.dumps(entry) + "\n")
     
     def get_summary(self) -> Dict:
@@ -374,11 +383,16 @@ class RSIMetrics:
             summary["overall_accuracy"] = total_correct / total_classifications
         
         for predicate_name, pm in metrics.items():
+            # DEBT-003: Collect latencies from threshold-level data
+            all_latencies = []
+            for tm in pm["thresholds"].values():
+                all_latencies.extend(tm.get("latencies", []))
+
             summary["predicates"][predicate_name] = {
                 "total": pm["total_classifications"],
                 "correct": pm["correct_classifications"],
                 "accuracy": pm["correct_classifications"] / pm["total_classifications"] if pm["total_classifications"] > 0 else 0.0,
-                "avg_latency": sum(pm["latencies"]) / len(pm["latencies"]) if pm["latencies"] else 0.0,
+                "avg_latency": sum(all_latencies) / len(all_latencies) if all_latencies else 0.0,
                 "thresholds": len(pm["thresholds"])
             }
         
