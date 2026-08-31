@@ -54,14 +54,14 @@
 - [x] Integration with state-canon-mcp (rsi_bridge.py)
 - [x] Extended capabilities in README
 
-## ✅ v0.2.0 — Validation (2026-08-31)
-- [x] 50 real evaluations processed (gate: Fase 1)
-- [x] 1 threshold adjustment applied
-- [x] 10 runs processed, 1 improvement via scenario_memory (gate: Fase 2)
-- [x] End-to-end test: generate → evaluate → evolve → measurable improvement (G3)
-- [x] Integration with state-canon-mcp
-- [x] All 16 rsi_*.py mapped to package components (G4)
-- [x] Coverage ≥90%
+## 🚀 v0.2.0 — Validation
+- [ ] 50 real evaluations processed (gate: Fase 1)
+- [ ] 1 threshold adjustment applied
+- [ ] 10 runs processed, 1 improvement via scenario_memory (gate: Fase 2)
+- [ ] End-to-end test: generate → evaluate → evolve → measurable improvement (G3)
+- [ ] Integration with state-canon-mcp
+- [ ] All 16 rsi_*.py mapped to package components (G4)
+- [ ] Coverage ≥90%
 
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation
