@@ -26,18 +26,14 @@ class TestFallbackTruthClass(unittest.TestCase):
 
     def test_fallback_truth_has_required_constants(self):
         """Fallback Truth class exposes TRUE, FALSE, UNKNOWN."""
-        # Simulate import failure by temporarily removing socratic_engine from sys.modules
-        saved = {}
-        for key in list(sys.modules):
-            if key.startswith("socratic_engine"):
-                saved[key] = sys.modules.pop(key)
-
-        # Also remove vsf_rsi.rsi_observer so it re-executes import logic
-        if "vsf_rsi.rsi_observer" in sys.modules:
-            saved["vsf_rsi.rsi_observer"] = sys.modules.pop("vsf_rsi.rsi_observer")
-
-        # Block the real import
         import importlib
+        import vsf_rsi.rsi_observer as mod
+
+        # Save module dict snapshot
+        saved_has = getattr(mod, "_HAS_GENETIC_ALGORITHM", None)
+        saved_truth = getattr(mod, "Truth", None)
+
+        # Simulate import failure by temporarily blocking socratic_engine.engine
         import builtins
         real_import = builtins.__import__
 
@@ -48,21 +44,18 @@ class TestFallbackTruthClass(unittest.TestCase):
 
         try:
             builtins.__import__ = mock_import
-            # Re-import the module to trigger fallback
-            import vsf_rsi.rsi_observer as mod
+            # Re-execute module code to trigger fallback
             importlib.reload(mod)
 
             # The module-level Truth should be the fallback class
-            # Check it by importing directly from the class definition
-            from vsf_rsi.rsi_observer import Truth
+            Truth = mod.Truth
             self.assertEqual(Truth.TRUE, "TRUE")
             self.assertEqual(Truth.FALSE, "FALSE")
             self.assertEqual(Truth.UNKNOWN, "UNKNOWN")
         finally:
             builtins.__import__ = real_import
-            # Restore modules
-            for k, v in saved.items():
-                sys.modules[k] = v
+            # Restore original module state (without destroying sys.modules entry)
+            importlib.reload(mod)
 
 
 class TestFallbackScenarioMemory(unittest.TestCase):
@@ -96,9 +89,14 @@ class TestFallbackGeneticAlgorithm(unittest.TestCase):
 class TestGALoopBody(unittest.TestCase):
     """Lines 440+: GA loop body — evolve_generation + return RSIAction."""
 
+    def _get_module(self):
+        """Get the live rsi_observer module for patching."""
+        import vsf_rsi.rsi_observer as mod
+        return mod
+
     def test_evolve_returns_rsi_action_with_best_genome(self):
         """evolve_predicate_population returns RSIAction when GA succeeds."""
-        from vsf_rsi.rsi_observer import evolve_predicate_population, RSIAction
+        from vsf_rsi.rsi_observer import RSIAction
 
         mock_genome = MagicMock()
         mock_genome.fitness = 0.95
@@ -107,9 +105,10 @@ class TestGALoopBody(unittest.TestCase):
         mock_ga.create_forest.return_value = [mock_genome]
         mock_ga.evolve_generation.return_value = [mock_genome]
 
-        with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
-             patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
-            result = evolve_predicate_population(
+        mod = self._get_module()
+        with patch.object(mod, "RSIGeneticAlgorithm", return_value=mock_ga), \
+             patch.object(mod, "_HAS_GENETIC_ALGORITHM", True):
+            result = mod.evolve_predicate_population(
                 "test_pred", generations=2, population_size=5, mutation_rate=0.1
             )
 
@@ -119,30 +118,26 @@ class TestGALoopBody(unittest.TestCase):
 
     def test_evolve_returns_none_when_no_genomes(self):
         """evolve_predicate_population returns None when forest is empty."""
-        from vsf_rsi.rsi_observer import evolve_predicate_population
-
         mock_ga = MagicMock()
         mock_ga.create_forest.return_value = []
         mock_ga.evolve_generation.return_value = []
 
-        with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
-             patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
-            result = evolve_predicate_population("test_pred", generations=1)
+        mod = self._get_module()
+        with patch.object(mod, "RSIGeneticAlgorithm", return_value=mock_ga), \
+             patch.object(mod, "_HAS_GENETIC_ALGORITHM", True):
+            result = mod.evolve_predicate_population("test_pred", generations=1)
 
         self.assertIsNone(result)
 
     def test_evolve_returns_none_when_ga_not_available(self):
         """evolve_predicate_population returns None when GA not installed."""
-        from vsf_rsi.rsi_observer import evolve_predicate_population
-
-        with patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", False):
-            result = evolve_predicate_population("test_pred")
+        mod = self._get_module()
+        with patch.object(mod, "_HAS_GENETIC_ALGORITHM", False):
+            result = mod.evolve_predicate_population("test_pred")
         self.assertIsNone(result)
 
     def test_ga_loop_runs_for_generations(self):
         """GA loop calls evolve_generation each generation."""
-        from vsf_rsi.rsi_observer import evolve_predicate_population
-
         mock_genome = MagicMock()
         mock_genome.fitness = 0.5
 
@@ -150,17 +145,16 @@ class TestGALoopBody(unittest.TestCase):
         mock_ga.create_forest.return_value = [mock_genome]
         mock_ga.evolve_generation.return_value = [mock_genome]
 
-        with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
-             patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
-            evolve_predicate_population("pred", generations=3, population_size=5)
+        mod = self._get_module()
+        with patch.object(mod, "RSIGeneticAlgorithm", return_value=mock_ga), \
+             patch.object(mod, "_HAS_GENETIC_ALGORITHM", True):
+            mod.evolve_predicate_population("pred", generations=3, population_size=5)
 
         # evolve_generation called 3 times (once per generation)
         self.assertEqual(mock_ga.evolve_generation.call_count, 3)
 
     def test_ga_tracks_best_genome_across_generations(self):
         """GA loop tracks the genome with highest fitness across generations."""
-        from vsf_rsi.rsi_observer import evolve_predicate_population
-
         g1_genome = MagicMock()
         g1_genome.fitness = 0.3
         g2_genome = MagicMock()
@@ -171,9 +165,10 @@ class TestGALoopBody(unittest.TestCase):
         # Gen 1: low fitness, Gen 2: high fitness
         mock_ga.evolve_generation.side_effect = [[g1_genome], [g2_genome]]
 
-        with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
-             patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
-            result = evolve_predicate_population("pred", generations=2)
+        mod = self._get_module()
+        with patch.object(mod, "RSIGeneticAlgorithm", return_value=mock_ga), \
+             patch.object(mod, "_HAS_GENETIC_ALGORITHM", True):
+            result = mod.evolve_predicate_population("pred", generations=2)
 
         self.assertIsNotNone(result)
         self.assertEqual(result.params["generations"], 2)
