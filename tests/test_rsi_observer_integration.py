@@ -16,7 +16,6 @@ from pathlib import Path
 # Add paths
 sys.path.insert(0, str(Path(__file__).parent.parent / "vsf_rsi"))
 sys.path.insert(0, "/home/rmw3/socratic-engine")
-sys.path.insert(0, "/home/rmw3/vsf/child/vOSlab/vsf-rsi/src/vsf_rsi")
 
 from socratic_engine.engine import SocraticEngine, Truth, PredicateResult
 from vsf_rsi.rsi_observer import RSIObserver, RSIMode, EvaluationEvent
@@ -298,11 +297,15 @@ class TestRSIObserverScenarioMemory(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp()
         os.environ["VSI_RSI_STORE"] = self.tmpdir
 
-        # Re-import scenario_memory to pick up the new STORE path
-        import importlib
-        import scenario_memory as sm
-        sm.STORE = Path(self.tmpdir)
-        importlib.reload(sm)
+        # Skip if scenario_memory not available
+        try:
+            import scenario_memory as sm
+            self.sm = sm
+            sm.STORE = Path(self.tmpdir)
+            import importlib
+            importlib.reload(sm)
+        except ImportError:
+            self.skipTest("scenario_memory not installed")
 
         self.engine = SocraticEngine()
 

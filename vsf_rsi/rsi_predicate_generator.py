@@ -19,7 +19,7 @@ from pathlib import Path
 # ── Configuration ────────────────────────────────────────────────────
 PREDICATES_DIR = Path(__file__).parent
 GENERATED_DIR = PREDICATES_DIR / "generated"
-MANIFEST_FILE = Path(__file__).parent.parent.parent.parent / "docs" / "spec_revision" / "system" / "s1-operations" / "rsi_generated_predicates.vsm"
+MANIFEST_FILE = Path(__file__).parent.parent / "docs" / "rsi_generated_predicates.vsm"
 
 
 class RSIPredicateGenerator:
@@ -218,7 +218,7 @@ PREDICATE = {{
     
     def _load_manifest(self) -> Dict:
         """Load manifest from file."""
-        from rsi_manifest_parser import load_manifest
+        from vsf_rsi.rsi_manifest_parser import load_manifest
         if MANIFEST_FILE.exists():
             return load_manifest(MANIFEST_FILE)
         return {"predicates": []}
@@ -228,7 +228,7 @@ PREDICATE = {{
         # Skip if manifest directory doesn't exist (package mode)
         if not MANIFEST_FILE.parent.exists():
             return
-        from rsi_manifest_parser import save_manifest
+        from vsf_rsi.rsi_manifest_parser import save_manifest
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         save_manifest(MANIFEST_FILE, "predicates", manifest["predicates"],
                       "rsi_generated_predicates", timestamp)

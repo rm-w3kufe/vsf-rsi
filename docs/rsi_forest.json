@@ -1,0 +1,285 @@
+{
+  "predicate": "evo_pred",
+  "population_size": 10,
+  "trees": [
+    {
+      "id": "evo_pred_gen0_0",
+      "name": "evo_pred_tree_0",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.8180185070967211,
+        "complexity": 5
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.691751+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_1",
+      "name": "evo_pred_tree_1",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.635622223887826,
+        "complexity": 4
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.691828+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_2",
+      "name": "evo_pred_tree_2",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.827150145571828,
+        "complexity": 3
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.691871+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_3",
+      "name": "evo_pred_tree_3",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.7664356871626011,
+        "complexity": 2
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.691908+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_4",
+      "name": "evo_pred_tree_4",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.7592286206177119,
+        "complexity": 5
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.691938+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_5",
+      "name": "evo_pred_tree_5",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.8228621876639468,
+        "complexity": 3
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.691970+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_6",
+      "name": "evo_pred_tree_6",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.6124248974725941,
+        "complexity": 4
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.692002+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_7",
+      "name": "evo_pred_tree_7",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.6724674251075964,
+        "complexity": 1
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.692043+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_8",
+      "name": "evo_pred_tree_8",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "TRUE",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.7988152873478025,
+        "complexity": 2
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.692079+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_9",
+      "name": "evo_pred_tree_9",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.8766381436983612,
+        "complexity": 5
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-08-31T00:31:19.692109+00:00"
+    }
+  ],
+  "timestamp": "2026-08-31T00:31:19.692438+00:00"
+}

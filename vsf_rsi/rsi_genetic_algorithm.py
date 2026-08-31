@@ -19,10 +19,10 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from rsi_metrics import RSIMetrics
+from vsf_rsi.rsi_metrics import RSIMetrics
 
 # ── Configuration ────────────────────────────────────────────────────
-EVOLUTION_DIR = Path(__file__).parent.parent.parent / "state" / "monitoring"
+EVOLUTION_DIR = Path(__file__).parent.parent / "docs"
 FOREST_FILE = EVOLUTION_DIR / "rsi_forest.json"
 EVOLUTION_HISTORY_FILE = EVOLUTION_DIR / "rsi_evolution_history.jsonl"
 

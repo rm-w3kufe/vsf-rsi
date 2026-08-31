@@ -5,8 +5,6 @@ RSI Scenario Bridge — connects scenario-memory ↔ RSI gap detector.
 Bidirectional flow:
   scenario-memory failures → rsi_gap_detector → RSI improvements
   rsi_gap_detector gaps → scenario-memory matching → correction suggestions
-
-design: child/docs/vos_package_detailed_plans.vsm
 """
 
 import sys
@@ -15,17 +13,13 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 
-# scenario-memory lives in vsf-rsi package (child/vOSlab/vsf-rsi/)
-SCENARIO_MEMORY_DIR = Path(__file__).parent.parent.parent.parent / "child" / "vOSlab" / "vsf-rsi" / "src"
-
-# rsi modules live in scripts/vsl/classifier/
-RSI_DIR = Path(__file__).parent
-
-# Add paths to sys.path for imports
-if str(SCENARIO_MEMORY_DIR) not in sys.path:
-    sys.path.insert(0, str(SCENARIO_MEMORY_DIR))
-if str(RSI_DIR) not in sys.path:
-    sys.path.insert(0, str(RSI_DIR))
+# scenario-memory is optional (may not be installed)
+try:
+    import scenario_memory as _sm
+    _HAS_SCENARIO_MEMORY = True
+except ImportError:
+    _sm = None
+    _HAS_SCENARIO_MEMORY = False
 
 
 def _import_scenario_memory():
@@ -40,7 +34,7 @@ def _import_scenario_memory():
 def _import_gap_detector():
     """Import RSIGapDetector from RSI modules."""
     try:
-        from rsi_gap_detector import RSIGapDetector
+        from vsf_rsi.rsi_gap_detector import RSIGapDetector
         return RSIGapDetector()
     except ImportError as e:
         raise ImportError(f"RSIGapDetector not available: {e}")

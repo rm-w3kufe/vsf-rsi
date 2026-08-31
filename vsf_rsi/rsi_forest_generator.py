@@ -15,11 +15,11 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from pathlib import Path
-from rsi_genetic_algorithm import RSIGeneticAlgorithm, TreeGenome
+from vsf_rsi.rsi_genetic_algorithm import RSIGeneticAlgorithm, TreeGenome
 
 # ── Configuration ────────────────────────────────────────────────────
 FORESTS_DIR = Path(__file__).parent.parent.parent.parent / ".opencode" / "plugins" / "support" / "trees" / "forests"
-MANIFEST_FILE = Path(__file__).parent.parent.parent.parent / "docs" / "spec_revision" / "system" / "s1-operations" / "rsi_forests.vsm"
+MANIFEST_FILE = Path(__file__).parent.parent / "docs" / "rsi_forests.vsm"
 
 
 class RSIForestGenerator:
@@ -232,14 +232,14 @@ class RSIForestGenerator:
     
     def _load_manifest(self) -> Dict:
         """Load manifest from file."""
-        from rsi_manifest_parser import load_manifest
+        from vsf_rsi.rsi_manifest_parser import load_manifest
         if MANIFEST_FILE.exists():
             return load_manifest(MANIFEST_FILE)
         return {"forests": []}
     
     def _save_manifest(self, manifest: Dict) -> None:
         """Save manifest to file."""
-        from rsi_manifest_parser import save_manifest
+        from vsf_rsi.rsi_manifest_parser import save_manifest
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         save_manifest(MANIFEST_FILE, "forests", manifest["forests"],
                       "rsi_forests", timestamp)

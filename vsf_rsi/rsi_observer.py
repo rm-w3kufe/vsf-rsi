@@ -32,18 +32,10 @@ _classifier_dir = Path(__file__).parent
 if str(_classifier_dir) not in sys.path:
     sys.path.insert(0, str(_classifier_dir))
 
-from rsi_metrics import RSIMetrics
+from vsf_rsi.rsi_metrics import RSIMetrics
 
-# Import scenario_memory (optional, from child/vOSlab or system path)
+# Import scenario_memory (optional, from system path or package)
 try:
-    # Try to find scenario_memory in various locations
-    _scenario_locations = [
-        Path(__file__).parent.parent.parent.parent / "child" / "vOSlab" / "vsf-rsi" / "src" / "vsf_rsi",
-        Path("/home/rmw3/vsf/child/vOSlab/vsf-rsi/src/vsf_rsi"),
-    ]
-    for _scenario_dir in _scenario_locations:
-        if _scenario_dir.exists() and str(_scenario_dir) not in sys.path:
-            sys.path.insert(0, str(_scenario_dir))
     import scenario_memory as _sm
     _HAS_SCENARIO_MEMORY = True
 except ImportError:
@@ -52,14 +44,14 @@ except ImportError:
 
 # Import rsi_predicate_generator (optional)
 try:
-    from rsi_predicate_generator import RSIPredicateGenerator
+    from vsf_rsi.rsi_predicate_generator import RSIPredicateGenerator
     _HAS_PREDICATE_GENERATOR = True
 except ImportError:
     _HAS_PREDICATE_GENERATOR = False
 
 # Import rsi_genetic_algorithm (optional)
 try:
-    from rsi_genetic_algorithm import RSIGeneticAlgorithm, TreeGenome
+    from vsf_rsi.rsi_genetic_algorithm import RSIGeneticAlgorithm, TreeGenome
     _HAS_GENETIC_ALGORITHM = True
 except ImportError:
     _HAS_GENETIC_ALGORITHM = False

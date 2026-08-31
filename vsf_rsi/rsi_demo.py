@@ -16,7 +16,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
-sys.path.insert(0, '/home/rmw3/vsf')
 
 from scripts.vsl.classifier.rsi_metrics import RSIMetrics
 from scripts.vsl.classifier.rsi_feedback_loop import RSIFeedbackLoop
