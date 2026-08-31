@@ -48,13 +48,17 @@ except ImportError:
         FALSE = "FALSE"
         UNKNOWN = "UNKNOWN"
 
-# Import scenario_memory (optional, from system path or package)
+# Import scenario_memory (optional, from package or system path)
 try:
-    import scenario_memory as _sm
+    from . import scenario_memory as _sm
     _HAS_SCENARIO_MEMORY = True
 except ImportError:
-    _sm = None
-    _HAS_SCENARIO_MEMORY = False
+    try:
+        import scenario_memory as _sm
+        _HAS_SCENARIO_MEMORY = True
+    except ImportError:
+        _sm = None
+        _HAS_SCENARIO_MEMORY = False
 
 # Import rsi_predicate_generator (optional)
 try:

@@ -6,13 +6,15 @@ socratic-engine predicates and trees through parameter drift,
 capability extension, predicate generation, and genetic evolution.
 """
 
-__version__ = "0.1.9"
+__version__ = "0.2.0"
 
 from .rsi_observer import RSIObserver, RSIMode
 from .rsi_metrics import RSIMetrics
+from . import scenario_memory
 
 __all__ = [
     "RSIObserver",
     "RSIMode",
     "RSIMetrics",
+    "scenario_memory",
 ]

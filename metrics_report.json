@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-08-31T04:17:01.732201+00:00",
+  "baseline": {
+    "evaluations": 50,
+    "errors": 20,
+    "error_rate": 0.4,
+    "time_seconds": 8.013706684112549
+  },
+  "post_fix": {
+    "evaluations": 50,
+    "errors": 0,
+    "error_rate": 0.0,
+    "time_seconds": 10.450854539871216
+  },
+  "improvement": {
+    "error_rate_reduction": 0.4,
+    "percentage_improvement": 100.0
+  },
+  "debt_verification": {
+    "DEBT-001": "PASS",
+    "DEBT-002": "PASS",
+    "DEBT-003": "PASS",
+    "DEBT-004": "PASS",
+    "DEBT-005": "PASS",
+    "DEBT-006": "PASS",
+    "DEBT-007": "PASS"
+  }
+}

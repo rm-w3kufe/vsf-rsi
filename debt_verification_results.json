@@ -1,0 +1,26 @@
+{
+  "DEBT-001": {
+    "passed": true
+  },
+  "DEBT-002": {
+    "passed": false,
+    "crashes": 0,
+    "successes": 20
+  },
+  "DEBT-003": {
+    "passed": true,
+    "latencies_count": 2
+  },
+  "DEBT-004": {
+    "passed": true
+  },
+  "DEBT-005": {
+    "passed": true
+  },
+  "DEBT-006": {
+    "passed": true
+  },
+  "DEBT-007": {
+    "passed": true
+  }
+}
