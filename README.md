@@ -13,7 +13,29 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.1.7 — production-ready with error recovery, logging, convergence checks, and pattern decay. 63 tests passing.
+**Status:** v0.1.8 — production-ready with error recovery, logging, convergence checks, and pattern decay. 63 tests passing.
+
+---
+
+## Installation
+
+```bash
+pip install vsf-rsi
+```
+
+With socratic-engine (required dependency):
+
+```bash
+pip install vsf-rsi socratic-engine
+```
+
+From source:
+
+```bash
+git clone https://github.com/rm-w3kufe/vsf-rsi.git
+cd vsf-rsi
+pip install -e ".[dev]"
+```
 
 ---
 
@@ -264,19 +286,10 @@ Key safety properties:
 
 See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 
-### v0.1.7 — Hardened (current)
-- [x] Type validation for non-numeric inputs (BUG-001)
-- [x] Threshold drift bounds with MIN/MAX constants (BUG-002)
-- [x] Memory leak prevention with circular buffer (BUG-003)
-- [x] is_error computed property (BUG-004)
-- [x] load_thresholds path flexibility (BUG-005)
-- [x] Structured logging configuration (DEBT-001)
-- [x] Error recovery throughout pipeline (DEBT-002)
-- [x] Duplicate latency tracking removed (DEBT-003)
-- [x] Genetic algorithm convergence checks (DEBT-004)
-- [x] Pattern decay for stale patterns (DEBT-005)
-- [x] Generated code validation (DEBT-006)
-- [x] Version conflict detection (DEBT-007)
+### v0.1.8 — Release (current)
+- [x] Installation instructions in README
+- [x] PyPI badge fixed
+- [x] All v0.1.x bug fixes and improvements
 - [x] 63 tests passing
 
 ### v0.2.0 — Validation

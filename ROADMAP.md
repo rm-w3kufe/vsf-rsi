@@ -42,6 +42,12 @@
 - [x] DEBT-006: Generated code validation with ast.parse()
 - [x] DEBT-007: Version conflict detection in tree registry
 
+## ✅ v0.1.8 — Release (2026-08-31)
+- [x] Installation instructions in README
+- [x] PyPI badge fixed
+- [x] PyPI publishing configured
+- [x] All v0.1.x bug fixes and improvements
+
 ## 🚀 v0.2.0 — Validation
 - [ ] 50 real evaluations processed (gate: Fase 1)
 - [ ] 1 threshold adjustment applied

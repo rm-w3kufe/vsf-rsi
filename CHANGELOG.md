@@ -1,5 +1,14 @@
 # Changelog — vsf-rsi
 
+## [0.1.8] — 2026-08-31
+
+### Added
+- Installation instructions in README (pip install, from source)
+- PyPI badge in README
+
+### Changed
+- Version bumped to 0.1.8
+
 ## [0.1.7] — 2026-08-30
 
 ### Added
