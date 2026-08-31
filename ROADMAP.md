@@ -1,6 +1,6 @@
 # Roadmap — vsf-rsi
 
-## ✅ v0.1.0 — Core
+## ✅ v0.1.0 — Core (2026-08-30)
 - [x] Observer wrapper for socratic-engine
 - [x] Bridge to rsi_metrics (track_classification)
 - [x] Error discrimination (BLOCKING / STRUCTURAL / NONE)
@@ -10,7 +10,11 @@
 - [x] L4 genetic evolution (population-based, human approval)
 - [x] Scenario memory integration (match/record)
 - [x] dump_events() for observation
-- [x] 52 tests passing
+- [x] 50 tests passing, 2 skipped (scenario_memory)
+- [x] GitHub Actions CI (pytest 3.10-3.12 + coverage ≥80%)
+- [x] GitHub Actions Release (tag↔pyproject↔__init__ sync)
+- [x] All hardcoded paths removed
+- [x] All internal imports fixed (from vsf_rsi.*)
 
 ## 🚀 v0.2.0 — Validation
 - [ ] 50 real evaluations processed (gate: Fase 1)
@@ -18,7 +22,8 @@
 - [ ] 10 runs processed, 1 improvement via scenario_memory (gate: Fase 2)
 - [ ] End-to-end test: generate → evaluate → evolve → measurable improvement (G3)
 - [ ] Integration with state-canon-mcp
-- [ ] All 14 rsi_*.py mapped to package components (G4)
+- [ ] All 16 rsi_*.py mapped to package components (G4)
+- [ ] Coverage ≥90%
 
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation

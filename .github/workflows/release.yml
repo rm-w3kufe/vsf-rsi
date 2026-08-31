@@ -1,0 +1,73 @@
+name: Release
+
+# Triggered by tags v*
+# Builds, publishes to PyPI, creates GitHub Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build + publish + GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify tag ↔ pyproject version sync
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          echo "tag=$TAG  pyproject=$PKG_VERSION"
+          if [ "$TAG" != "$PKG_VERSION" ]; then
+            echo "❌ tag v$TAG != pyproject $PKG_VERSION — bump pyproject.toml primero"
+            exit 1
+          fi
+          # __init__ version must match
+          INIT_VERSION=$(python -c "import ast; t=ast.parse(open('vsf_rsi/__init__.py').read()); print([n.value.value for n in t.body if isinstance(n, ast.Assign) and getattr(n.targets[0],'id','')=='__version__'][0])")
+          echo "init=$INIT_VERSION"
+          if [ "$INIT_VERSION" != "$PKG_VERSION" ]; then
+            echo "❌ __init__ $INIT_VERSION != pyproject $PKG_VERSION"
+            exit 1
+          fi
+          echo "✓ tag, pyproject, __init__ sincronizados ($PKG_VERSION)"
+
+      - name: Clone socratic-engine (hard dependency)
+        run: |
+          git clone --depth 1 https://github.com/rm-w3kufe/socratic-engine.git ~/socratic-engine
+
+      - name: Run full test suite before release
+        run: |
+          pip install -e ".[dev]"
+          pip install pytest-cov build
+          python -m pytest tests/ -q --cov=vsf_rsi --cov-report=term-missing --cov-fail-under=80
+
+      - name: Build package
+        run: python -m build
+
+      - name: Verify wheel metadata
+        run: |
+          python -c 'import zipfile,glob,sys; w=glob.glob("dist/*.whl")[0]; m=[n for n in zipfile.ZipFile(w).namelist() if n.endswith(".dist-info/METADATA")][0]; meta=zipfile.ZipFile(w).read(m).decode(); assert "License: Apache-2.0" in meta, meta; print("✓ metadata: Apache-2.0")'
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: vsf-rsi ${{ github.ref_name }}
+          body: |
+            Release ${{ github.ref_name }} — publicado en PyPI.
+            Verificado: tag↔pyproject↔__init__ sync, suite completa, metadata Apache-2.0.
+          files: dist/*
+          generate_release_notes: true
