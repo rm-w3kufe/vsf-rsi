@@ -13,7 +13,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.1.8 — production-ready with error recovery, logging, convergence checks, and pattern decay. 63 tests passing.
+**Status:** v0.1.9 — state-canon-mcp integration, extended capabilities, installation instructions. 63 tests passing.
 
 ---
 
@@ -78,13 +78,14 @@ The central boundary is:
 At its core, vsf-rsi provides:
 
 - **Observer** — wraps `SocraticEngine.evaluate()` to capture every evaluation event
-- **Bridge** — feeds events to `rsi_metrics` for tracking
+- **Bridge** — integrates with `state-canon-mcp` for canonical state queries and metrics feedback
 - **Discriminator** — classifies errors as BLOCKING or STRUCTURAL
-- **Resolver** — applies the appropriate improvement level
-- **Scenario Memory** — records and matches past corrections
+- **Resolver** — applies the appropriate improvement level (L1-L4)
+- **Scenario Memory** — records and matches past corrections (optional, requires `scenario_memory`)
 - **Predicate Generator** — creates new predicates from error patterns (with syntax validation)
 - **Genetic Algorithm** — evolves populations of predicates (with convergence checks)
 - **Pattern Detector** — identifies recurring errors (with time-based decay)
+- **Tree Registry** — manages predicate versions and prevents conflicts
 - **Error Recovery** — system continues with degraded functionality on failures
 - **Logging** — structured logging for debugging and monitoring
 
@@ -119,6 +120,23 @@ flowchart TD
 | **L2** | Create wrapper predicates | ✓ Yes | Validated before keeping |
 | **L3** | Generate new predicates | ✗ No | Human approval required |
 | **L4** | Evolve predicate populations | ✗ No | Human approval required |
+
+### state-canon-mcp integration
+
+The `rsi_bridge` module provides functions to integrate with the state canon:
+
+```python
+from vsf_rsi.rsi_bridge import get_rsi_rules, query_canon, feed_metrics_to_canon
+
+# Get rules that constrain RSI behavior
+rules = get_rsi_rules()
+
+# Query canonical state
+result = query_canon("rsi_metrics", {"predicate": "stasis_check"})
+
+# Feed metrics back to state canon
+feed_metrics_to_canon({"total_evaluations": 100, "error_rate": 0.05})
+```
 
 ---
 
@@ -286,23 +304,23 @@ Key safety properties:
 
 See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 
-### v0.1.8 — Release (current)
-- [x] Installation instructions in README
-- [x] PyPI badge fixed
-- [x] All v0.1.x bug fixes and improvements
-- [x] 63 tests passing
+### v0.1.9 — Integration (current)
+- [x] 1 threshold adjustment applied
+- [x] End-to-end test: generate → evaluate → evolve → measurable improvement (50% → 0%)
+- [x] Integration with state-canon-mcp (rsi_bridge.py)
+- [x] Extended capabilities in README
 
 ### v0.2.0 — Validation
 - [ ] 50 real evaluations processed
-- [ ] 1 threshold adjustment applied
-- [ ] End-to-end test: generate → evaluate → evolve → measurable improvement
-- [ ] Integration with state-canon-mcp
+- [ ] 10 runs processed, 1 improvement via scenario_memory
+- [ ] All 16 rsi_*.py mapped to package components
+- [ ] Coverage ≥90%
 
 ### v0.3.0 — Production
 - [ ] Dashboard for observation
 - [ ] Cross-validation
 - [ ] Overfitting detection
-- [ ] PyPI publication
+- [ ] GA produces trees with fitness > 0.7 on real benchmark
 
 ---
 

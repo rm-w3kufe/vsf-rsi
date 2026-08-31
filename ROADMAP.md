@@ -48,6 +48,12 @@
 - [x] PyPI publishing configured
 - [x] All v0.1.x bug fixes and improvements
 
+## ✅ v0.1.9 — Integration (2026-08-31)
+- [x] 1 threshold adjustment applied
+- [x] End-to-end test: generate → evaluate → evolve → measurable improvement (50% → 0%)
+- [x] Integration with state-canon-mcp (rsi_bridge.py)
+- [x] Extended capabilities in README
+
 ## 🚀 v0.2.0 — Validation
 - [ ] 50 real evaluations processed (gate: Fase 1)
 - [ ] 1 threshold adjustment applied

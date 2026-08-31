@@ -1,5 +1,19 @@
 # Changelog — vsf-rsi
 
+## [0.1.9] — 2026-08-31
+
+### Added
+- `rsi_bridge.py` — integration with state-canon-mcp
+  - `get_rsi_rules()`: query rules constraining RSI behavior
+  - `query_canon()`: query canonical state
+  - `get_rsi_focus()`: get current RSI focus state
+  - `feed_metrics_to_canon()`: feed metrics back to state canon
+- Extended capabilities documentation in README
+- Installation instructions (pip, source)
+
+### Changed
+- Version bumped to 0.1.9
+
 ## [0.1.8] — 2026-08-31
 
 ### Added
