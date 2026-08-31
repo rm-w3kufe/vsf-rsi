@@ -443,25 +443,27 @@ python -m socratic_engine evaluate tree.json --context ctx.json
 python -m vsf_rsi.scenario_memory record --fault "error" --fix "solution"
 ```
 
-### Quick reference
+### Full pattern with other tools
 
 ```python
-# 1. Evaluate a decision with socratic-engine
-from socratic_engine import SocraticEngine
-engine = SocraticEngine()
-result = engine.evaluate(tree, context)
-print(result.certified, result.explain)
-
-# 2. Get ground truth from state-canon
+# 1. Get ground truth from state-canon
 from state_canon import StateCanon
 canon = StateCanon()
 state = canon.query("services", {"name": "api"})
+
+# 2. Evaluate decision with socratic-engine
+from socratic_engine import SocraticEngine
+engine = SocraticEngine()
+result = engine.evaluate(tree, {"state": state})
+print(result.certified, result.explain)
 
 # 3. Record pattern with vsf-rsi
 from vsf_rsi.scenario_memory import record, match
 record({"fault_signature": "timeout", "decision": "increase", "outcome": "success"})
 matches = match({"fault_signature": "timeout"})
 ```
+
+For the full integration guide, see [Integration with agent systems](#integration-with-agent-systems).
 
 ---
 
