@@ -1,5 +1,16 @@
 # Changelog — vsf-rsi
 
+## [0.1.2] — 2026-08-30
+
+### Fixed
+- **BUG-004 (MEDIUM)**: `is_error` is now computed from `expected != actual`
+- **BUG-005 (LOW)**: `load_thresholds()` accepts optional `thresholds_dir` parameter
+
+### Changed
+- `EvaluationEvent.is_error` uses `__post_init__` (no longer settable)
+- Added `PACKAGE_DIR` and `STATE_DIR` constants
+- Tests updated to use `expected/actual` instead of `is_error`
+
 ## [0.1.1] — 2026-08-30
 
 ### Fixed
