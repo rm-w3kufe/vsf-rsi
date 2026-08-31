@@ -13,7 +13,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.0 — validation complete with end-to-end improvement demonstrated and state-canon-mcp integration. 63 tests passing.
+**Status:** v0.1.9 — state-canon-mcp integration, extended capabilities. 63 tests passing.
 
 ---
 
