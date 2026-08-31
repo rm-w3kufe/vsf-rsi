@@ -4,7 +4,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/rm-w3kufe/vsf-rsi)](https://github.com/rm-w3kufe/vsf-rsi/releases)
-[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.5-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
+[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.5-brightgreen.svg)](https://pypi.org/project/socratic-engine/>
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
 
@@ -12,7 +12,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.1.0 — core observer, bridge, discriminator, resolver, L1-L4 capabilities. 52 tests passing.
+**Status:** v0.1.7 — production-ready with error recovery, logging, convergence checks, and pattern decay. 63 tests passing.
 
 ---
 
@@ -59,8 +59,11 @@ At its core, vsf-rsi provides:
 - **Discriminator** — classifies errors as BLOCKING or STRUCTURAL
 - **Resolver** — applies the appropriate improvement level
 - **Scenario Memory** — records and matches past corrections
-- **Predicate Generator** — creates new predicates from error patterns
-- **Genetic Algorithm** — evolves populations of predicates
+- **Predicate Generator** — creates new predicates from error patterns (with syntax validation)
+- **Genetic Algorithm** — evolves populations of predicates (with convergence checks)
+- **Pattern Detector** — identifies recurring errors (with time-based decay)
+- **Error Recovery** — system continues with degraded functionality on failures
+- **Logging** — structured logging for debugging and monitoring
 
 ### The four levels of RSI
 
@@ -260,16 +263,20 @@ Key safety properties:
 
 See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 
-### v0.1.0 — Core (current)
-- [x] Observer wrapper for socratic-engine
-- [x] Bridge to rsi_metrics
-- [x] Error discrimination (BLOCKING / STRUCTURAL)
-- [x] L1 parameter drift
-- [x] L2 capability extension (inject predicate)
-- [x] L3 predicate generation
-- [x] L4 genetic evolution
-- [x] Scenario memory integration
-- [x] 52 tests passing
+### v0.1.7 — Hardened (current)
+- [x] Type validation for non-numeric inputs (BUG-001)
+- [x] Threshold drift bounds with MIN/MAX constants (BUG-002)
+- [x] Memory leak prevention with circular buffer (BUG-003)
+- [x] is_error computed property (BUG-004)
+- [x] load_thresholds path flexibility (BUG-005)
+- [x] Structured logging configuration (DEBT-001)
+- [x] Error recovery throughout pipeline (DEBT-002)
+- [x] Duplicate latency tracking removed (DEBT-003)
+- [x] Genetic algorithm convergence checks (DEBT-004)
+- [x] Pattern decay for stale patterns (DEBT-005)
+- [x] Generated code validation (DEBT-006)
+- [x] Version conflict detection (DEBT-007)
+- [x] 63 tests passing
 
 ### v0.2.0 — Validation
 - [ ] 50 real evaluations processed

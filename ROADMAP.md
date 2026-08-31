@@ -16,6 +16,32 @@
 - [x] All hardcoded paths removed
 - [x] All internal imports fixed (from vsf_rsi.*)
 
+## ✅ v0.1.1 — Bug Fixes (2026-08-30)
+- [x] BUG-001: Type validation for non-numeric inputs (HIGH)
+- [x] BUG-002: Threshold drift bounds with MIN/MAX constants (MEDIUM)
+- [x] BUG-003: Memory leak prevention with circular buffer (LOW)
+
+## ✅ v0.1.2 — More Bug Fixes (2026-08-30)
+- [x] BUG-004: is_error computed property via __post_init__ (MEDIUM)
+- [x] BUG-005: load_thresholds path flexibility with PACKAGE_DIR (LOW)
+
+## ✅ v0.1.3 — Logging (2026-08-30)
+- [x] DEBT-001: Structured logging configuration with logging.getLogger()
+
+## ✅ v0.1.4 — Error Recovery (2026-08-30)
+- [x] DEBT-002: Error recovery throughout evaluate() pipeline
+
+## ✅ v0.1.5 — Convergence Check (2026-08-30)
+- [x] DEBT-004: Genetic algorithm convergence check with early stopping
+
+## ✅ v0.1.6 — Pattern Decay (2026-08-30)
+- [x] DEBT-005: Pattern decay for stale patterns (10% per day)
+
+## ✅ v0.1.7 — Hardened (2026-08-30)
+- [x] DEBT-003: Duplicate latency tracking removed
+- [x] DEBT-006: Generated code validation with ast.parse()
+- [x] DEBT-007: Version conflict detection in tree registry
+
 ## 🚀 v0.2.0 — Validation
 - [ ] 50 real evaluations processed (gate: Fase 1)
 - [ ] 1 threshold adjustment applied
