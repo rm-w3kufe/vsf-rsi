@@ -145,10 +145,10 @@ def _dedup_key(entry: Dict[str, str]) -> tuple:
 def save_manifest(path: Path, list_name: str, entries: List[Dict[str, str]],
                   header_name: str, timestamp: str,
                   expression_type: str = "MANIFEST-v1",
-                  vsm_version: str = "1.2",
+                  vsm_version: str = "1.2.1",
                   status: str = "active",
                   deduplicate: bool = True) -> None:
-    """Save entries to a VSM 1.2 compliant manifest file.
+    """Save entries to a VSM 1.2.1 compliant manifest file.
 
     Args:
         path: Path to the manifest file
@@ -157,11 +157,11 @@ def save_manifest(path: Path, list_name: str, entries: List[Dict[str, str]],
         header_name: Name for the VSM header/footer
         timestamp: UTC timestamp for the header (will be normalized to Z format)
         expression_type: VSM expression type (default: MANIFEST-v1)
-        vsm_version: VSM version (default: 1.2)
+        vsm_version: VSM version (default: 1.2.1, per vsl_language_primer)
         status: Document status (default: active)
         deduplicate: Whether to deduplicate entries (default: True)
     """
-    # Normalize timestamp to VSM 1.2 format
+    # Normalize timestamp to VSM 1.2.1 format
     header_ts = _format_timestamp(timestamp)
 
     # Deduplicate entries if requested
@@ -195,6 +195,7 @@ def save_manifest(path: Path, list_name: str, entries: List[Dict[str, str]],
         content += "  { " + ", ".join(parts) + " },\n"
 
     content += "]\n\n"
-    content += f"⟦ /{header_name} | {expression_type} | vsm-{vsm_version} ⟧\n"
+    # Footer: NAME-ONLY per vsl_language_primer.vsm §file_grammar (vsm-1.2.1)
+    content += f"⟦ /{header_name} ⟧\n"
 
     path.write_text(content, encoding='utf-8')
