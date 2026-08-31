@@ -439,11 +439,7 @@ def evolve_predicate_population(
         # Evolve for N generations
         best_genome = None
         for gen in range(generations):
-            forest = ga.evaluate_fitness(forest, predicate_name)
-            forest = ga.select_parents(forest, method="tournament")
-            forest = ga.crossover_population(forest)
-            forest = ga.mutate_population(forest)
-            forest = ga.next_generation(forest, predicate_name)
+            forest = ga.evolve_generation(forest, predicate_name)
 
             # Track best
             if forest:

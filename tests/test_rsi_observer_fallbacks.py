@@ -94,7 +94,7 @@ class TestFallbackGeneticAlgorithm(unittest.TestCase):
 
 
 class TestGALoopBody(unittest.TestCase):
-    """Lines 445-457: GA loop body — mutate + next_gen + fitness + return RSIAction."""
+    """Lines 440+: GA loop body — evolve_generation + return RSIAction."""
 
     def test_evolve_returns_rsi_action_with_best_genome(self):
         """evolve_predicate_population returns RSIAction when GA succeeds."""
@@ -105,11 +105,7 @@ class TestGALoopBody(unittest.TestCase):
 
         mock_ga = MagicMock()
         mock_ga.create_forest.return_value = [mock_genome]
-        mock_ga.evaluate_fitness.return_value = [mock_genome]
-        mock_ga.select_parents.return_value = [mock_genome]
-        mock_ga.crossover_population.return_value = [mock_genome]
-        mock_ga.mutate_population.return_value = [mock_genome]  # line 445
-        mock_ga.next_generation.return_value = [mock_genome]    # line 446
+        mock_ga.evolve_generation.return_value = [mock_genome]
 
         with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
              patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
@@ -127,11 +123,7 @@ class TestGALoopBody(unittest.TestCase):
 
         mock_ga = MagicMock()
         mock_ga.create_forest.return_value = []
-        mock_ga.evaluate_fitness.return_value = []
-        mock_ga.select_parents.return_value = []
-        mock_ga.crossover_population.return_value = []
-        mock_ga.mutate_population.return_value = []
-        mock_ga.next_generation.return_value = []
+        mock_ga.evolve_generation.return_value = []
 
         with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
              patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
@@ -148,7 +140,7 @@ class TestGALoopBody(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_ga_loop_runs_for_generations(self):
-        """GA loop calls mutate_population and next_generation each generation."""
+        """GA loop calls evolve_generation each generation."""
         from vsf_rsi.rsi_observer import evolve_predicate_population
 
         mock_genome = MagicMock()
@@ -156,19 +148,14 @@ class TestGALoopBody(unittest.TestCase):
 
         mock_ga = MagicMock()
         mock_ga.create_forest.return_value = [mock_genome]
-        mock_ga.evaluate_fitness.return_value = [mock_genome]
-        mock_ga.select_parents.return_value = [mock_genome]
-        mock_ga.crossover_population.return_value = [mock_genome]
-        mock_ga.mutate_population.return_value = [mock_genome]
-        mock_ga.next_generation.return_value = [mock_genome]
+        mock_ga.evolve_generation.return_value = [mock_genome]
 
         with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
              patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
             evolve_predicate_population("pred", generations=3, population_size=5)
 
-        # mutate + next_generation called 3 times each
-        self.assertEqual(mock_ga.mutate_population.call_count, 3)
-        self.assertEqual(mock_ga.next_generation.call_count, 3)
+        # evolve_generation called 3 times (once per generation)
+        self.assertEqual(mock_ga.evolve_generation.call_count, 3)
 
     def test_ga_tracks_best_genome_across_generations(self):
         """GA loop tracks the genome with highest fitness across generations."""
@@ -182,11 +169,7 @@ class TestGALoopBody(unittest.TestCase):
         mock_ga = MagicMock()
         mock_ga.create_forest.return_value = [g1_genome]
         # Gen 1: low fitness, Gen 2: high fitness
-        mock_ga.evaluate_fitness.side_effect = [[g1_genome], [g2_genome]]
-        mock_ga.select_parents.side_effect = [[g1_genome], [g2_genome]]
-        mock_ga.crossover_population.side_effect = [[g1_genome], [g2_genome]]
-        mock_ga.mutate_population.side_effect = [[g1_genome], [g2_genome]]
-        mock_ga.next_generation.side_effect = [[g1_genome], [g2_genome]]
+        mock_ga.evolve_generation.side_effect = [[g1_genome], [g2_genome]]
 
         with patch("vsf_rsi.rsi_observer.RSIGeneticAlgorithm", return_value=mock_ga), \
              patch("vsf_rsi.rsi_observer._HAS_GENETIC_ALGORITHM", True):
