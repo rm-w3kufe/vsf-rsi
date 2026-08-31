@@ -1,24 +1,12 @@
 """
 Tests for rsi_gap_detector.py — Gap detection and modification suggestions
-
-IMPORTANT: rsi_gap_detector imports `from rsi_metrics import RSIMetrics` (bare).
-We add a mock `rsi_metrics` module to sys.modules before import.
 """
 
 import json
-import sys
 import tempfile
 from pathlib import Path
 from unittest import TestCase, mock
 from unittest.mock import patch, MagicMock
-
-# rsi_gap_detector.py does `from rsi_metrics import RSIMetrics` (bare name).
-# We inject a mock module into sys.modules BEFORE importing the module under test.
-from vsf_rsi.rsi_metrics import RSIMetrics as _RealRSIMetrics
-
-_mock_rsi_metrics = MagicMock()
-_mock_rsi_metrics.RSIMetrics = _RealRSIMetrics  # Wire up real class
-sys.modules.setdefault("rsi_metrics", _mock_rsi_metrics)
 
 from vsf_rsi.rsi_gap_detector import RSIGapDetector, GAPS_DIR, GAPS_FILE
 

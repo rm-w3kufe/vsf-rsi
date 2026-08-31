@@ -15,7 +15,7 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-from rsi_metrics import RSIMetrics
+from vsf_rsi.rsi_metrics import RSIMetrics
 
 # ── Configuration ────────────────────────────────────────────────────
 GAPS_DIR = Path(__file__).parent.parent.parent / "state" / "monitoring"
