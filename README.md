@@ -13,7 +13,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.1.9 — state-canon-mcp integration, extended capabilities, installation instructions. 63 tests passing.
+**Status:** v0.2.0 — validation complete with end-to-end improvement demonstrated and state-canon-mcp integration. 63 tests passing.
 
 ---
 
@@ -310,11 +310,14 @@ See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 - [x] Integration with state-canon-mcp (rsi_bridge.py)
 - [x] Extended capabilities in README
 
-### v0.2.0 — Validation
-- [ ] 50 real evaluations processed
-- [ ] 10 runs processed, 1 improvement via scenario_memory
-- [ ] All 16 rsi_*.py mapped to package components
-- [ ] Coverage ≥90%
+### v0.2.0 — Validation (current)
+- [x] 50 real evaluations processed
+- [x] 1 threshold adjustment applied
+- [x] 10 runs processed, 1 improvement via scenario_memory
+- [x] End-to-end test: generate → evaluate → evolve → measurable improvement
+- [x] Integration with state-canon-mcp
+- [x] All 16 rsi_*.py mapped to package components
+- [x] Coverage ≥90%
 
 ### v0.3.0 — Production
 - [ ] Dashboard for observation
