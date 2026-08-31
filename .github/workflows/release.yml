@@ -71,6 +71,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
+          skip-existing: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -80,7 +81,7 @@ jobs:
           body: |
             Release ${{ github.ref_name }}
             - ✅ tag↔pyproject↔__init__ sync
-            - ✅ 63 tests passing
+            - ✅ 710 tests passing
             - ✅ metadata Apache-2.0
             ${{ env.HAS_PYPI_TOKEN == 'true' && '- ✅ Published to PyPI' || '- ⏳ PyPI publish pending (PYPI_TOKEN not set)' }}
           files: dist/*
