@@ -345,6 +345,60 @@ sequenceDiagram
 
 ---
 
+## Full tool integration hierarchy
+
+vsf-rsi is part of a three-tool ecosystem. Here's how they work together:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AGENT (you)                              │
+├─────────────────────────────────────────────────────────────┤
+│  1. THINK   → socratic-engine evaluates decisions          │
+│  2. VERIFY  → state-canon provides ground truth            │
+│  3. LEARN   → vsf-rsi records patterns for future          │
+└─────────────────────────────────────────────────────────────┘
+        ↓                    ↓                    ↓
+┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+│ socratic-     │  │ state-canon   │  │ vsf-rsi       │
+│ engine        │  │               │  │               │
+│ • evaluate()  │  │ • query()     │  │ • record()    │
+│ • diagnose()  │  │ • verify()    │  │ • match()     │
+│ • trees       │  │ • reconcile() │  │ • adapt()     │
+└───────────────┘  └───────────────┘  └───────────────┘
+```
+
+### Prerequisites
+
+| Tool | Version | Install | Purpose |
+|------|---------|---------|---------|
+| `socratic-engine` | ≥0.2.5 | `pip install socratic-engine` | Decision evaluation |
+| `state-canon-mcp` | latest | `git clone` + MCP server | Ground truth |
+| `vsf-rsi` | ≥0.2.0 | `pip install vsf-rsi` | Recursive improvement |
+
+### Quick integration
+
+```python
+# 1. Evaluate with socratic-engine
+from socratic_engine import SocraticEngine
+engine = SocraticEngine()
+result = engine.evaluate(tree, context)
+
+# 2. Verify with state-canon
+from state_canon import StateCanon
+canon = StateCanon()
+truth = canon.query("services", {"name": "my-service"})
+
+# 3. Learn with vsf-rsi
+from vsf_rsi.scenario_memory import record
+record({
+    "fault_signature": "my-error",
+    "decision": "my-fix",
+    "outcome": "success"
+})
+```
+
+---
+
 ## Safety model
 
 The VSM safety constraints are enforced at every level:
