@@ -35,6 +35,7 @@ class RSITreeRegistry:
     def register_tree(self, tree_path: str, predicate: str, metadata: Optional[Dict] = None) -> Dict:
         """
         Register a new tree.
+        DEBT-007: Added version conflict detection.
         
         Args:
             tree_path: Path to tree file
@@ -65,6 +66,18 @@ class RSITreeRegistry:
                     "error": "Tree already registered",
                     "path": tree_path
                 }
+        
+        # DEBT-007: Check for version conflicts (same predicate, different path)
+        for entry in registry["trees"]:
+            if entry["predicate"] == predicate and entry["path"] != tree_path:
+                # Same predicate, different path - potential version conflict
+                if entry.get("status") == "active":
+                    return {
+                        "success": False,
+                        "error": f"Version conflict: predicate '{predicate}' already has active tree at {entry['path']}",
+                        "path": tree_path,
+                        "conflict_path": entry["path"]
+                    }
         
         # Add to registry
         tree_entry = {

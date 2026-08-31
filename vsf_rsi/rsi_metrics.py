@@ -41,6 +41,7 @@ class RSIMetrics:
     ) -> None:
         """
         Track a classification result.
+        DEBT-003: Simplified - only store latency at threshold level.
         
         Args:
             predicate_name: Name of predicate (e.g., 'ac_stasis_critical')
@@ -59,7 +60,7 @@ class RSIMetrics:
                 "thresholds": {},
                 "total_classifications": 0,
                 "correct_classifications": 0,
-                "latencies": []
+                # DEBT-003: Removed predicate-level latencies (redundant)
             }
         
         # Initialize threshold metrics if not exists
@@ -81,11 +82,7 @@ class RSIMetrics:
             pm["correct_classifications"] += 1
             tm["correct"] += 1
         
-        # Track latency (keep last 100)
-        pm["latencies"].append(latency_ms)
-        if len(pm["latencies"]) > 100:
-            pm["latencies"] = pm["latencies"][-100:]
-        
+        # DEBT-003: Only track latency at threshold level
         tm["latencies"].append(latency_ms)
         if len(tm["latencies"]) > 100:
             tm["latencies"] = tm["latencies"][-100:]
@@ -140,6 +137,7 @@ class RSIMetrics:
     def get_latency(self, predicate_name: str, threshold: Optional[float] = None) -> float:
         """
         Get average latency for predicate/threshold.
+        DEBT-003: Predicate-level latency computed from threshold-level data.
         
         Args:
             predicate_name: Name of predicate
@@ -164,10 +162,14 @@ class RSIMetrics:
                 return 0.0
             return sum(tm["latencies"]) / len(tm["latencies"])
         else:
-            # Get overall latency
-            if not pm["latencies"]:
+            # DEBT-003: Compute overall latency from all thresholds
+            all_latencies = []
+            for tm in pm["thresholds"].values():
+                all_latencies.extend(tm.get("latencies", []))
+            
+            if not all_latencies:
                 return 0.0
-            return sum(pm["latencies"]) / len(pm["latencies"])
+            return sum(all_latencies) / len(all_latencies)
     
     def get_coverage(self, predicate_name: str) -> float:
         """
@@ -278,6 +280,7 @@ class RSIMetrics:
     
     def rebuild_from_history(self) -> Dict:
         """Rebuild rsi_metrics.json from rsi_metrics_history.jsonl.
+        DEBT-003: Simplified - only store latency at threshold level.
         
         This closes the feedback loop: history (raw) → metrics (aggregated)
         → GA fitness evaluation. Call when rsi_metrics.json is missing or stale.
@@ -311,7 +314,7 @@ class RSIMetrics:
                         "thresholds": {},
                         "total_classifications": 0,
                         "correct_classifications": 0,
-                        "latencies": []
+                        # DEBT-003: No predicate-level latencies
                     }
                 
                 pm = metrics[predicate]
@@ -334,15 +337,10 @@ class RSIMetrics:
                     pm["correct_classifications"] += 1
                     tm["correct"] += 1
                 
-                # Track latency (keep last 100 per threshold)
+                # DEBT-003: Only track latency at threshold level
                 tm["latencies"].append(latency_ms)
                 if len(tm["latencies"]) > 100:
                     tm["latencies"] = tm["latencies"][-100:]
-                
-                # Also keep in predicate-level latencies (keep last 100)
-                pm["latencies"].append(latency_ms)
-                if len(pm["latencies"]) > 100:
-                    pm["latencies"] = pm["latencies"][-100:]
         
         # Save rebuilt metrics
         self._save_metrics(metrics)

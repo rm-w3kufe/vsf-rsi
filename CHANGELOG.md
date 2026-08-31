@@ -1,5 +1,23 @@
 # Changelog — vsf-rsi
 
+## [0.1.7] — 2026-08-30
+
+### Added
+- **DEBT-003**: Removed duplicate latency tracking
+- Latency now only stored at threshold level (not predicate level)
+- `get_latency()` computes predicate-level from threshold-level data
+- Reduced storage overhead
+
+- **DEBT-006**: Added validation of generated code
+- `generate_predicate()` now validates Python syntax before writing
+- Uses `ast.parse()` to check for syntax errors
+- Raises `ValueError` if generated code is invalid
+
+- **DEBT-007**: Added version conflict detection
+- `register_tree()` now checks for same predicate with different path
+- Prevents multiple active trees for the same predicate
+- Returns conflict info if detected
+
 ## [0.1.6] — 2026-08-30
 
 ### Added

@@ -1,4 +1,4 @@
-⟦ rsi_generated_predicates | MANIFEST-v1 | vsm-1.2 | 2026-08-31T02:14:33Z ⟧
+⟦ rsi_generated_predicates | MANIFEST-v1 | vsm-1.2 | 2026-08-31T03:17:06Z ⟧
 
 @vsm 1.2
 @status active
@@ -26,7 +26,10 @@ predicates = [
   { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T02:03:31.722338+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active", 31T02: 3, 00: 0 },
   { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T02:06:07.962176+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active", 31T02: 6, 00: 0 },
   { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T02:11:56.993389+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active", 31T02: 11, 00: 0 },
-  { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T02:14:33.309767+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active" },
+  { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T02:14:33.309767+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active", 31T02: 14, 00: 0 },
+  { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T03:14:53.915421+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active", 31T03: 14, 00: 0 },
+  { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T03:15:59.914715+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active", 31T03: 15, 00: 0 },
+  { name: "_rsi_gen_failing_pred", path: "/home/rmw3/packages/public/vsf-rsi/vsf_rsi/generated/_rsi_gen_failing_pred.py", generated: "2026-08-31T03:17:06.248919+00:00", pattern_type: "unknown", purpose: "Auto-generated from 4 errors on failing_pred", status: "active" },
 ]
 
 ⟦ /rsi_generated_predicates ⟧

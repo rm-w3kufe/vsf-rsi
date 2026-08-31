@@ -10,6 +10,7 @@ RSI LEVEL 3: AUTO-GENERATION
 - Register in system
 """
 
+import ast
 import json
 import os
 from datetime import datetime, timezone
@@ -34,6 +35,7 @@ class RSIPredicateGenerator:
     def generate_predicate(self, pattern: Dict, base_predicate: Optional[str] = None) -> str:
         """
         Generate a new predicate based on pattern.
+        DEBT-006: Validates generated code before writing.
         
         Args:
             pattern: Detected pattern
@@ -41,9 +43,17 @@ class RSIPredicateGenerator:
         
         Returns:
             Path to generated predicate
+        
+        Raises:
+            ValueError: If generated code is invalid
         """
         # Generate predicate content
         predicate_content = self._create_predicate_content(pattern, base_predicate)
+        
+        # DEBT-006: Validate generated code before writing
+        validation_result = self._validate_code(predicate_content)
+        if not validation_result["valid"]:
+            raise ValueError(f"Generated code is invalid: {validation_result['error']}")
         
         # Generate filename
         predicate_name = pattern.get("name", "auto_generated")
@@ -58,6 +68,25 @@ class RSIPredicateGenerator:
         self._register_predicate(predicate_name, filepath, pattern)
         
         return str(filepath)
+    
+    def _validate_code(self, code: str) -> Dict:
+        """
+        DEBT-006: Validate generated Python code.
+        
+        Args:
+            code: Python code to validate
+        
+        Returns:
+            Dict with 'valid' bool and 'error' message if invalid
+        """
+        try:
+            # Try to parse the code
+            ast.parse(code)
+            return {"valid": True, "error": None}
+        except SyntaxError as e:
+            return {"valid": False, "error": f"Syntax error: {e}"}
+        except Exception as e:
+            return {"valid": False, "error": f"Validation error: {e}"}
     
     def _create_predicate_content(self, pattern: Dict, base_predicate: Optional[str]) -> str:
         """Create predicate content based on pattern."""
