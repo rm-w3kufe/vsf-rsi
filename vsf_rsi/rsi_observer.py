@@ -18,6 +18,7 @@ Future: get_expected() will plug into VSM kernel for multi-source truth.
 """
 
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass, field, asdict
@@ -25,6 +26,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+# ── Logging (DEBT-001) ────────────────────────────────────────────
+logger = logging.getLogger("vsf_rsi.observer")
 
 # ── Imports from sibling modules ──────────────────────────────────
 import sys
@@ -702,6 +706,7 @@ class RSIObserver:
         self.events: List[EvaluationEvent] = []
         self.actions: List[RSIAction] = []
         self._has_scenario_memory = _HAS_SCENARIO_MEMORY
+        logger.info(f"RSIObserver initialized: mode={self.mode}")
 
     def evaluate(
         self,
@@ -738,6 +743,7 @@ class RSIObserver:
             result = self.engine.evaluate(tree, ctx)
         except TypeError as e:
             # Predicate crashed on non-numeric input
+            logger.warning(f"Predicate crashed on non-numeric input: {e}")
             t_end = time.monotonic()
             latency_ms = (t_end - t_start) * 1000.0
             
@@ -769,12 +775,14 @@ class RSIObserver:
 
         # Discriminate and resolve
         if event.is_error:
+            logger.info(f"Error detected: source={event.source}, class={event.error_class}")
             # Try scenario_memory match first
             fault_sig = f"{event.source}:error={event.error_class}"
             scenario_correction = match_scenario(fault_sig)
 
             if scenario_correction:
                 # Found a matching scenario — apply its correction
+                logger.info(f"Scenario match found: {scenario_correction}")
                 action = RSIAction(
                     event=event,
                     level=ActionLevel.L1.value,
@@ -794,6 +802,7 @@ class RSIObserver:
 
             if action is not None:
                 self.actions.append(action)
+                logger.debug(f"Action taken: {action.action_type} - {action.resolution}")
 
                 # If parameter_drift modified ctx, re-evaluate
                 if action.action_type == "adjust_threshold" and action.autonomous:
@@ -802,7 +811,7 @@ class RSIObserver:
                         result = self.engine.evaluate(tree, ctx)
                     except TypeError:
                         # Re-evaluation also crashed — keep original result
-                        pass
+                        logger.warning("Re-evaluation after threshold adjustment failed")
 
                 # Record the scenario for future matching
                 record_scenario(event, action)

@@ -1,5 +1,14 @@
 # Changelog — vsf-rsi
 
+## [0.1.3] — 2026-08-30
+
+### Added
+- **DEBT-001**: Added logging configuration with `logging.getLogger("vsf_rsi.observer")`
+- Logger initialized in `RSIObserver.__init__`
+- Info logging for: initialization, error detection, scenario matches
+- Debug logging for: action taken
+- Warning logging for: predicate crashes, re-evaluation failures
+
 ## [0.1.2] — 2026-08-30
 
 ### Fixed
