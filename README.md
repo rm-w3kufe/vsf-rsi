@@ -1,7 +1,10 @@
 # vsf-rsi — Recursive Self-Improvement for VSM systems
 
+[![CI](https://github.com/rm-w3kufe/vsf-rsi/actions/workflows/ci.yml/badge.svg)](https://github.com/rm-w3kufe/vsf-rsi/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/rm-w3kufe/vsf-rsi)](https://github.com/rm-w3kufe/vsf-rsi/releases)
+[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.5-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
 
