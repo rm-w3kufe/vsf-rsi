@@ -1,5 +1,20 @@
 # Changelog — vsf-rsi
 
+## [0.1.4] — 2026-08-30
+
+### Added
+- **DEBT-002**: Error recovery throughout evaluate() pipeline
+- Catch-all exception handler for engine.evaluate()
+- Fallback event creation when _build_event() fails
+- Error recovery for _bridge_to_metrics()
+- Error recovery for error discrimination/resolution
+- Error recovery for scenario recording
+
+### Changed
+- System now continues with degraded functionality on failures
+- All critical paths wrapped in try-except blocks
+- Errors logged but don't crash the observer
+
 ## [0.1.3] — 2026-08-30
 
 ### Added

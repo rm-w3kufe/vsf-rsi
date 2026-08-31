@@ -724,6 +724,8 @@ class RSIObserver:
           4. Build EvaluationEvent
           5. Bridge to rsi_metrics
           6. Discriminate and resolve errors
+        
+        DEBT-002: Error recovery — if one component fails, continue with degraded functionality.
         """
         ctx = ctx or {}
 
@@ -759,46 +761,83 @@ class RSIObserver:
             
             # Override input_value to prevent re-crash in _build_event
             ctx["input_value"] = 0.5
+        except Exception as e:
+            # DEBT-002: Catch-all for unexpected errors
+            logger.error(f"Unexpected error in engine.evaluate(): {e}")
+            t_end = time.monotonic()
+            latency_ms = (t_end - t_start) * 1000.0
+            
+            class FallbackResult:
+                is_true = False
+                truth = Truth.UNKNOWN
+                certified = False
+                metadata = {"error": "engine_crash", "message": str(e)}
+                source = "unknown"
+            
+            result = FallbackResult()
+            ctx["input_value"] = 0.5
 
         t_end = time.monotonic()
         latency_ms = (t_end - t_start) * 1000.0
 
-        # Build event
-        event = self._build_event(result, ctx, tree_id, latency_ms)
+        # Build event (with error recovery)
+        try:
+            event = self._build_event(result, ctx, tree_id, latency_ms)
+        except Exception as e:
+            logger.error(f"Error building event: {e}")
+            # Create a minimal fallback event
+            event = EvaluationEvent(
+                tree_id=tree_id,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                latency_ms=latency_ms,
+                source="unknown",
+                truth="UNKNOWN",
+                expected=False,
+                actual=False,
+                error_class=ErrorClass.NONE.value,
+            )
+
         # BUG-003: Circular buffer to prevent memory leak
         self.events.append(event)
         if len(self.events) > MAX_EVENTS:
             self.events = self.events[-MAX_EVENTS:]
 
-        # Bridge to rsi_metrics
-        self._bridge_to_metrics(event)
+        # Bridge to rsi_metrics (with error recovery)
+        try:
+            self._bridge_to_metrics(event)
+        except Exception as e:
+            logger.error(f"Error bridging to metrics: {e}")
 
-        # Discriminate and resolve
+        # Discriminate and resolve (with error recovery)
         if event.is_error:
             logger.info(f"Error detected: source={event.source}, class={event.error_class}")
-            # Try scenario_memory match first
-            fault_sig = f"{event.source}:error={event.error_class}"
-            scenario_correction = match_scenario(fault_sig)
+            try:
+                # Try scenario_memory match first
+                fault_sig = f"{event.source}:error={event.error_class}"
+                scenario_correction = match_scenario(fault_sig)
 
-            if scenario_correction:
-                # Found a matching scenario — apply its correction
-                logger.info(f"Scenario match found: {scenario_correction}")
-                action = RSIAction(
-                    event=event,
-                    level=ActionLevel.L1.value,
-                    action_type="scenario_match",
-                    params={"correction": scenario_correction},
-                    autonomous=True,
-                    resolution=f"scenario_matched:{scenario_correction}",
-                )
-            else:
-                # No match — use standard resolution
-                action = resolve_error(
-                    event, ctx,
-                    mode=self.mode,
-                    engine=self.engine,
-                    tree=tree,
-                )
+                if scenario_correction:
+                    # Found a matching scenario — apply its correction
+                    logger.info(f"Scenario match found: {scenario_correction}")
+                    action = RSIAction(
+                        event=event,
+                        level=ActionLevel.L1.value,
+                        action_type="scenario_match",
+                        params={"correction": scenario_correction},
+                        autonomous=True,
+                        resolution=f"scenario_matched:{scenario_correction}",
+                    )
+                else:
+                    # No match — use standard resolution
+                    action = resolve_error(
+                        event, ctx,
+                        mode=self.mode,
+                        engine=self.engine,
+                        tree=tree,
+                    )
+            except Exception as e:
+                logger.error(f"Error in error resolution: {e}")
+                action = None
 
             if action is not None:
                 self.actions.append(action)
@@ -814,7 +853,10 @@ class RSIObserver:
                         logger.warning("Re-evaluation after threshold adjustment failed")
 
                 # Record the scenario for future matching
-                record_scenario(event, action)
+                try:
+                    record_scenario(event, action)
+                except Exception as e:
+                    logger.error(f"Error recording scenario: {e}")
 
         return result
 
