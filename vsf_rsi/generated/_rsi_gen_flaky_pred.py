@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 _rsi_gen_flaky_pred — Edge case predicate
-Generated: 2026-08-31T00:23:42Z
-Purpose: Auto-generated from 5 errors on flaky_pred
+Generated: 2026-08-31T01:26:30Z
+Purpose: Auto-generated from 3 errors on flaky_pred
 """
 
 from typing import Dict, Any
@@ -42,6 +42,6 @@ PREDICATE = {
     "name": "_rsi_gen_flaky_pred",
     "function": _rsi_gen_flaky_pred,
     "type": "edge_case",
-    "generated": "2026-08-31T00:23:42Z",
-    "purpose": "Auto-generated from 5 errors on flaky_pred"
+    "generated": "2026-08-31T01:26:30Z",
+    "purpose": "Auto-generated from 3 errors on flaky_pred"
 }

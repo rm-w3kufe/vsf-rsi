@@ -34,6 +34,16 @@ if str(_classifier_dir) not in sys.path:
 
 from vsf_rsi.rsi_metrics import RSIMetrics
 
+# Import socratic_engine types (required)
+try:
+    from socratic_engine.engine import Truth
+except ImportError:
+    # Fallback if socratic_engine not available
+    class Truth:
+        TRUE = "TRUE"
+        FALSE = "FALSE"
+        UNKNOWN = "UNKNOWN"
+
 # Import scenario_memory (optional, from system path or package)
 try:
     import scenario_memory as _sm
@@ -83,6 +93,17 @@ DEFAULT_THRESHOLDS: Dict[str, float] = {
     "ac_stasis_warning": 0.80,
     "ac_viable_false": 0.50,
 }
+
+# BUG-002: Threshold drift bounds (prevent drift to 0 or infinity)
+MIN_THRESHOLD: float = 0.05
+MAX_THRESHOLD: float = 0.95
+THRESHOLD_STEP: float = 0.05
+
+# BUG-003: Memory leak prevention (circular buffer for events)
+MAX_EVENTS: int = 1000
+
+# BUG-001: Type validation (valid input types for comparison)
+VALID_INPUT_TYPES = (int, float)
 
 
 # ── Data Classes ──────────────────────────────────────────────────
@@ -511,15 +532,16 @@ def _try_parameter_drift(
 ) -> Optional[RSIAction]:
     """
     L1: Adjust threshold in context. Always autonomous.
+    BUG-002: Uses MIN_THRESHOLD and MAX_THRESHOLD constants.
     """
     thresholds = ctx.get("_rsi_thresholds", {})
     current = thresholds.get(event.source, event.threshold)
 
-    # Heuristic: if actual was wrong, nudge threshold toward input_value
+    # BUG-002: Heuristic with bounds (prevent drift to 0 or infinity)
     if event.input_value > current:
-        new_threshold = min(current + 0.05, 0.95)
+        new_threshold = min(current + THRESHOLD_STEP, MAX_THRESHOLD)
     else:
-        new_threshold = max(current - 0.05, 0.05)
+        new_threshold = max(current - THRESHOLD_STEP, MIN_THRESHOLD)
 
     if abs(new_threshold - current) < 0.001:
         return None  # Already at boundary
@@ -699,15 +721,36 @@ class RSIObserver:
         # Measure latency
         t_start = time.monotonic()
 
-        # Evaluate through engine
-        result = self.engine.evaluate(tree, ctx)
+        # BUG-001: Try-evaluate with type validation fallback
+        try:
+            result = self.engine.evaluate(tree, ctx)
+        except TypeError as e:
+            # Predicate crashed on non-numeric input
+            t_end = time.monotonic()
+            latency_ms = (t_end - t_start) * 1000.0
+            
+            # Create a fallback result
+            class FallbackResult:
+                is_true = False
+                truth = Truth.UNKNOWN
+                certified = False
+                metadata = {"error": "predicate_crash", "message": str(e)}
+                source = "unknown"
+            
+            result = FallbackResult()
+            
+            # Override input_value to prevent re-crash in _build_event
+            ctx["input_value"] = 0.5
 
         t_end = time.monotonic()
         latency_ms = (t_end - t_start) * 1000.0
 
         # Build event
         event = self._build_event(result, ctx, tree_id, latency_ms)
+        # BUG-003: Circular buffer to prevent memory leak
         self.events.append(event)
+        if len(self.events) > MAX_EVENTS:
+            self.events = self.events[-MAX_EVENTS:]
 
         # Bridge to rsi_metrics
         self._bridge_to_metrics(event)
@@ -742,7 +785,12 @@ class RSIObserver:
 
                 # If parameter_drift modified ctx, re-evaluate
                 if action.action_type == "adjust_threshold" and action.autonomous:
-                    result = self.engine.evaluate(tree, ctx)
+                    # BUG-001: Wrap re-evaluation in try-except too
+                    try:
+                        result = self.engine.evaluate(tree, ctx)
+                    except TypeError:
+                        # Re-evaluation also crashed — keep original result
+                        pass
 
                 # Record the scenario for future matching
                 record_scenario(event, action)
@@ -757,8 +805,35 @@ class RSIObserver:
         latency_ms: float,
     ) -> EvaluationEvent:
         """Build an EvaluationEvent from an engine result."""
-        # Extract ground truth
+        # BUG-001: Extract and validate input_value type
         input_value = ctx.get("input_value", 0.5)
+        
+        # Validate type BEFORE comparison
+        if not isinstance(input_value, VALID_INPUT_TYPES):
+            # Non-numeric input: treat as error (cannot compare)
+            source = getattr(result, "source", "unknown") if result else "unknown"
+            thresholds = ctx.get("_rsi_thresholds", self.thresholds)
+            optimal = thresholds.get(source, 0.70)
+            
+            event = EvaluationEvent(
+                tree_id=tree_id,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                latency_ms=latency_ms,
+                source=source,
+                truth="UNKNOWN",
+                certified=False,
+                metadata={"error": "non_numeric_input", "input_type": type(input_value).__name__},
+                task_id=ctx.get("task_id", ""),
+                threshold=optimal,
+                input_value=0.5,  # fallback
+                actual=False,
+                expected=False,
+                is_error=True,  # always error for non-numeric
+                error_class=ErrorClass.BLOCKING.value,
+            )
+            return event
+        
+        # Normal path: compute expected from threshold
         thresholds = ctx.get("_rsi_thresholds", self.thresholds)
         source = getattr(result, "source", "unknown")
         optimal = thresholds.get(source, 0.70)
