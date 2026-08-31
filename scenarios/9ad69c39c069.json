@@ -1,0 +1,7 @@
+{
+  "id": "9ad69c39c069",
+  "decision": "evaluate(flaky_pred, truth=false)",
+  "outcome": "resolved",
+  "correction_path": "scenario_matched:threshold_adjusted:0.700\u21920.650",
+  "fault_signature": "flaky_pred:error=BLOCKING"
+}

@@ -225,6 +225,9 @@ PREDICATE = {{
     
     def _save_manifest(self, manifest: Dict) -> None:
         """Save manifest to file."""
+        # Skip if manifest directory doesn't exist (package mode)
+        if not MANIFEST_FILE.parent.exists():
+            return
         from rsi_manifest_parser import save_manifest
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         save_manifest(MANIFEST_FILE, "predicates", manifest["predicates"],

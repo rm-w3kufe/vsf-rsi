@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-_rsi_gen_failing_pred — Edge case predicate
-Generated: 2026-08-31T00:23:50Z
-Purpose: Auto-generated from 4 errors on failing_pred
+_rsi_gen_flaky_pred — Edge case predicate
+Generated: 2026-08-31T00:23:42Z
+Purpose: Auto-generated from 5 errors on flaky_pred
 """
 
 from typing import Dict, Any
 
 
-def _rsi_gen_failing_pred(ctx: Dict[str, Any]) -> bool:
+def _rsi_gen_flaky_pred(ctx: Dict[str, Any]) -> bool:
     """
     Edge case predicate for handling misclassifications.
     
@@ -39,9 +39,9 @@ def _rsi_gen_failing_pred(ctx: Dict[str, Any]) -> bool:
 
 # Register predicate
 PREDICATE = {
-    "name": "_rsi_gen_failing_pred",
-    "function": _rsi_gen_failing_pred,
+    "name": "_rsi_gen_flaky_pred",
+    "function": _rsi_gen_flaky_pred,
     "type": "edge_case",
-    "generated": "2026-08-31T00:23:50Z",
-    "purpose": "Auto-generated from 4 errors on failing_pred"
+    "generated": "2026-08-31T00:23:42Z",
+    "purpose": "Auto-generated from 5 errors on flaky_pred"
 }
