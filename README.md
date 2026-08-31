@@ -6,6 +6,7 @@
 [![GitHub Release](https://img.shields.io/github/v/release/rm-w3kufe/vsf-rsi)](https://github.com/rm-w3kufe/vsf-rsi/releases)
 [![PyPI](https://img.shields.io/pypi/v/vsf-rsi.svg)](https://pypi.org/project/vsf-rsi/)
 [![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.5-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
+[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)]()
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
 
@@ -13,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.1.9 — state-canon-mcp integration, extended capabilities. 63 tests passing.
+**Status:** v0.2.0 — Validation milestone achieved. 708 tests, 99% coverage.
 
 ---
 
@@ -77,17 +78,24 @@ The central boundary is:
 
 At its core, vsf-rsi provides:
 
-- **Observer** — wraps `SocraticEngine.evaluate()` to capture every evaluation event
-- **Bridge** — integrates with `state-canon-mcp` for canonical state queries and metrics feedback
-- **Discriminator** — classifies errors as BLOCKING or STRUCTURAL
-- **Resolver** — applies the appropriate improvement level (L1-L4)
-- **Scenario Memory** — records and matches past corrections (optional, requires `scenario_memory`)
-- **Predicate Generator** — creates new predicates from error patterns (with syntax validation)
-- **Genetic Algorithm** — evolves populations of predicates (with convergence checks)
-- **Pattern Detector** — identifies recurring errors (with time-based decay)
-- **Tree Registry** — manages predicate versions and prevents conflicts
-- **Error Recovery** — system continues with degraded functionality on failures
-- **Logging** — structured logging for debugging and monitoring
+- **Observer** (`rsi_observer.py`) — wraps `SocraticEngine.evaluate()` to capture every evaluation event, discriminate errors, and resolve them through L1-L4
+- **Bridge** (`rsi_bridge.py`) — integrates with `state-canon-mcp` for canonical state queries, metrics feedback, and rule enforcement
+- **Metrics** (`rsi_metrics.py`) — tracks classification history, accuracy, latency, and threshold adjustments
+- **Feedback Loop** (`rsi_feedback_loop.py`) — manages threshold adjustments with drift bounds and step limits
+- **Scenario Memory** (`scenario_memory.py`) — procedural learning: records failures with correction paths, matches novel faults to prior corrections
+- **Gap Detector** (`rsi_gap_detector.py`) — detects evaluation gaps: stale predicates, missing branches, low accuracy
+- **Pattern Detector** (`rsi_pattern_detector.py`) — identifies recurring error patterns with time-based decay (10%/day)
+- **Predicate Generator** (`rsi_predicate_generator.py`) — creates new predicates from error patterns (with AST validation)
+- **Tree Generator** (`rsi_tree_generator.py`) — generates evaluation trees from gap analysis
+- **Forest Generator** (`rsi_forest_generator.py`) — generates populations of trees for genetic evolution
+- **Genetic Algorithm v1** (`rsi_genetic_algorithm.py`) — evolves predicate populations with tournament selection, crossover, mutation, and convergence detection
+- **Genetic Algorithm v2** (`rsi_genetic_algorithm_v2.py`) — improved GA with adaptive mutation rates
+- **Tree Registry** (`rsi_tree_registry.py`) — manages predicate versions, prevents conflicts, tracks lineage
+- **Component Registry** (`rsi_component_registry.py`) — maps package components to their roles and dependencies
+- **Manifest Parser** (`rsi_manifest_parser.py`) — parses RSI manifest files for tree/predicate registration
+- **Demo** (`rsi_demo.py`) — runnable demo: generate → evaluate → evolve → measurable improvement
+- **Error Recovery** — system continues with degraded functionality on failures (never crashes)
+- **Logging** — structured logging via `logging.getLogger("vsf_rsi.observer")`
 
 ### The four levels of RSI
 
@@ -136,6 +144,79 @@ result = query_canon("rsi_metrics", {"predicate": "stasis_check"})
 
 # Feed metrics back to state canon
 feed_metrics_to_canon({"total_evaluations": 100, "error_rate": 0.05})
+```
+
+---
+
+## CLI usage
+
+Each module has its own CLI entry point:
+
+```bash
+# Feedback loop — adjust thresholds
+python -m vsf_rsi.rsi_feedback_loop adjust
+python -m vsf_rsi.rsi_feedback_loop status
+python -m vsf_rsi.rsi_feedback_loop history
+
+# Pattern detector — analyze error patterns
+python -m vsf_rsi.rsi_pattern_detector detect
+python -m vsf_rsi.rsi_pattern_detector detect --predicate stasis_check
+python -m vsf_rsi.rsi_pattern_detector summary
+
+# Gap detector — find evaluation gaps
+python -m vsf_rsi.rsi_gap_detector detect
+python -m vsf_rsi.rsi_gap_detector gaps
+
+# Tree generator — create trees from gaps
+python -m vsf_rsi.rsi_tree_generator generate
+python -m vsf_rsi.rsi_tree_generator list
+
+# Forest generator — create populations for GA
+python -m vsf_rsi.rsi_forest_generator generate --predicate stasis_check
+python -m vsf_rsi.rsi_forest_generator evolve --predicate stasis_check
+python -m vsf_rsi.rsi_forest_generator best --predicate stasis_check
+python -m vsf_rsi.rsi_forest_generator list
+
+# Component registry — manage components
+python -m vsf_rsi.rsi_component_registry list
+```
+
+---
+
+## Demo
+
+Run the complete end-to-end demo:
+
+```bash
+python -m vsf_rsi.rsi_demo
+```
+
+The demo demonstrates the full RSI cycle:
+1. Creates an SocraticEngine with built-in predicates
+2. Runs 10 evaluations (mix of passes and failures)
+3. Records failures in scenario_memory
+4. Matches novel faults to prior corrections
+5. Applies scenario_memory corrections to improve results
+6. Generates patterns from error history
+7. Evolves predicate populations with the genetic algorithm
+8. Reports measurable improvement
+
+---
+
+## Testing
+
+```bash
+# Run full suite (708 tests, 99% coverage)
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=vsf_rsi --cov-report=term-missing
+
+# Run integration tests only (requires socratic-engine)
+pytest tests/test_rsi_observer_integration.py -v
+
+# Run scenario_memory integration test
+pytest tests/test_scenario_memory_integration.py -v
 ```
 
 ---
@@ -304,25 +385,20 @@ Key safety properties:
 
 See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 
-### v0.1.9 — Integration (current)
+### v0.2.0 — Validation (current) ✅
+- [x] 50 real evaluations processed
 - [x] 1 threshold adjustment applied
-- [x] End-to-end test: generate → evaluate → evolve → measurable improvement (50% → 0%)
-- [x] Integration with state-canon-mcp (rsi_bridge.py)
-- [x] Extended capabilities in README
-
-### v0.2.0 — Validation
-- [ ] 50 real evaluations processed
-- [ ] 1 threshold adjustment applied
-- [ ] 10 runs processed, 1 improvement via scenario_memory
-- [ ] End-to-end test: generate → evaluate → evolve → measurable improvement
-- [ ] Integration with state-canon-mcp
-- [ ] All 16 rsi_*.py mapped to package components
-- [ ] Coverage ≥90%
+- [x] 10 runs processed, 1 improvement via scenario_memory
+- [x] End-to-end test: generate → evaluate → evolve → measurable improvement
+- [x] Integration with state-canon-mcp
+- [x] All 16 rsi_*.py mapped to package components
+- [x] Coverage ≥90% (actual: 99%)
 
 ### v0.3.0 — Production
 - [ ] Dashboard for observation
 - [ ] Cross-validation
 - [ ] Overfitting detection
+- [ ] 5 components generated, 3 approved, 2 measurable improvements
 - [ ] GA produces trees with fitness > 0.7 on real benchmark
 
 ---

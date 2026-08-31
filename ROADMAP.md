@@ -64,12 +64,12 @@
 - [x] Coverage ≥90%
 
 ## 🎯 v0.3.0 — Production
-- [ ] Dashboard for observation
-- [ ] Cross-validation
-- [ ] Overfitting detection
+- [ ] Dashboard for observation (visual metrics + pattern timeline)
+- [ ] Cross-validation (k-fold on error classification)
+- [ ] Overfitting detection (scenario_memory + pattern decay)
 - [ ] 5 components generated, 3 approved, 2 measurable improvements (gate: Fase 3)
 - [ ] GA produces trees with fitness > 0.7 on real benchmark (gate: Fase 4)
-- [ ] PyPI publication
+- [ ] PyPI publication with install extras (`pip install vsf-rsi[full]`)
 
 ## 🔮 v1.0.0 — Maturity
 - [ ] Co-evolution (predator-prey)

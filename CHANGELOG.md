@@ -1,5 +1,33 @@
 # Changelog — vsf-rsi
 
+## [0.2.0] — 2026-08-31
+
+### Added
+- **Scenario Memory Integration** (`test_scenario_memory_integration.py`)
+  - Full RSI loop: 10 evaluation runs, scenario_memory records failures, matches corrections, improves results
+  - Demonstrates procedural learning: failures → scenario records → correction matching → threshold adjustment
+- **Comprehensive test coverage** (708 tests, 99% coverage)
+  - `test_debt002_error_recovery.py` — 22 tests proving error recovery works
+  - `test_scenario_memory_deep.py` — scenario_memory 100% coverage
+  - `test_rsi_scenario_bridge_deep.py` — bridge import fallback coverage
+  - `test_rsi_pattern_detector_cli.py` — CLI main() coverage
+  - `test_rsi_tree_generator_cli.py` — CLI main() coverage
+  - `test_rsi_feedback_loop_cli.py` — CLI main() coverage
+  - `test_rsi_forest_generator_cli.py` — CLI main() coverage
+  - `test_rsi_observer_final.py` — import fallbacks + exception handlers
+
+### Fixed
+- DEBT-002: Error recovery verified with 22 dedicated tests (evaluate() never crashes)
+- DEBT-003 latencies bugs: Fixed in `rsi_metrics.py`, `rsi_gap_detector.py`, `rsi_pattern_detector.py`
+- Bare import: `rsi_gap_detector.py` fixed `from rsi_metrics import RSIMetrics` → `from vsf_rsi.rsi_metrics import RSIMetrics`
+- `rsi_metrics.py` architectural fix: instance-level paths via `_metrics_file` property
+
+### Changed
+- `scenario_memory` exported from `vsf_rsi` package (public API)
+- ROADMAP v0.2.0 items all checked off
+- README expanded with all 16 module capabilities, CLI usage, demo, and testing sections
+- Coverage: 31% → 99%
+
 ## [0.1.9] — 2026-08-31
 
 ### Added
