@@ -1,5 +1,20 @@
 # Changelog — vsf-rsi
 
+## [0.1.1] — 2026-08-30
+
+### Fixed
+- **BUG-001 (HIGH)**: Type validation — non-numeric inputs no longer crash observer
+- **BUG-002 (MEDIUM)**: Threshold drift bounds — added MIN/MAX/STEP constants
+- **BUG-003 (LOW)**: Memory leak — circular buffer limits events to 1000
+
+### Added
+- `MIN_THRESHOLD`, `MAX_THRESHOLD`, `THRESHOLD_STEP` constants
+- `MAX_EVENTS` constant for circular buffer
+- `VALID_INPUT_TYPES` tuple for type validation
+- `Truth` import from socratic_engine (with fallback)
+- Try-except around `engine.evaluate()` calls
+- Try-except around re-evaluation after threshold adjustment
+
 ## [0.1.0] — 2026-08-30
 
 ### Added
