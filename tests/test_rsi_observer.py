@@ -74,30 +74,34 @@ class TestLoadThresholds(unittest.TestCase):
 
     def test_loads_from_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            thresholds_file = Path(tmpdir) / "state" / "monitoring" / "rsi_thresholds.json"
-            thresholds_file.parent.mkdir(parents=True, exist_ok=True)
+            thresholds_file = Path(tmpdir) / "rsi_thresholds.json"
             thresholds_file.write_text(json.dumps({
                 "ac_stasis_critical": 0.85,
                 "ac_stasis_warning": 0.90,
             }))
-            with patch("vsf_rsi.rsi_observer.Path") as mock_path:
-                mock_path.return_value.parent.parent.parent = Path(tmpdir)
-                thresholds = load_thresholds()
-                self.assertEqual(thresholds["ac_stasis_critical"], 0.85)
-                self.assertEqual(thresholds["ac_stasis_warning"], 0.90)
-                # Default preserved for missing key
-                self.assertEqual(thresholds["ac_viable_false"], 0.50)
+            # BUG-005: Use new path parameter
+            thresholds = load_thresholds(thresholds_dir=Path(tmpdir))
+            self.assertEqual(thresholds["ac_stasis_critical"], 0.85)
+            self.assertEqual(thresholds["ac_stasis_warning"], 0.90)
+            # Default preserved for missing key
+            self.assertEqual(thresholds["ac_viable_false"], 0.50)
 
 
 class TestDiscriminate(unittest.TestCase):
     """Test error discrimination."""
 
     def _make_event(self, is_error=True, certified=False, source="test_pred"):
+        # BUG-004: is_error is computed from expected != actual
+        # To get is_error=True: expected=True, actual=False
+        # To get is_error=False: expected=False, actual=False (or same)
+        expected = is_error  # If we want error, expected=True
+        actual = False       # actual=False always for simplicity
         return EvaluationEvent(
             source=source,
             truth="FALSE",
             certified=certified,
-            is_error=is_error,
+            expected=expected,
+            actual=actual,
             error_class="NONE",
         )
 
@@ -130,10 +134,10 @@ class TestResolveError(unittest.TestCase):
 
     def _make_event(self, source="ac_stasis_critical", threshold=0.70,
                     input_value=0.80, actual=False, expected=True):
+        # BUG-004: is_error is computed from expected != actual
         return EvaluationEvent(
             source=source,
             truth="FALSE",
-            is_error=True,
             error_class="BLOCKING",
             threshold=threshold,
             input_value=input_value,
@@ -210,10 +214,12 @@ class TestEvaluationEvent(unittest.TestCase):
         self.assertEqual(event.error_class, "NONE")
 
     def test_serialization(self):
+        # BUG-004: is_error is now computed from expected != actual
         event = EvaluationEvent(
             source="test",
             truth="TRUE",
-            is_error=True,
+            expected=True,
+            actual=False,  # Different from expected → is_error=True
             error_class="BLOCKING",
         )
         d = asdict(event)

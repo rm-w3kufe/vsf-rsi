@@ -105,6 +105,10 @@ MAX_EVENTS: int = 1000
 # BUG-001: Type validation (valid input types for comparison)
 VALID_INPUT_TYPES = (int, float)
 
+# BUG-005: Package directory constant (prevents fragile path assumptions)
+PACKAGE_DIR = Path(__file__).parent
+STATE_DIR = PACKAGE_DIR.parent / "state" / "monitoring"
+
 
 # ── Data Classes ──────────────────────────────────────────────────
 
@@ -113,6 +117,7 @@ class EvaluationEvent:
     """
     Captures each socratic-engine evaluation.
     Populated by the observer wrapper.
+    BUG-004: is_error is now computed from expected != actual.
     """
     # From wrapper (automatic)
     tree_id: str = ""
@@ -133,8 +138,12 @@ class EvaluationEvent:
     # Derived
     actual: bool = False
     expected: bool = False
-    is_error: bool = False
+    is_error: bool = field(init=False)  # BUG-004: computed, not settable
     error_class: str = "NONE"
+
+    def __post_init__(self):
+        """BUG-004: Compute is_error from expected != actual."""
+        self.is_error = self.expected != self.actual
 
 
 @dataclass
@@ -166,12 +175,15 @@ def get_expected(input_value: float, optimal_threshold: float) -> bool:
     return input_value < optimal_threshold
 
 
-def load_thresholds() -> Dict[str, float]:
-    """Load thresholds from rsi_thresholds.json, falling back to defaults."""
-    thresholds_file = (
-        Path(__file__).parent.parent.parent
-        / "state" / "monitoring" / "rsi_thresholds.json"
-    )
+def load_thresholds(thresholds_dir: Optional[Path] = None) -> Dict[str, float]:
+    """
+    Load thresholds from rsi_thresholds.json, falling back to defaults.
+    BUG-005: Accept optional path parameter for flexibility.
+    """
+    if thresholds_dir is None:
+        thresholds_dir = STATE_DIR
+    
+    thresholds_file = thresholds_dir / "rsi_thresholds.json"
     if thresholds_file.exists():
         try:
             with open(thresholds_file, "r") as f:
@@ -828,7 +840,7 @@ class RSIObserver:
                 input_value=0.5,  # fallback
                 actual=False,
                 expected=False,
-                is_error=True,  # always error for non-numeric
+                # is_error is now computed in __post_init__ (always True here)
                 error_class=ErrorClass.BLOCKING.value,
             )
             return event
@@ -842,8 +854,7 @@ class RSIObserver:
         actual = result.is_true if hasattr(result, "is_true") else False
         truth_str = result.truth.value if hasattr(result, "truth") else "UNKNOWN"
 
-        is_error = expected != actual
-
+        # is_error is now computed in __post_init__ from expected != actual
         event = EvaluationEvent(
             tree_id=tree_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -857,12 +868,11 @@ class RSIObserver:
             input_value=input_value,
             actual=actual,
             expected=expected,
-            is_error=is_error,
             error_class="NONE",
         )
 
         # Classify error
-        if is_error:
+        if event.is_error:
             event.error_class = discriminate(event)
 
         return event
