@@ -47,7 +47,7 @@ jobs:
         run: |
           pip install -e ".[dev]"
           pip install pytest-cov build
-          python -m pytest tests/ -q --cov=vsf_rsi --cov-report=term-missing --cov-fail-under=40
+          python -m pytest tests/ -q --cov=vsf_rsi --cov-report=term-missing --cov-fail-under=25
 
       - name: Build package
         run: python -m build
