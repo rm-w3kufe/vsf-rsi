@@ -182,7 +182,7 @@ class RSIAdvancedTreeGenerator:
     
     def _register_tree(self, name: str, filepath: Path, pattern: Dict) -> None:
         """Register tree in manifest."""
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         
         # Load existing manifest
         manifest = self._load_manifest()

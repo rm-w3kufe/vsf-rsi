@@ -68,7 +68,7 @@ class RSIForestGenerator:
                 }
                 for g in forest
             ],
-            "created": datetime.now(timezone.utc).isoformat()
+            "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         }
         
         with open(forest_dir / "forest.json", 'w') as f:
@@ -213,7 +213,7 @@ class RSIForestGenerator:
     
     def _register_forest(self, predicate_name: str, forest_dir: Path, metadata: Dict) -> None:
         """Register forest in manifest."""
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         
         # Load existing manifest
         manifest = self._load_manifest()

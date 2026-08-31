@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 _rsi_gen_failing_pred — Edge case predicate
-Generated: 2026-08-31T16:47:22Z
+Generated: 2026-08-31T19:05:20Z
 Purpose: Auto-generated from 4 errors on failing_pred
 """
 
@@ -42,6 +42,6 @@ PREDICATE = {
     "name": "_rsi_gen_failing_pred",
     "function": _rsi_gen_failing_pred,
     "type": "edge_case",
-    "generated": "2026-08-31T16:47:22Z",
+    "generated": "2026-08-31T19:05:20Z",
     "purpose": "Auto-generated from 4 errors on failing_pred"
 }

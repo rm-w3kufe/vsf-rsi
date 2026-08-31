@@ -227,7 +227,7 @@ PREDICATE = {{
     
     def _register_predicate(self, name: str, filepath: Path, pattern: Dict) -> None:
         """Register predicate in manifest."""
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         
         # Load existing manifest
         manifest = self._load_manifest()
