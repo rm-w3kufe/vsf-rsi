@@ -345,56 +345,122 @@ sequenceDiagram
 
 ---
 
-## Full tool integration hierarchy
+## Integration with agent systems
 
-vsf-rsi is part of a three-tool ecosystem. Here's how they work together:
+vsf-rsi is designed to be used by any AI agent or human operator. Here's how to integrate it:
 
+### Available tools
+
+| Tool | What it does | Install |
+|------|--------------|---------|
+| `socratic-engine` | Evaluates logical trees (decisions) | `pip install socratic-engine` |
+| `state-canon-mcp` | Provides ground truth about system state | Run MCP server |
+| `vsf-rsi` | Records and learns from patterns | `pip install vsf-rsi` |
+
+### Integration by platform
+
+#### OpenCode
+
+Add to your `opencode.json`:
+
+```json
+{
+  "mcp": {
+    "socratic-engine": {
+      "type": "local",
+      "command": ["python3", "/path/to/socratic_mcp_with_bridge.py"]
+    },
+    "state-canon": {
+      "type": "local",
+      "command": ["python3", "/path/to/mcp_server.py", "--instance", "/path/to/your_state.py"]
+    }
+  }
+}
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    AGENT (you)                              │
-├─────────────────────────────────────────────────────────────┤
-│  1. THINK   → socratic-engine evaluates decisions          │
-│  2. VERIFY  → state-canon provides ground truth            │
-│  3. LEARN   → vsf-rsi records patterns for future          │
-└─────────────────────────────────────────────────────────────┘
-        ↓                    ↓                    ↓
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│ socratic-     │  │ state-canon   │  │ vsf-rsi       │
-│ engine        │  │               │  │               │
-│ • evaluate()  │  │ • query()     │  │ • record()    │
-│ • diagnose()  │  │ • verify()    │  │ • match()     │
-│ • trees       │  │ • reconcile() │  │ • adapt()     │
-└───────────────┘  └───────────────┘  └───────────────┘
-```
 
-### Prerequisites
-
-| Tool | Version | Install | Purpose |
-|------|---------|---------|---------|
-| `socratic-engine` | ≥0.2.5 | `pip install socratic-engine` | Decision evaluation |
-| `state-canon-mcp` | latest | `git clone` + MCP server | Ground truth |
-| `vsf-rsi` | ≥0.2.0 | `pip install vsf-rsi` | Recursive improvement |
-
-### Quick integration
+Then use in your agent:
 
 ```python
-# 1. Evaluate with socratic-engine
+# Agent calls these via MCP tools
 from socratic_engine import SocraticEngine
+from vsf_rsi.scenario_memory import record
+
+# Evaluate a decision
+engine = SocraticEngine()
+result = engine.evaluate(your_tree, your_context)
+
+# Record what happened
+record({
+    "fault_signature": "what_went_wrong",
+    "decision": "what_you_did",
+    "outcome": "success_or_failure"
+})
+```
+
+#### Claude Code
+
+Add to your `CLAUDE.md`:
+
+```markdown
+## Tools available
+
+- `socratic_engine.evaluate(tree, context)` — evaluate decisions
+- `state_canon.query(domain, filter)` — get ground truth
+- `vsf_rsi.record(pattern)` — learn from outcomes
+```
+
+#### Perplexity / ChatGPT / Other agents
+
+Install the packages:
+
+```bash
+pip install socratic-engine vsf-rsi
+git clone https://github.com/rm-w3kufe/state-canon-mcp.git
+```
+
+Use in your code:
+
+```python
+from socratic_engine import SocraticEngine
+from vsf_rsi.scenario_memory import record
+
+# Evaluate
 engine = SocraticEngine()
 result = engine.evaluate(tree, context)
 
-# 2. Verify with state-canon
+# Learn
+record({"fault": "error", "fix": "solution", "outcome": "success"})
+```
+
+#### Human operator
+
+```bash
+# Install
+pip install socratic-engine vsf-rsi
+
+# Use CLI
+python -m socratic_engine evaluate tree.json --context ctx.json
+python -m vsf_rsi.scenario_memory record --fault "error" --fix "solution"
+```
+
+### Quick reference
+
+```python
+# 1. Evaluate a decision with socratic-engine
+from socratic_engine import SocraticEngine
+engine = SocraticEngine()
+result = engine.evaluate(tree, context)
+print(result.certified, result.explain)
+
+# 2. Get ground truth from state-canon
 from state_canon import StateCanon
 canon = StateCanon()
-truth = canon.query("services", {"name": "my-service"})
+state = canon.query("services", {"name": "api"})
 
-# 3. Learn with vsf-rsi
-from vsf_rsi.scenario_memory import record
-record({
-    "fault_signature": "my-error",
-    "decision": "my-fix",
-    "outcome": "success"
-})
+# 3. Record pattern with vsf-rsi
+from vsf_rsi.scenario_memory import record, match
+record({"fault_signature": "timeout", "decision": "increase", "outcome": "success"})
+matches = match({"fault_signature": "timeout"})
 ```
 
 ---
