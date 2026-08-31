@@ -22,6 +22,10 @@ from vsf_rsi.rsi_metrics import RSIMetrics
 PATTERNS_DIR = Path(__file__).parent.parent.parent / "state" / "monitoring"
 PATTERNS_FILE = PATTERNS_DIR / "rsi_patterns.json"
 
+# DEBT-005: Pattern decay configuration
+PATTERN_DECAY_RATE: float = 0.1  # Decay per day (10% per day)
+PATTERN_MIN_STRENGTH: float = 0.1  # Minimum strength before removal
+
 
 class RSIPatternDetector:
     """Detects patterns in classification data."""
@@ -223,16 +227,69 @@ class RSIPatternDetector:
         return None
     
     def _save_patterns(self, patterns: Dict) -> None:
-        """Save patterns to file."""
+        """Save patterns to file with timestamps for decay tracking."""
         # Load existing patterns
         existing_patterns = self._load_patterns()
+        
+        # DEBT-005: Add last_seen timestamp and strength to new patterns
+        now = datetime.now(timezone.utc).isoformat()
+        for pattern in patterns.get("patterns", []):
+            if "last_seen" not in pattern:
+                pattern["last_seen"] = now
+            if "strength" not in pattern:
+                pattern["strength"] = 1.0
         
         # Update with new patterns
         existing_patterns[patterns["predicate"]] = patterns
         
+        # DEBT-005: Apply decay to all patterns
+        existing_patterns = self._apply_decay(existing_patterns)
+        
         # Save
         with open(PATTERNS_FILE, 'w') as f:
             json.dump(existing_patterns, f, indent=2)
+    
+    def _apply_decay(self, patterns: Dict) -> Dict:
+        """
+        DEBT-005: Apply time-based decay to pattern strength.
+        Remove patterns with strength below threshold.
+        """
+        now = datetime.now(timezone.utc)
+        decayed_patterns = {}
+        
+        for predicate_name, predicate_patterns in patterns.items():
+            decayed_list = []
+            
+            for pattern in predicate_patterns.get("patterns", []):
+                # Calculate time since last_seen
+                last_seen_str = pattern.get("last_seen")
+                if last_seen_str:
+                    try:
+                        last_seen = datetime.fromisoformat(last_seen_str.replace('Z', '+00:00'))
+                        days_since = (now - last_seen).total_seconds() / 86400
+                    except (ValueError, TypeError):
+                        days_since = 0
+                else:
+                    days_since = 0
+                
+                # Apply exponential decay
+                current_strength = pattern.get("strength", 1.0)
+                new_strength = current_strength * (1 - PATTERN_DECAY_RATE) ** days_since
+                
+                # Update pattern
+                pattern["strength"] = new_strength
+                pattern["last_seen"] = now.isoformat()
+                
+                # Keep pattern if strength is above threshold
+                if new_strength >= PATTERN_MIN_STRENGTH:
+                    decayed_list.append(pattern)
+            
+            # Only keep predicate if it has patterns
+            if decayed_list:
+                predicate_patterns["patterns"] = decayed_list
+                decayed_patterns[predicate_name] = predicate_patterns
+        
+        return decayed_patterns
     
     def _load_patterns(self) -> Dict:
         """Load patterns from file."""

@@ -1,5 +1,19 @@
 # Changelog — vsf-rsi
 
+## [0.1.6] — 2026-08-30
+
+### Added
+- **DEBT-005**: Pattern decay for stale patterns
+- Added `PATTERN_DECAY_RATE` (0.1/day) and `PATTERN_MIN_STRENGTH` (0.1) constants
+- Patterns now have `last_seen` and `strength` fields
+- Exponential decay applied when saving patterns
+- Patterns with strength below threshold are automatically removed
+
+### Changed
+- Patterns now expire over time (10% decay per day)
+- Old patterns that haven't been seen recently are removed
+- Prevents stale patterns from influencing decisions
+
 ## [0.1.5] — 2026-08-30
 
 ### Added
