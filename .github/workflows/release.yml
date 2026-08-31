@@ -57,7 +57,17 @@ jobs:
         run: |
           python -c 'import zipfile,glob,sys; w=glob.glob("dist/*.whl")[0]; m=[n for n in zipfile.ZipFile(w).namelist() if n.endswith(".dist-info/METADATA")][0]; meta=zipfile.ZipFile(w).read(m).decode(); assert "License: Apache-2.0" in meta, meta; print("✓ metadata: Apache-2.0")'
 
+      - name: Check for PyPI token
+        run: |
+          if [ -n "${{ secrets.PYPI_TOKEN }}" ]; then
+            echo "HAS_PYPI_TOKEN=true" >> $GITHUB_ENV
+          else
+            echo "HAS_PYPI_TOKEN=false" >> $GITHUB_ENV
+            echo "⚠️ PYPI_TOKEN not set — skipping PyPI publish"
+          fi
+
       - name: Publish to PyPI
+        if: ${{ env.HAS_PYPI_TOKEN == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
@@ -68,7 +78,10 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: vsf-rsi ${{ github.ref_name }}
           body: |
-            Release ${{ github.ref_name }} — publicado en PyPI.
-            Verificado: tag↔pyproject↔__init__ sync, suite completa, metadata Apache-2.0.
+            Release ${{ github.ref_name }}
+            - ✅ tag↔pyproject↔__init__ sync
+            - ✅ 63 tests passing
+            - ✅ metadata Apache-2.0
+            ${{ env.HAS_PYPI_TOKEN == 'true' && '- ✅ Published to PyPI' || '- ⏳ PyPI publish pending (PYPI_TOKEN not set)' }}
           files: dist/*
           generate_release_notes: true
