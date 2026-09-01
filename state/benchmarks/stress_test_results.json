@@ -1,0 +1,305 @@
+{
+  "timestamp": "2026-09-01T06:54:31Z",
+  "breaking_points": {
+    "genome_expressiveness": {
+      "failure_mode": "threshold_cannot_represent_2d_boundary",
+      "parameter": "problem_type=unit_circle_2d",
+      "accuracy": 0.16666666666666666
+    },
+    "non_separable": {
+      "failure_mode": "non_separable_no_threshold_works",
+      "parameter": "checkerboard_xor=2d_xor",
+      "accuracy": 0.5
+    }
+  },
+  "results": [
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=1.0",
+      "ga_accuracy": 1.0,
+      "baseline": 0.75,
+      "improvement": 0.25,
+      "failure_mode": null,
+      "wall_time_s": 0.08
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.5",
+      "ga_accuracy": 1.0,
+      "baseline": 0.3333333333333333,
+      "improvement": 0.6666666666666667,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.3",
+      "ga_accuracy": 1.0,
+      "baseline": 0.75,
+      "improvement": 0.25,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.15",
+      "ga_accuracy": 1.0,
+      "baseline": 0.5833333333333334,
+      "improvement": 0.41666666666666663,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.08",
+      "ga_accuracy": 1.0,
+      "baseline": 0.5833333333333334,
+      "improvement": 0.41666666666666663,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.04",
+      "ga_accuracy": 1.0,
+      "baseline": 0.3333333333333333,
+      "improvement": 0.6666666666666667,
+      "failure_mode": null,
+      "wall_time_s": 0.06
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.02",
+      "ga_accuracy": 1.0,
+      "baseline": 0.25,
+      "improvement": 0.75,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "noise_tolerance",
+      "parameter": "signal_strength=0.01",
+      "ga_accuracy": 1.0,
+      "baseline": 0.4166666666666667,
+      "improvement": 0.5833333333333333,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=3",
+      "ga_accuracy": 0.8333333333333334,
+      "baseline": 0.5833333333333334,
+      "improvement": 0.25,
+      "failure_mode": null,
+      "wall_time_s": 0.11
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=5",
+      "ga_accuracy": 1.0,
+      "baseline": 0.3333333333333333,
+      "improvement": 0.6666666666666667,
+      "failure_mode": null,
+      "wall_time_s": 0.14
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=7",
+      "ga_accuracy": 0.9166666666666666,
+      "baseline": 0.5,
+      "improvement": 0.41666666666666663,
+      "failure_mode": null,
+      "wall_time_s": 0.08
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=10",
+      "ga_accuracy": 0.8333333333333334,
+      "baseline": 0.5,
+      "improvement": 0.33333333333333337,
+      "failure_mode": null,
+      "wall_time_s": 0.08
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=15",
+      "ga_accuracy": 0.9166666666666666,
+      "baseline": 0.3333333333333333,
+      "improvement": 0.5833333333333333,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=20",
+      "ga_accuracy": 0.9166666666666666,
+      "baseline": 0.5833333333333334,
+      "improvement": 0.33333333333333326,
+      "failure_mode": null,
+      "wall_time_s": 0.05
+    },
+    {
+      "dimension": "dimensionality",
+      "parameter": "xor_dims=30",
+      "ga_accuracy": 0.9166666666666666,
+      "baseline": 0.25,
+      "improvement": 0.6666666666666666,
+      "failure_mode": null,
+      "wall_time_s": 0.06
+    },
+    {
+      "dimension": "genome_expressiveness",
+      "parameter": "problem_type=unit_circle_2d",
+      "ga_accuracy": 0.16666666666666666,
+      "baseline": 0.5,
+      "improvement": -0.33333333333333337,
+      "failure_mode": "threshold_cannot_represent_2d_boundary",
+      "wall_time_s": 0.05
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=2",
+      "ga_accuracy": 1.0,
+      "baseline": 0.6666666666666666,
+      "improvement": 0.33333333333333337,
+      "failure_mode": null,
+      "wall_time_s": 0.02
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=3",
+      "ga_accuracy": 1.0,
+      "baseline": 0.75,
+      "improvement": 0.25,
+      "failure_mode": null,
+      "wall_time_s": 0.02
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=5",
+      "ga_accuracy": 1.0,
+      "baseline": 0.3333333333333333,
+      "improvement": 0.6666666666666667,
+      "failure_mode": null,
+      "wall_time_s": 0.02
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=8",
+      "ga_accuracy": 1.0,
+      "baseline": 0.5833333333333334,
+      "improvement": 0.41666666666666663,
+      "failure_mode": null,
+      "wall_time_s": 0.04
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=10",
+      "ga_accuracy": 1.0,
+      "baseline": 0.4166666666666667,
+      "improvement": 0.5833333333333333,
+      "failure_mode": null,
+      "wall_time_s": 0.06
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=15",
+      "ga_accuracy": 1.0,
+      "baseline": 0.3333333333333333,
+      "improvement": 0.6666666666666667,
+      "failure_mode": null,
+      "wall_time_s": 0.11
+    },
+    {
+      "dimension": "population_pressure",
+      "parameter": "population_size=20",
+      "ga_accuracy": 1.0,
+      "baseline": 0.5833333333333334,
+      "improvement": 0.41666666666666663,
+      "failure_mode": null,
+      "wall_time_s": 0.13
+    },
+    {
+      "dimension": "non_separable",
+      "parameter": "checkerboard_xor=2d_xor",
+      "ga_accuracy": 0.5,
+      "baseline": 0.5833333333333334,
+      "improvement": -0.08333333333333337,
+      "failure_mode": "non_separable_no_threshold_works",
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "adversarial_attack",
+      "parameter": "bimodal_distribution=bimodal_0.2_0.8",
+      "ga_accuracy": 1.0,
+      "baseline": 0.4166666666666667,
+      "improvement": 0.5833333333333333,
+      "failure_mode": null,
+      "wall_time_s": 0.07
+    },
+    {
+      "dimension": "adversarial_attack",
+      "parameter": "label_flipping=flip_at_boundary",
+      "ga_accuracy": 0.8333333333333334,
+      "baseline": 0.5,
+      "improvement": 0.33333333333333337,
+      "failure_mode": null,
+      "wall_time_s": 0.08
+    },
+    {
+      "dimension": "adversarial_attack",
+      "parameter": "distribution_shift=train_0.3_test_0.05",
+      "ga_accuracy": 1.0,
+      "baseline": 0.4166666666666667,
+      "improvement": 0.5833333333333333,
+      "failure_mode": null,
+      "wall_time_s": 0.06
+    },
+    {
+      "dimension": "scalability",
+      "parameter": "n_scenarios=20",
+      "ga_accuracy": 1.0,
+      "baseline": 0.75,
+      "improvement": 0.25,
+      "failure_mode": null,
+      "wall_time_s": 0.02
+    },
+    {
+      "dimension": "scalability",
+      "parameter": "n_scenarios=50",
+      "ga_accuracy": 1.0,
+      "baseline": 0.4,
+      "improvement": 0.6,
+      "failure_mode": null,
+      "wall_time_s": 0.03
+    },
+    {
+      "dimension": "scalability",
+      "parameter": "n_scenarios=100",
+      "ga_accuracy": 1.0,
+      "baseline": 0.6,
+      "improvement": 0.4,
+      "failure_mode": null,
+      "wall_time_s": 0.08
+    },
+    {
+      "dimension": "scalability",
+      "parameter": "n_scenarios=200",
+      "ga_accuracy": 1.0,
+      "baseline": 0.575,
+      "improvement": 0.42500000000000004,
+      "failure_mode": null,
+      "wall_time_s": 0.18
+    },
+    {
+      "dimension": "scalability",
+      "parameter": "n_scenarios=500",
+      "ga_accuracy": 1.0,
+      "baseline": 0.42,
+      "improvement": 0.5800000000000001,
+      "failure_mode": null,
+      "wall_time_s": 0.52
+    }
+  ]
+}

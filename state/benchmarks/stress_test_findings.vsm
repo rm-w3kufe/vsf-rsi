@@ -1,0 +1,109 @@
+⟦ stress_test_findings | FINDINGS-v1 | vsm-1.2.1 | 2026-09-01T07:30:00Z ⟧
+
+@vsm 1.2.1
+@status active
+
+= Stress Test Findings — vsf-rsi v0.2.6 =
+
+date: 2026-09-01
+scope: adversarial challenge + 7-dimension stress test
+method: 32 tests across noise, dimensionality, genome expressiveness, population, non-separable, adversarial attacks, scalability
+
+== BREAKING POINTS DISCOVERED ==
+
+=== BP-1: Genome Expressiveness (CRITICAL) ===
+dimension: genome_expressiveness
+problem: unit circle (x²+y² < 1)
+result: 16.7% accuracy — worse than random (50%)
+root_cause: genome only has threshold plus branch_count. The bridge genome_to_predicate maps to value > threshold — a 1D threshold cannot represent a 2D circular boundary.
+impact: ANY problem requiring non-linear, multi-dimensional decision boundaries fails.
+fix_required: genome must encode tree structure (nested conditions, boolean operators, feature selection)
+
+=== BP-2: Non-Separable Problems (CRITICAL) ===
+dimension: non_separable
+problem: checkerboard XOR (x>0 XOR y>0)
+result: 50% accuracy — equal to random
+root_cause: no single threshold on any feature can separate the XOR pattern. The genome has no way to combine multiple features.
+impact: any problem where the decision boundary is not axis-aligned fails.
+fix_required: genome must support multi-feature combinations (AND, OR, NOT)
+
+== AREAS OF ROBUSTNESS ==
+
+=== ROB-1: Noise Tolerance ===
+tested: SNR from 1.0 down to 0.01
+result: 100% accuracy at all levels
+note: the GA finds the optimal threshold even when signal is 1% of noise
+limitation: this works because the ground truth IS a threshold on SNR
+
+=== ROB-2: Dimensionality (XOR) ===
+tested: 3D to 30D
+result: 83-100% accuracy across all dimensions
+note: genome_to_predicate hardcodes XOR computation for the xor scenario type
+limitation: this is a bridge artifact, not genome capability
+
+=== ROB-3: Population Pressure ===
+tested: populations of 2 to 20
+result: 100% accuracy even with population=2
+note: elite preservation plus small population still finds optimum
+limitation: diversity loss is total (all thresholds converge), but it converges to the right answer
+
+=== ROB-4: Adversarial Attacks ===
+tested: bimodal, label flipping, distribution shift
+result: bimodal=100%, label flip=83.3%, distribution shift=100%
+note: label flipping at boundary causes 17% accuracy drop
+limitation: the GA can be confused by adversarial label noise at the decision boundary
+
+=== ROB-5: Scalability ===
+tested: 20 to 500 scenarios
+result: 100% accuracy, less than 1s for all sizes
+note: linear scaling, no performance issues
+
+== IMPROVEMENT CANDIDATES ==
+
+1. GENOME-V2: richer genome representation
+   - tree structure (nested if/else)
+   - boolean operators (AND, OR, NOT)
+   - feature selection (which context fields to use)
+   - multi-threshold (multiple decision boundaries)
+   priority: CRITICAL — without this, RSI can only solve threshold problems
+
+2. BRIDGE-REDESIGN: genome_to_predicate must be generic
+   - current: hardcoded per scenario type
+   - needed: genome encodes the full predicate logic
+   priority: HIGH — current bridge is a cheat code
+
+3. FITNESS-FUNCTION: adversarial fitness must be scenario-agnostic
+   - current: uses scenario_type to select evaluation logic
+   - needed: genome encodes how to evaluate, fitness measures accuracy
+   priority: HIGH — current fitness function knows too much
+
+4. CONVERGENCE-DETECTION: track diversity loss
+   - current: diversity_loss detected but not acted on
+   - needed: inject random genomes when diversity drops
+   priority: MEDIUM — would help with small populations
+
+5. MULTI-OBJECTIVE: fitness should balance accuracy plus complexity plus generalization
+   - current: accuracy-only fitness
+   - needed: Pareto frontier across multiple objectives
+   priority: MEDIUM — would reduce overfitting risk
+
+== KEY INSIGHT ==
+
+The GA is a competent optimizer — it finds the best threshold reliably.
+The bottleneck is NOT the optimization algorithm.
+The bottleneck is the GENOME REPRESENTATION.
+
+Current genome: threshold plus branch_count — can only solve 1D threshold problems.
+Needed genome: tree_structure plus operators plus features — can solve arbitrary boolean logic.
+
+This is the fundamental limitation: RSI can optimize parameters, but it cannot
+discover new strategies. The genome is a parameter tuner, not a strategy learner.
+
+== SESSION CONTEXT ==
+
+vsf-rsi version: 0.2.6
+socratic-engine version: 0.2.8
+tests: 785 passing
+stress tests: 32 (2 failures, 30 passes)
+
+⟦ /stress_test_findings ⟧
