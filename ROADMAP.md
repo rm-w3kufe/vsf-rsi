@@ -131,6 +131,13 @@
 - [x] 24 new tests for autonomous cycle (843 total)
 - [x] Bridge to L4: shadow mode = fitness eval, rollback = natural selection
 
+## ✅ Phase P2 — Dashboard (2026-09-01)
+- [x] Dashboard HTML with metrics visualization
+- [x] Summary: total evaluations, accuracy, active sources
+- [x] Per-source: evaluations, accuracy, thresholds, latency
+- [x] Auto-refresh every 30s
+- [x] Dark theme (GitHub-style)
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
