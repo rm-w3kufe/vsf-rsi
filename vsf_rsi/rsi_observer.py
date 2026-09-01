@@ -698,6 +698,7 @@ class RSIObserver:
         engine: Any,
         mode: str = None,
         metrics: Optional[RSIMetrics] = None,
+        autonomous_l3: bool = True,
     ):
         self.engine = engine
         self.mode = mode or os.environ.get("RSI_MODE", RSIMode.CAPABILITY.value)
@@ -706,6 +707,16 @@ class RSIObserver:
         self.events: List[EvaluationEvent] = []
         self.actions: List[RSIAction] = []
         self._has_scenario_memory = _HAS_SCENARIO_MEMORY
+
+        # L3 Autonomous Cycle (optional, enabled by default)
+        self._autonomous_l3 = None
+        if autonomous_l3:
+            try:
+                from .rsi_autonomous_l3 import AutonomousL3
+                self._autonomous_l3 = AutonomousL3(engine, self.metrics)
+                logger.info("L3 Autonomous Cycle enabled")
+            except Exception as e:
+                logger.warning(f"L3 Autonomous init failed (disabled): {e}")
 
         # Feature-detect enforce_limits support (socratic-engine >= 0.2.6)
         import inspect
@@ -869,6 +880,20 @@ class RSIObserver:
                     record_scenario(event, action)
                 except Exception as e:
                     logger.error(f"Error recording scenario: {e}")
+
+        # ── L3 Autonomous Cycle (if enabled) ────────────────────────
+        # Feed event to fault detector; if complex fault detected,
+        # triggers GA generation → shadow validation → activation
+        if self._autonomous_l3 is not None and event.is_error:
+            try:
+                cycle_result = self._autonomous_l3.process_event(event)
+                if cycle_result is not None:
+                    logger.info(f"L3 cycle {cycle_result.cycle_id}: "
+                               f"{cycle_result.status} "
+                               f"(generated={cycle_result.strategies_generated}, "
+                               f"passed={cycle_result.strategies_passed_shadow})")
+            except Exception as e:
+                logger.error(f"L3 autonomous cycle error: {e}")
 
         return result
 
