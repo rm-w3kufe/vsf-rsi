@@ -17,7 +17,9 @@ from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 
 # ── Configuration ────────────────────────────────────────────────────
-METRICS_DIR = Path(__file__).parent.parent.parent / "state" / "monitoring"
+# RSI_METRICS_DIR env var overrides default location
+_default_metrics_dir = Path(__file__).parent.parent.parent / "state" / "monitoring"
+METRICS_DIR = Path(os.environ.get("RSI_METRICS_DIR", str(_default_metrics_dir)))
 METRICS_FILE = METRICS_DIR / "rsi_metrics.json"
 HISTORY_FILE = METRICS_DIR / "rsi_metrics_history.jsonl"
 
