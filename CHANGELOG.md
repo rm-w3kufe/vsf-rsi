@@ -1,5 +1,17 @@
 # Changelog — vsf-rsi
 
+## [0.2.9] — 2026-09-01
+
+### Added
+- **L3 Autonomous Cycle** — "Estratega Autónomo" (rmw3-approved design)
+  - `rsi_fault_detector.py`: detects complex faults (≥3 BLOCKING errors in 10 evals)
+  - `rsi_shadow_mode.py`: validates strategies with 10 real evals before activation
+  - `rsi_rollback.py`: monitors activated strategies, auto-reverts if degrades
+  - `rsi_autonomous_l3.py`: orchestrator — detect → generate → shadow → activate
+  - Safety: AST validation → shadow mode → ≥10% threshold → auto-rollback
+  - Integrated with RSIObserver (autonomous_l3=True by default)
+  - 24 tests for the full autonomous cycle
+
 ## [0.2.8] — 2026-09-01
 
 ### Fixed

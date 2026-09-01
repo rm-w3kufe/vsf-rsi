@@ -121,6 +121,16 @@
 - [x] 34 security regression tests (including Claude's PoC)
 - [x] 819/819 tests pass
 
+## ✅ v0.2.9 — L3 Autonomous Cycle: "Estratega Autónomo" (2026-09-01)
+- [x] rsi_fault_detector.py: detects complex faults (≥3 BLOCKING in 10 evals)
+- [x] rsi_shadow_mode.py: validates strategies with 10 real evals before activation
+- [x] rsi_rollback.py: monitors activated strategies, auto-reverts if degrades
+- [x] rsi_autonomous_l3.py: orchestrator — detect → generate → shadow → activate
+- [x] Safety: AST validation → shadow mode → ≥10% threshold → auto-rollback
+- [x] Integrated with RSIObserver (autonomous_l3=True by default)
+- [x] 24 new tests for autonomous cycle (843 total)
+- [x] Bridge to L4: shadow mode = fitness eval, rollback = natural selection
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)

@@ -14,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.8 — Security fix (RCE eliminated). 819 tests. Structured condition trees replace exec()-based code generation.
+**Status:** v0.2.9 — L3 Autonomous Cycle. 843 tests. Fault detection → shadow validation → auto-rollback. System operates proactively without agent invocation.
 
 ---
 
