@@ -102,6 +102,14 @@
 - [x] Hard mode: GA maintains 100% even at SNR~0.03
 - [x] First measurable evidence that RSI produces genuine improvement
 
+## ✅ v0.2.7 — Genoma-V3: Enriched Representation
+- [x] rsi_genome_v3.py: variadic ops, feature chaining, sign normalization, parity
+- [x] Checkerboard XOR: 100% train, 100% test (SOLVED autonomously)
+- [x] 5D XOR: 80% test (improved from 30%), limit: high-arity parity
+- [x] Unit Circle: 100% (maintained)
+- [x] TabuMemory: avoids repeated failed feature combinations
+- [x] Key insight: representation richness > search budget
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
