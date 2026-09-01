@@ -1,5 +1,46 @@
 # Changelog — vsf-rsi
 
+## [0.2.5] — 2026-09-01
+
+### Added
+- **rsi_benchmark.py** — Benchmark framework: load scenarios, run benchmarks, save/load reports, compute improvement curves
+- **rsi_adversarial.py** — 4 adversarial scenario generators:
+  - Prisoner's Dilemma (cooperation detection under noise)
+  - La Parábola Silenciosa (non-linear logic, hidden order in chaos)
+  - XOR de Alta Dimensión (5-variable non-separable interactions)
+  - Señal en Ruido Blanco (weak signal detection, SNR < 1)
+- **validate_predicate_behavior()** — run predicates against {input, expected} test cases, reject below min_accuracy
+- **Context-aware predicate generation** — `_create_context_aware_predicate()` uses avg_threshold, avg_input, error_class
+- **CI fix** — install socratic-engine before running tests (RSI-CI-INSTALL-FIX)
+
+### Changed
+- **scenario_to_test_case()** — now passes through nested `context` field for rich predicates
+- **rsi_observer.py** — feature-detect `enforce_limits` via `inspect.signature` (backward-compatible with old socratic-engine)
+
+## [0.2.4] — 2026-09-01
+
+### Added
+- **validate_predicate_behavior()** — runs predicates against test cases, rejects below min_accuracy
+- 13 behavioral validation tests
+
+## [0.2.3] — 2026-09-01
+
+### Added
+- **_create_context_aware_predicate()** — uses avg_threshold/avg_input from pattern data
+- error_class-based strategy selection (false_positive, false_negative, unknown)
+- Safety margin calculation (10% around threshold)
+- 10 context-aware generation tests
+
+## [0.2.2] — 2026-09-01
+
+### Fixed
+- **rsi_observer.py** — feature-detect `enforce_limits` via `inspect.signature` for backward compatibility
+
+## [0.2.1] — 2026-08-31
+
+### Fixed
+- CI: install socratic-engine from cloned repo
+
 ## [0.2.0] — 2026-08-31
 
 ### Added

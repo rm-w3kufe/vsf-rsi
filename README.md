@@ -5,7 +5,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/rm-w3kufe/vsf-rsi)](https://github.com/rm-w3kufe/vsf-rsi/releases)
 [![PyPI](https://img.shields.io/pypi/v/vsf-rsi.svg)](https://pypi.org/project/vsf-rsi/)
-[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.5-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
+[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.8-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](https://github.com/rm-w3kufe/vsf-rsi/actions/workflows/ci.yml)
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
@@ -14,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.0 — Validation milestone achieved. 708 tests, 99% coverage.
+**Status:** v0.2.5 — Adversarial benchmark suite. 775 tests, context-aware predicates, behavioral validation, 4 scenario types (prisoner, parábola, XOR 5D, señal+ruido).
 
 ---
 
@@ -93,6 +93,8 @@ At its core, vsf-rsi provides:
 - **Tree Registry** (`rsi_tree_registry.py`) — manages predicate versions, prevents conflicts, tracks lineage
 - **Component Registry** (`rsi_component_registry.py`) — maps package components to their roles and dependencies
 - **Manifest Parser** (`rsi_manifest_parser.py`) — parses RSI manifest files for tree/predicate registration
+- **Benchmark** (`rsi_benchmark.py`) — load scenarios, run benchmarks, save/load reports, compute improvement curves
+- **Adversarial Scenarios** (`rsi_adversarial.py`) — 4 scenario generators: Prisoner's Dilemma, Parábola Silenciosa, XOR 5D, Señal en Ruido
 - **Demo** (`rsi_demo.py`) — runnable demo: generate → evaluate → evolve → measurable improvement
 - **Error Recovery** — system continues with degraded functionality on failures (never crashes)
 - **Logging** — structured logging via `logging.getLogger("vsf_rsi.observer")`
@@ -490,7 +492,7 @@ Key safety properties:
 - **[docs/rsi_forests.vsm](./docs/rsi_forests.vsm)** — generated forest populations (VSM notation).
 - **[docs/rsi_generated_predicates.vsm](./docs/rsi_generated_predicates.vsm)** — generated predicates (VSM notation).
 - **[docs/rsi_generated_trees.vsm](./docs/rsi_generated_trees.vsm)** — generated trees (VSM notation).
-- **[tests/](./tests/)** — 708 tests, 99% coverage.
+- **[tests/](./tests/)** — 775 tests.
 
 ---
 
@@ -498,20 +500,19 @@ Key safety properties:
 
 See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 
-### v0.2.0 — Validation (current) ✅
-- [x] 50 real evaluations processed
-- [x] 1 threshold adjustment applied
-- [x] 10 runs processed, 1 improvement via scenario_memory
-- [x] End-to-end test: generate → evaluate → evolve → measurable improvement
-- [x] Integration with state-canon-mcp
-- [x] All 16 rsi_*.py mapped to package components
-- [x] Coverage ≥90% (actual: 99%)
+### v0.2.5 — Adversarial Benchmarks ✅
+- [x] Benchmark framework: load scenarios, run benchmarks, save/load reports, improvement curves
+- [x] 4 adversarial scenario generators (prisoner, parábola, XOR 5D, señal+ruido)
+- [x] `validate_predicate_behavior()` — run predicates against test cases, reject below threshold
+- [x] Context-aware predicate generation (uses avg_threshold, avg_input, error_class)
+- [x] Feature-detect `enforce_limits` via `inspect.signature` (backward-compatible)
+- [x] CI fix: install socratic-engine before running tests
+- [x] 775 tests
 
 ### v0.3.0 — Production
 - [ ] Dashboard for observation
 - [ ] Cross-validation
 - [ ] Overfitting detection
-- [ ] 5 components generated, 3 approved, 2 measurable improvements
 - [ ] GA produces trees with fitness > 0.7 on real benchmark
 
 ---
