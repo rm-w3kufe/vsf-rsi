@@ -110,6 +110,17 @@
 - [x] TabuMemory: avoids repeated failed feature combinations
 - [x] Key insight: representation richness > search budget
 
+## ✅ v0.2.8 — Security Fix: RCE Elimination (2026-09-01)
+- [x] CRITICAL: eliminated exec()-based code injection in rsi_pipeline.py
+- [x] CRITICAL: eliminated exec()-based code injection in rsi_socratic_bridge.py
+- [x] Predicates now use structured condition trees (JSON) evaluated by socratic-engine
+- [x] Input sanitization: _sanitize_value(), _sanitize_fault_signature()
+- [x] enforce_limits=True added to all evaluation paths
+- [x] Persistence format v2: trees instead of code strings
+- [x] New built-in predicates: ctx_equals, ctx_contains
+- [x] 34 security regression tests (including Claude's PoC)
+- [x] 819/819 tests pass
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
