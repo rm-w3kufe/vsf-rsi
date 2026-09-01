@@ -22,6 +22,9 @@ jobs:
       - name: Clone socratic-engine (hard dependency)
         run: |
           git clone --depth 1 https://github.com/rm-w3kufe/socratic-engine.git ~/socratic-engine
+      - name: Install socratic-engine
+        run: |
+          pip install -e ~/socratic-engine
       - name: Install package (core)
         run: |
           python -m pip install --upgrade pip
@@ -46,6 +49,9 @@ jobs:
       - name: Clone socratic-engine
         run: |
           git clone --depth 1 https://github.com/rm-w3kufe/socratic-engine.git ~/socratic-engine
+      - name: Install socratic-engine
+        run: |
+          pip install -e ~/socratic-engine
       - name: Install package
         run: |
           python -m pip install --upgrade pip
