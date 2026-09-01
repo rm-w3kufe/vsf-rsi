@@ -95,6 +95,13 @@
 - [x] run_adversarial_benchmark() suite runner
 - [x] 21 benchmark tests + 21 adversarial tests = 42 new tests
 
+## ✅ v0.2.6 — Adversarial Challenge: First Evidence
+- [x] rsi_adversarial_harness.py: genome→predicate bridge, GA with adversarial fitness
+- [x] 5-fold cross-validation on all 4 scenario types
+- [x] Results: GA improves over random by +52.5% mean (prisoner 100%, parabola 98.8%, xor 95%, noise 100%)
+- [x] Hard mode: GA maintains 100% even at SNR~0.03
+- [x] First measurable evidence that RSI produces genuine improvement
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
