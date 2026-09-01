@@ -5,7 +5,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 [![GitHub Release](https://img.shields.io/github/v/release/rm-w3kufe/vsf-rsi)](https://github.com/rm-w3kufe/vsf-rsi/releases)
 [![PyPI](https://img.shields.io/pypi/v/vsf-rsi.svg)](https://pypi.org/project/vsf-rsi/)
-[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.8-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
+[![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.9-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
 [![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](https://github.com/rm-w3kufe/vsf-rsi/actions/workflows/ci.yml)
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
