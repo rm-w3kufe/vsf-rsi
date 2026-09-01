@@ -81,6 +81,13 @@
 - [x] Fallback to static templates when pattern data unavailable
 - [x] 10 tests in tests/test_rsi_predicate_semantic.py
 
+## ✅ v0.2.4 — Behavioral Validation
+- [x] validate_predicate_behavior(): runs predicate against test cases
+- [x] Rejects predicates with accuracy below min_accuracy threshold
+- [x] Normalizes PredicateResult → bool via is_true
+- [x] Failure reporting: input, expected, got, index
+- [x] 13 tests in tests/test_rsi_predicate_behavioral.py
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)

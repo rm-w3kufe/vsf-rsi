@@ -87,6 +87,89 @@ class RSIPredicateGenerator:
             return {"valid": False, "error": f"Syntax error: {e}"}
         except Exception as e:
             return {"valid": False, "error": f"Validation error: {e}"}
+
+    def validate_predicate_behavior(
+        self,
+        predicate_name: str,
+        predicate_func: callable,
+        test_cases: Optional[List[Dict]] = None,
+        min_accuracy: float = 0.5,
+    ) -> Dict:
+        """
+        L3-BEHAVIORAL: Validate a predicate by running it against test cases.
+
+        A predicate that parses correctly but produces wrong results is rejected.
+
+        Args:
+            predicate_name: Name of the predicate (for reporting)
+            predicate_func: The actual callable to test
+            test_cases: List of {'input': dict, 'expected': bool} dicts.
+                       If None, uses empty list (no test = pass with warning).
+            min_accuracy: Minimum accuracy threshold (0.0-1.0).
+
+        Returns:
+            Dict with:
+                - 'valid': bool — predicate passes behavioral validation
+                - 'accuracy': float — fraction of test cases passed
+                - 'passed': int — number of passed test cases
+                - 'total': int — total test cases
+                - 'failures': list of {input, expected, got} for failed cases
+                - 'warning': str or None — non-blocking concerns
+        """
+        if not test_cases:
+            return {
+                "valid": True,
+                "accuracy": 0.0,
+                "passed": 0,
+                "total": 0,
+                "failures": [],
+                "warning": "No test cases provided — behavioral validation skipped",
+            }
+
+        passed = 0
+        failures = []
+
+        for i, tc in enumerate(test_cases):
+            inp = tc.get("input", {})
+            expected = tc.get("expected")
+
+            try:
+                got = predicate_func(inp)
+                # Normalize: PredicateResult → bool
+                if hasattr(got, "is_true"):
+                    got = got.is_true
+                else:
+                    got = bool(got)
+
+                if got == expected:
+                    passed += 1
+                else:
+                    failures.append({
+                        "index": i,
+                        "input": inp,
+                        "expected": expected,
+                        "got": got,
+                    })
+            except Exception as e:
+                failures.append({
+                    "index": i,
+                    "input": inp,
+                    "expected": expected,
+                    "got": f"EXCEPTION: {e}",
+                })
+
+        total = len(test_cases)
+        accuracy = passed / total if total > 0 else 0.0
+        valid = accuracy >= min_accuracy
+
+        return {
+            "valid": valid,
+            "accuracy": accuracy,
+            "passed": passed,
+            "total": total,
+            "failures": failures,
+            "warning": None if valid else f"Accuracy {accuracy:.1%} < {min_accuracy:.1%} threshold",
+        }
     
     def _create_predicate_content(self, pattern: Dict, base_predicate: Optional[str]) -> str:
         """Create predicate content based on pattern."""
