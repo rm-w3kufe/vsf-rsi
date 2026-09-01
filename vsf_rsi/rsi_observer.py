@@ -742,7 +742,7 @@ class RSIObserver:
 
         # BUG-001: Try-evaluate with type validation fallback
         try:
-            result = self.engine.evaluate(tree, ctx)
+            result = self.engine.evaluate(tree, ctx, enforce_limits=True)
         except TypeError as e:
             # Predicate crashed on non-numeric input
             logger.warning(f"Predicate crashed on non-numeric input: {e}")
@@ -847,7 +847,7 @@ class RSIObserver:
                 if action.action_type == "adjust_threshold" and action.autonomous:
                     # BUG-001: Wrap re-evaluation in try-except too
                     try:
-                        result = self.engine.evaluate(tree, ctx)
+                        result = self.engine.evaluate(tree, ctx, enforce_limits=True)
                     except TypeError:
                         # Re-evaluation also crashed — keep original result
                         logger.warning("Re-evaluation after threshold adjustment failed")

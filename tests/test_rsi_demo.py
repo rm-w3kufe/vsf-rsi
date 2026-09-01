@@ -1,58 +1,12 @@
 """
-Tests for rsi_demo.py — Print helper functions only.
-
-The run_complete_demo / main functions import from scripts.vsl.classifier.rsi_*
-which may not exist in the test environment, so we only test the pure
-print helpers which are self-contained.
+Tests for rsi_demo.py — Print helper functions.
 """
 
 import io
 import sys
-import types
 from unittest import TestCase, main
 
-
-def _import_print_helpers():
-    """Import only the print helpers from rsi_demo without triggering
-    the scripts.vsl.classifier imports at module level."""
-    # Create a stub for the missing scripts.vsl.classifier package
-    stub = types.ModuleType("scripts")
-    stub.vsl = types.ModuleType("scripts.vsl")
-    stub.vsl.classifier = types.ModuleType("scripts.vsl.classifier")
-    # Provide minimal stubs for every rsi_* import the demo makes
-    for name in (
-        "rsi_metrics", "rsi_feedback_loop", "rsi_gap_detector",
-        "rsi_tree_generator", "rsi_pattern_detector",
-        "rsi_predicate_generator", "rsi_advanced_tree_generator",
-        "rsi_genetic_algorithm", "rsi_forest_generator",
-    ):
-        mod = types.ModuleType(f"scripts.vsl.classifier.{name}")
-        mod.RSIMetrics = type("RSIMetrics", (), {"__init__": lambda s: None})
-        mod.RSIFeedbackLoop = type("RSIFeedbackLoop", (), {"__init__": lambda s: None})
-        mod.RSIGapDetector = type("RSIGapDetector", (), {"__init__": lambda s: None})
-        mod.RSITreeGenerator = type("RSITreeGenerator", (), {"__init__": lambda s: None})
-        mod.RSIPatternDetector = type("RSIPatternDetector", (), {"__init__": lambda s: None})
-        mod.RSIPredicateGenerator = type("RSIPredicateGenerator", (), {"__init__": lambda s: None})
-        mod.RSIAdvancedTreeGenerator = type("RSIAdvancedTreeGenerator", (), {"__init__": lambda s: None})
-        mod.RSIGeneticAlgorithm = type("RSIGeneticAlgorithm", (), {"__init__": lambda s: None})
-        mod.RSIForestGenerator = type("RSIForestGenerator", (), {"__init__": lambda s: None})
-        setattr(stub.vsl.classifier, name, mod)
-    sys.modules["scripts"] = stub
-    sys.modules["scripts.vsl"] = stub.vsl
-    sys.modules["scripts.vsl.classifier"] = stub.vsl.classifier
-    for name in (
-        "rsi_metrics", "rsi_feedback_loop", "rsi_gap_detector",
-        "rsi_tree_generator", "rsi_pattern_detector",
-        "rsi_predicate_generator", "rsi_advanced_tree_generator",
-        "rsi_genetic_algorithm", "rsi_forest_generator",
-    ):
-        full = f"scripts.vsl.classifier.{name}"
-        sys.modules[full] = getattr(stub.vsl.classifier, name)
-    from vsf_rsi.rsi_demo import print_header, print_step, print_result, print_footer
-    return print_header, print_step, print_result, print_footer
-
-
-print_header, print_step, print_result, print_footer = _import_print_helpers()
+from vsf_rsi.rsi_demo import print_header, print_step, print_result, print_footer
 
 
 class TestPrintHeader(TestCase):

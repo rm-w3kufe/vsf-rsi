@@ -21,36 +21,8 @@ from vsf_rsi.rsi_genetic_algorithm import RSIGeneticAlgorithm
 from vsf_rsi.rsi_forest_generator import RSIForestGenerator
 
 
-def _ensure_demo_mocks():
-    """Ensure all scripts.* mocks are in sys.modules with real classes."""
-    pairs = [
-        ("scripts.vsl.classifier.rsi_metrics", "RSIMetrics", RSIMetrics),
-        ("scripts.vsl.classifier.rsi_feedback_loop", "RSIFeedbackLoop", RSIFeedbackLoop),
-        ("scripts.vsl.classifier.rsi_gap_detector", "RSIGapDetector", RSIGapDetector),
-        ("scripts.vsl.classifier.rsi_tree_generator", "RSITreeGenerator", RSITreeGenerator),
-        ("scripts.vsl.classifier.rsi_pattern_detector", "RSIPatternDetector", RSIPatternDetector),
-        ("scripts.vsl.classifier.rsi_predicate_generator", "RSIPredicateGenerator", RSIPredicateGenerator),
-        ("scripts.vsl.classifier.rsi_advanced_tree_generator", "RSIAdvancedTreeGenerator", RSIAdvancedTreeGenerator),
-        ("scripts.vsl.classifier.rsi_genetic_algorithm", "RSIGeneticAlgorithm", RSIGeneticAlgorithm),
-        ("scripts.vsl.classifier.rsi_forest_generator", "RSIForestGenerator", RSIForestGenerator),
-    ]
-    for pkg in ["scripts", "scripts.vsl", "scripts.vsl.classifier"]:
-        if pkg not in sys.modules:
-            m = mock.MagicMock()
-            m.__path__ = [pkg.replace(".", "/")]
-            sys.modules[pkg] = m
-        elif not hasattr(sys.modules[pkg], "__path__"):
-            sys.modules[pkg].__path__ = [pkg.replace(".", "/")]
-
-    for mod_name, cls_name, real_cls in pairs:
-        if mod_name not in sys.modules:
-            sys.modules[mod_name] = mock.MagicMock()
-        setattr(sys.modules[mod_name], cls_name, real_cls)
-
-
 def _get_demo_module():
     """Get a freshly-imported rsi_demo module."""
-    _ensure_demo_mocks()
     # Remove cached module so we get a fresh import
     sys.modules.pop("vsf_rsi.rsi_demo", None)
     import vsf_rsi.rsi_demo as demo_mod

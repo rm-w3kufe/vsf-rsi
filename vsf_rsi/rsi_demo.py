@@ -17,15 +17,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
-from scripts.vsl.classifier.rsi_metrics import RSIMetrics
-from scripts.vsl.classifier.rsi_feedback_loop import RSIFeedbackLoop
-from scripts.vsl.classifier.rsi_gap_detector import RSIGapDetector
-from scripts.vsl.classifier.rsi_tree_generator import RSITreeGenerator
-from scripts.vsl.classifier.rsi_pattern_detector import RSIPatternDetector
-from scripts.vsl.classifier.rsi_predicate_generator import RSIPredicateGenerator
-from scripts.vsl.classifier.rsi_advanced_tree_generator import RSIAdvancedTreeGenerator
-from scripts.vsl.classifier.rsi_genetic_algorithm import RSIGeneticAlgorithm
-from scripts.vsl.classifier.rsi_forest_generator import RSIForestGenerator
+from vsf_rsi.rsi_metrics import RSIMetrics
+from vsf_rsi.rsi_feedback_loop import RSIFeedbackLoop
+from vsf_rsi.rsi_gap_detector import RSIGapDetector
+from vsf_rsi.rsi_tree_generator import RSITreeGenerator
+from vsf_rsi.rsi_pattern_detector import RSIPatternDetector
+from vsf_rsi.rsi_predicate_generator import RSIPredicateGenerator
+from vsf_rsi.rsi_advanced_tree_generator import RSIAdvancedTreeGenerator
+from vsf_rsi.rsi_genetic_algorithm import RSIGeneticAlgorithm
+from vsf_rsi.rsi_forest_generator import RSIForestGenerator
 
 
 def print_header(title: str):

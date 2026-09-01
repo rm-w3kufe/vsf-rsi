@@ -55,7 +55,7 @@ def _make_engine(blocking_threshold=0.5):
     engine = MagicMock()
     engine.predicates = {}
 
-    def evaluate(tree, ctx):
+    def evaluate(tree, ctx, **kwargs):
         val = ctx.get("input_value", 0.0)
         pred = tree.get("predicate", "test") if isinstance(tree, dict) else "test"
         threshold = ctx.get("_rsi_thresholds", {}).get(pred, blocking_threshold)
