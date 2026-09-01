@@ -50,7 +50,7 @@ class TestRSIObserverRealEngine(unittest.TestCase):
             )
 
         @self.engine.register("test_always_true")
-        def test_always_true(ctx, **kw):
+        def test_always_true(**kw):
             return PredicateResult(
                 truth=Truth.TRUE,
                 certified=True,
@@ -110,7 +110,7 @@ class TestRSIObserverRealEngine(unittest.TestCase):
 
         tree = {
             "op": "AND",
-            "args": [
+            "children": [
                 {"predicate": "test_high", "args": ["$ctx", 0.5]},
                 {"predicate": "test_always_true", "args": []},
             ]
