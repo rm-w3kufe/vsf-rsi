@@ -69,6 +69,10 @@
 - [x] rsi_socratic_bridge.py: register predicates + trees in socratic-engine
 - [x] Bash failure capture added to tool-integration plugin
 - [x] register_rsi_tree_from_file() for generated tree loading
+- [x] rsi_pipeline.py: full evolution cycle orchestrator
+- [x] enforce_limits=True in RSIObserver for auto-generated trees
+- [x] Fixed broken imports in rsi_demo.py (scripts.vsl.classifier → vsf_rsi)
+- [x] Removed ~80 lines of test scaffolding (no longer needed)
 
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
