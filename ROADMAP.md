@@ -63,7 +63,7 @@
 - [x] All 16 rsi_*.py mapped to package components (G4)
 - [x] Coverage ≥90%
 
-## ✅ v0.2.1 — Integration Bridge
+## ✅ v0.2.2 — Integration Bridge + Hardening
 - [x] adapt(): update pattern quality after execution
 - [x] learn(): detect repeated patterns (≥N occurrences)
 - [x] rsi_socratic_bridge.py: register predicates + trees in socratic-engine
