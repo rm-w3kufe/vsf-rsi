@@ -88,6 +88,13 @@
 - [x] Failure reporting: input, expected, got, index
 - [x] 13 tests in tests/test_rsi_predicate_behavioral.py
 
+## ✅ v0.2.5 — Adversarial Benchmark Suite
+- [x] rsi_benchmark.py: load scenarios, run benchmarks, save/load reports, improvement curve
+- [x] rsi_adversarial.py: 4 scenario generators (prisoner, parabola, xor, noise)
+- [x] Baseline predicates for comparison (always_true, random, snr_threshold)
+- [x] run_adversarial_benchmark() suite runner
+- [x] 21 benchmark tests + 21 adversarial tests = 42 new tests
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
