@@ -6,7 +6,7 @@
 [![GitHub Release](https://img.shields.io/github/v/release/rm-w3kufe/vsf-rsi)](https://github.com/rm-w3kufe/vsf-rsi/releases)
 [![PyPI](https://img.shields.io/pypi/v/vsf-rsi.svg)](https://pypi.org/project/vsf-rsi/)
 [![Socratic Engine](https://img.shields.io/badge/socratic--engine-%3E%3D0.2.5-brightgreen.svg)](https://pypi.org/project/socratic-engine/)
-[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)]()
+[![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen.svg)](https://github.com/rm-w3kufe/vsf-rsi/actions/workflows/ci.yml)
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
 
@@ -443,27 +443,7 @@ python -m socratic_engine evaluate tree.json --context ctx.json
 python -m vsf_rsi.scenario_memory record --fault "error" --fix "solution"
 ```
 
-### Full pattern with other tools
-
-```python
-# 1. Get ground truth from state-canon
-from state_canon import StateCanon
-canon = StateCanon()
-state = canon.query("services", {"name": "api"})
-
-# 2. Evaluate decision with socratic-engine
-from socratic_engine import SocraticEngine
-engine = SocraticEngine()
-result = engine.evaluate(tree, {"state": state})
-print(result.certified, result.explain)
-
-# 3. Record pattern with vsf-rsi
-from vsf_rsi.scenario_memory import record, match
-record({"fault_signature": "timeout", "decision": "increase", "outcome": "success"})
-matches = match({"fault_signature": "timeout"})
-```
-
-For the full integration guide, see [Integration with agent systems](#integration-with-agent-systems).
+For the full three-tool integration pattern, see [state-canon-mcp README](https://github.com/rm-w3kufe/state-canon-mcp#full-pattern-with-other-tools).
 
 ---
 
@@ -500,6 +480,17 @@ Key safety properties:
 - **A5**: Autonomy ceiling — L1 is autonomous, L2+ requires validation
 - **R17**: Destructive actions always require explicit human consent
 - **R4**: Trust requires independent check — RSI cannot self-certify
+
+---
+
+## Going deeper
+
+- **[ROADMAP.md](./ROADMAP.md)** — version history and future plans.
+- **[CHANGELOG.md](./CHANGELOG.md)** — what changed, by version.
+- **[docs/rsi_forests.vsm](./docs/rsi_forests.vsm)** — generated forest populations (VSM notation).
+- **[docs/rsi_generated_predicates.vsm](./docs/rsi_generated_predicates.vsm)** — generated predicates (VSM notation).
+- **[docs/rsi_generated_trees.vsm](./docs/rsi_generated_trees.vsm)** — generated trees (VSM notation).
+- **[tests/](./tests/)** — 708 tests, 99% coverage.
 
 ---
 
