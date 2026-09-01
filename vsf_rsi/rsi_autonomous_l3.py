@@ -230,49 +230,153 @@ class AutonomousL3:
         return self.run_cycle(fault)
 
     def _generate_strategies(self, fault: Any) -> List[Any]:
-        """Generate candidate strategies for a fault.
+        """Generate candidate strategies for a fault using Genome V3.
 
-        Uses a simplified GA approach:
-          1. Load existing trees for this source
-          2. Apply mutations (swap operators, adjust thresholds)
-          3. Generate random variations
-          4. Validate each with AST parse
+        Uses the enriched genome representation:
+          1. Random genome creation with variadic operations
+          2. Feature chaining (d1 can reference d0)
+          3. Crossover between genomes
+          4. Mutation (swap operations, adjust thresholds)
+          5. Convert to socratic tree for evaluation
 
         Returns:
             List of StrategyCandidate objects
         """
         from .rsi_shadow_mode import StrategyCandidate
-        from .rsi_fault_detector import FaultSignature
+        from .rsi_genome_v3 import (
+            create_random_genome_v3, crossover_v3, mutate_v3,
+        )
 
         candidates = []
         source = fault.source
 
-        # Strategy 1: Simple threshold adjustment
-        for delta in [-0.1, -0.05, 0.05, 0.1]:
-            tree = self._build_threshold_tree(source, delta)
-            if tree:
-                candidates.append(StrategyCandidate(
-                    strategy_id=f"thresh-{source}-{delta:+.2f}-{uuid.uuid4().hex[:4]}",
-                    fault_id=fault.fault_id,
-                    tree=tree,
-                    source=source,
-                    description=f"Threshold adjustment: {delta:+.2f}",
-                ))
+        # Available features based on fault source
+        features = ["input_value", "threshold", "latency_ms"]
+        if "pred" in source:
+            features.append("prediction")
 
-        # Strategy 2: Operator swap
-        for op in ["AND", "OR", "NOT"]:
-            tree = self._build_operator_tree(source, op)
-            if tree:
-                candidates.append(StrategyCandidate(
-                    strategy_id=f"op-{source}-{op}-{uuid.uuid4().hex[:4]}",
-                    fault_id=fault.fault_id,
-                    tree=tree,
-                    source=source,
-                    description=f"Operator: {op}",
-                ))
+        # Generate random genomes
+        for i in range(STRATEGIES_PER_FAULT):
+            try:
+                # Create random genome
+                genome = create_random_genome_v3(
+                    genome_id=f"l3-{source}-{i}-{uuid.uuid4().hex[:4]}",
+                    available_features=features,
+                    n_derived=3,
+                    tree_depth=2,
+                )
+
+                # Convert genome to socratic tree
+                tree = self._genome_to_tree(genome)
+                if tree:
+                    candidates.append(StrategyCandidate(
+                        strategy_id=genome.id,
+                        fault_id=fault.fault_id,
+                        tree=tree,
+                        source=source,
+                        description=f"Genome V3: {genome.id}",
+                    ))
+            except Exception as e:
+                logger.debug(f"Genome generation failed: {e}")
+                continue
+
+        # Add some crossover combinations
+        if len(candidates) >= 2:
+            for i in range(min(2, len(candidates) - 1)):
+                try:
+                    g1 = candidates[i]
+                    g2 = candidates[i + 1]
+                    # Simple tree crossover: swap children
+                    tree = self._crossover_trees(g1.tree, g2.tree)
+                    if tree:
+                        candidates.append(StrategyCandidate(
+                            strategy_id=f"cross-{uuid.uuid4().hex[:8]}",
+                            fault_id=fault.fault_id,
+                            tree=tree,
+                            source=source,
+                            description=f"Crossover: {g1.strategy_id} + {g2.strategy_id}",
+                        ))
+                except Exception as e:
+                    logger.debug(f"Crossover failed: {e}")
 
         # Limit to STRATEGIES_PER_FAULT
         return candidates[:STRATEGIES_PER_FAULT]
+
+    def _genome_to_tree(self, genome: Any) -> Optional[Dict[str, Any]]:
+        """Convert a GenomeV3 to a socratic tree for evaluation.
+
+        The genome's features are converted to predicate nodes,
+        and the tree structure uses AND/OR/NOT operators.
+        Each feature becomes a predicate node with its operation.
+        """
+        if not genome.features:
+            return None
+
+        # Build tree from genome features
+        children = []
+        for feature in genome.features[:3]:  # Limit to 3 features
+            op = feature.op if hasattr(feature, 'op') else 'ctx_has'
+            args = feature.args if hasattr(feature, 'args') else []
+
+            # Map genome operations to socratic predicates
+            # Use ctx_has with the first arg as field
+            field_name = args[0] if args else 'input_value'
+
+            # For variadic operations, create nested AND structure
+            if op in ['add', 'sub', 'mul', 'max', 'min', 'mean']:
+                # Create predicate for each input
+                pred_children = []
+                for arg in args[:3]:  # Limit to 3 args
+                    pred_children.append({
+                        "op": "ctx_has",
+                        "kwargs": {"field": arg}
+                    })
+                if len(pred_children) == 1:
+                    children.append(pred_children[0])
+                elif len(pred_children) > 1:
+                    children.append({
+                        "op": "AND",
+                        "children": pred_children
+                    })
+            elif op in ['sign', 'parity', 'count_neg', 'xor2']:
+                # Special operations → use the first input
+                children.append({
+                    "op": "ctx_has",
+                    "kwargs": {"field": field_name}
+                })
+            else:
+                # Default: ctx_has
+                children.append({
+                    "op": "ctx_has",
+                    "kwargs": {"field": field_name}
+                })
+
+        if not children:
+            return None
+
+        # Combine with AND operator
+        if len(children) == 1:
+            return children[0]
+        return {
+            "op": "AND",
+            "children": children
+        }
+
+    def _crossover_trees(self, tree1: Dict, tree2: Dict) -> Optional[Dict[str, Any]]:
+        """Simple crossover: swap children between two trees."""
+        if not tree1 or not tree2:
+            return None
+
+        if tree1.get("op") == tree2.get("op") == "AND":
+            children1 = tree1.get("children", [])
+            children2 = tree2.get("children", [])
+            if children1 and children2:
+                # Take first child from tree1, rest from tree2
+                new_children = [children1[0]] + children2[1:]
+                return {"op": "AND", "children": new_children}
+
+        # Different operators — return tree1 as-is
+        return tree1
 
     def _build_test_cases(self, fault: Any) -> List[Dict[str, Any]]:
         """Build test cases from fault's sample events."""

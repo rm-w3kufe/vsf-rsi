@@ -9,29 +9,68 @@
         "type": "decision",
         "branches": [
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
           },
           {
             "condition": "ctx_has($ctx, 'active')",
-            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
-          },
-          {
-            "condition": "ctx_has($ctx, 'active')",
-            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.709664748060917,
-        "complexity": 2
+        "threshold": 0.7526175820134164,
+        "complexity": 3
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951330+00:00"
+      "created": "2026-09-01T19:19:43.198841+00:00"
     },
     {
       "id": "evo_pred_gen0_1",
       "name": "evo_pred_tree_1",
+      "genes": {
+        "type": "decision",
+        "branches": [
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          }
+        ],
+        "threshold": 0.8520847036565284,
+        "complexity": 3
+      },
+      "fitness": 0.0,
+      "generation": 0,
+      "parent_ids": [],
+      "created": "2026-09-01T19:19:43.198895+00:00"
+    },
+    {
+      "id": "evo_pred_gen0_2",
+      "name": "evo_pred_tree_2",
       "genes": {
         "type": "decision",
         "branches": [
@@ -41,47 +80,28 @@
           },
           {
             "condition": "ctx_equals($ctx, 'value', 0.9)",
-            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
-          },
-          {
-            "condition": "ctx_has($ctx, 'active')",
-            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
-          }
-        ],
-        "threshold": 0.6558145664029811,
-        "complexity": 2
-      },
-      "fitness": 0.0,
-      "generation": 0,
-      "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951368+00:00"
-    },
-    {
-      "id": "evo_pred_gen0_2",
-      "name": "evo_pred_tree_2",
-      "genes": {
-        "type": "decision",
-        "branches": [
-          {
-            "condition": "ctx_has($ctx, 'active')",
             "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           },
           {
-            "condition": "TRUE",
-            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_has($ctx, 'active')",
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.5936117042099708,
-        "complexity": 1
+        "threshold": 0.6744308004085324,
+        "complexity": 3
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951382+00:00"
+      "created": "2026-09-01T19:19:43.198925+00:00"
     },
     {
       "id": "evo_pred_gen0_3",
@@ -91,24 +111,24 @@
         "branches": [
           {
             "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
             "condition": "ctx_equals($ctx, 'value', 0.7)",
-            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
-          },
-          {
-            "condition": "TRUE",
             "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.7450026991564919,
-        "complexity": 5
+        "threshold": 0.8044713101417442,
+        "complexity": 4
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951396+00:00"
+      "created": "2026-09-01T19:19:43.198949+00:00"
     },
     {
       "id": "evo_pred_gen0_4",
@@ -117,29 +137,33 @@
         "type": "decision",
         "branches": [
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
             "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
           },
           {
             "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "TRUE",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
-            "condition": "TRUE",
-            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
-          },
-          {
-            "condition": "TRUE",
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.6960808254920012,
-        "complexity": 4
+        "threshold": 0.5524073365213282,
+        "complexity": 1
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951409+00:00"
+      "created": "2026-09-01T19:19:43.198976+00:00"
     },
     {
       "id": "evo_pred_gen0_5",
@@ -148,25 +172,33 @@
         "type": "decision",
         "branches": [
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
-            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "condition": "ctx_has($ctx, 'active')",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
             "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.6399208933230476,
-        "complexity": 3
+        "threshold": 0.7107358369959084,
+        "complexity": 5
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951421+00:00"
+      "created": "2026-09-01T19:19:43.199003+00:00"
     },
     {
       "id": "evo_pred_gen0_6",
@@ -175,21 +207,29 @@
         "type": "decision",
         "branches": [
           {
-            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
           },
           {
             "condition": "ctx_has($ctx, 'active')",
             "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.8882703173417983,
-        "complexity": 4
+        "threshold": 0.5971044730379762,
+        "complexity": 5
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951432+00:00"
+      "created": "2026-09-01T19:19:43.199161+00:00"
     },
     {
       "id": "evo_pred_gen0_7",
@@ -198,25 +238,33 @@
         "type": "decision",
         "branches": [
           {
-            "condition": "ctx_has($ctx, 'active')",
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
             "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
-            "condition": "TRUE",
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_equals($ctx, 'value', 0.9)",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.8179160634250348,
-        "complexity": 3
+        "threshold": 0.6249878303550871,
+        "complexity": 1
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951444+00:00"
+      "created": "2026-09-01T19:19:43.199191+00:00"
     },
     {
       "id": "evo_pred_gen0_8",
@@ -225,15 +273,11 @@
         "type": "decision",
         "branches": [
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
-            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
-          },
-          {
             "condition": "ctx_equals($ctx, 'value', 0.5)",
             "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_equals($ctx, 'value', 0.7)",
+            "condition": "TRUE",
             "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
           },
           {
@@ -241,17 +285,17 @@
             "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           },
           {
-            "condition": "TRUE",
-            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.5751140142598475,
+        "threshold": 0.6778279190229597,
         "complexity": 2
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951457+00:00"
+      "created": "2026-09-01T19:19:43.199217+00:00"
     },
     {
       "id": "evo_pred_gen0_9",
@@ -261,29 +305,33 @@
         "branches": [
           {
             "condition": "ctx_equals($ctx, 'value', 0.9)",
-            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
+            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+          },
+          {
+            "condition": "ctx_has($ctx, 'active')",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
             "condition": "TRUE",
             "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
-            "action": "{\"home\": \"escalate\", \"truth\": \"unknown\", \"certified\": TRUE}"
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"ok\", \"truth\": \"normal\", \"certified\": TRUE}"
           },
           {
-            "condition": "ctx_equals($ctx, 'value', 0.9)",
-            "action": "{\"home\": \"warning\", \"truth\": \"borderline\", \"certified\": TRUE}"
+            "condition": "ctx_equals($ctx, 'value', 0.5)",
+            "action": "{\"home\": \"critical\", \"truth\": \"edge case\", \"certified\": TRUE}"
           }
         ],
-        "threshold": 0.5178011605316839,
-        "complexity": 5
+        "threshold": 0.5331457484672345,
+        "complexity": 4
       },
       "fitness": 0.0,
       "generation": 0,
       "parent_ids": [],
-      "created": "2026-09-01T19:05:55.951471+00:00"
+      "created": "2026-09-01T19:19:43.199244+00:00"
     }
   ],
-  "timestamp": "2026-09-01T19:05:55.951671+00:00"
+  "timestamp": "2026-09-01T19:19:43.199501+00:00"
 }
