@@ -4,6 +4,11 @@
 Flow:
     action → record → learn → generate → register → evaluate
 
+SECURITY FIX (2026-09-01): Eliminated exec()-based code generation.
+Predicates are now represented as structured condition trees evaluated
+by socratic-engine's safe evaluator — never as dynamically generated
+Python code. See RSI-RCE-FIX-2026-09-01 IR for details.
+
 Usage:
     from vsf_rsi.rsi_pipeline import pipeline
 
@@ -23,9 +28,10 @@ Usage:
 import json
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from vsf_rsi.scenario_memory import record, adapt, learn
 
@@ -41,116 +47,266 @@ MIN_OCCURRENCES = int(os.environ.get("RSI_MIN_OCCURRENCES", "2"))
 # Quality threshold — patterns below this are candidates for improvement
 QUALITY_THRESHOLD = float(os.environ.get("RSI_QUALITY_THRESHOLD", "0.5"))
 
+# ============================================================
+# SECURITY: Input sanitization
+# ============================================================
+
+# Characters allowed in fault_signature components (after split on '.')
+# Alphanumeric, underscore, hyphen — NO quotes, parens, braces, semicolons
+_SAFE_VALUE_RE = re.compile(r'^[a-zA-Z0-9_\-]+$')
+
+# Maximum length for any value injected into a tree
+_MAX_VALUE_LENGTH = 200
+
+
+def _sanitize_value(value: str) -> str:
+    """Sanitize a value for safe use in condition trees.
+    
+    Raises ValueError if value contains unsafe characters.
+    This prevents injection attacks via fault_signature or command strings.
+    """
+    if not value:
+        return value
+    if len(value) > _MAX_VALUE_LENGTH:
+        raise ValueError(f"Value too long ({len(value)} > {_MAX_VALUE_LENGTH})")
+    if not _SAFE_VALUE_RE.match(value):
+        raise ValueError(
+            f"Value contains unsafe characters: {value!r}. "
+            f"Only alphanumeric, underscore, hyphen allowed."
+        )
+    return value
+
+
+def _sanitize_fault_signature(fault_signature: str) -> List[str]:
+    """Parse and sanitize a fault signature into safe components.
+    
+    Returns list of sanitized components.
+    Raises ValueError if any component is unsafe.
+    """
+    parts = fault_signature.split(".")
+    return [_sanitize_value(p) for p in parts if p]
+
+
+# ============================================================
+# Predicate tree generation (SAFE — no exec/eval)
+# ============================================================
 
 def _generate_predicate_name(fault_signature: str) -> str:
     """Convert fault signature to valid Python identifier."""
-    return "rsi_" + fault_signature.replace(".", "_").replace("-", "_").replace(" ", "_")
+    # Only allow safe characters in identifiers
+    safe = re.sub(r'[^a-zA-Z0-9_]', '_', fault_signature)
+    return "rsi_" + safe
 
 
-def _generate_predicate_body(fault_signature: str, correction_path: str) -> str:
-    """Generate predicate body from pattern.
-
-    This is a simplified generator — the real generator (rsi_predicate_generator.py)
-    uses AST analysis and pattern detection. This is the fast path for the pipeline.
+def _generate_predicate_tree(fault_signature: str, correction_path: str) -> Dict[str, Any]:
+    """Generate a structured condition tree from a fault signature.
+    
+    This is the SAFE replacement for _generate_predicate_body().
+    Instead of generating Python code that gets exec()'d, we generate
+    a JSON tree that socratic-engine evaluates safely.
+    
+    The tree uses only built-in predicates:
+      - ctx_has(key): checks if context has a non-empty key
+      - ctx_equals(key, value): checks ctx[key] == value (exact match)
+      - ctx_contains(key, substring): checks substring in ctx[key]
+    
+    SECURITY: All values are sanitized before being placed in the tree.
     """
-    # Extract meaningful parts from fault signature
-    parts = fault_signature.split(".")
+    components = _sanitize_fault_signature(fault_signature)
+    
+    children: List[Dict[str, Any]] = []
+    
+    # Guard: context must exist and have 'tool'
+    children.append({
+        "predicate": "ctx_has",
+        "args": ["tool"],
+        "inject_context": True,
+    })
+    
+    if len(components) >= 1 and components[0]:
+        # First component: tool name (exact match)
+        children.append({
+            "predicate": "ctx_equals",
+            "args": ["tool", components[0]],
+            "inject_context": True,
+        })
+    
+    if len(components) >= 2 and components[1]:
+        # Second component: command substring (contains match)
+        children.append({
+            "predicate": "ctx_contains",
+            "args": ["command", components[1]],
+            "inject_context": True,
+        })
+    
+    if len(components) >= 3 and components[2]:
+        # Third component: additional detail substring
+        children.append({
+            "predicate": "ctx_contains",
+            "args": ["command", components[2]],
+            "inject_context": True,
+        })
+    
+    return {
+        "op": "AND",
+        "children": children,
+        "inject_context": True,
+    }
 
-    # Build a predicate that checks for the fault condition
-    body_parts = []
-    if len(parts) >= 2:
-        if parts[0]:
-            body_parts.append(f"ctx.get('tool') == '{parts[0]}'")
-        if len(parts) > 1 and parts[1]:
-            body_parts.append(f"'{parts[1]}' in ctx.get('command', '')")
 
-    condition = " and ".join(body_parts) if body_parts else "True"
+# ============================================================
+# Persistence (safe — stores trees, not code)
+# ============================================================
 
-    return f"""return (
-    _context is not None
-    and {condition}
-)"""
-
-
-def _persist_predicate(predicate_name: str, fault_signature: str, body: str, correction_path: str) -> str:
-    """Persist predicate to disk for future loading."""
+def _persist_predicate(predicate_name: str, fault_signature: str,
+                       tree: Dict[str, Any], correction_path: str) -> str:
+    """Persist predicate tree to disk for future loading.
+    
+    SECURITY: Stores the tree structure, NOT executable code.
+    Old format (body as string) is NOT loaded — see _load_predicates().
+    """
     pred_file = PREDICATES_DIR / f"{predicate_name}.json"
     data = {
         "name": predicate_name,
         "fault_signature": fault_signature,
-        "body": body,
+        "tree": tree,  # NEW: structured tree, not code string
         "correction_path": correction_path,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "format_version": 2,  # v2 = tree-based (safe)
     }
     pred_file.write_text(json.dumps(data, indent=2))
     return str(pred_file)
 
 
 def _load_predicates(engine) -> int:
-    """Load all persisted predicates into socratic-engine."""
-    from vsf_rsi.rsi_socratic_bridge import register_rsi_predicate
+    """Load all persisted predicates into socratic-engine.
+    
+    SECURITY: Only loads v2 format (structured trees). 
+    Old v1 format (body strings with exec()) is SKIPPED with a warning.
+    """
+    from vsf_rsi.rsi_socratic_bridge import register_rsi_tree
 
     count = 0
     for pred_file in PREDICATES_DIR.glob("*.json"):
         try:
             data = json.loads(pred_file.read_text())
-            name = data["name"]
-            body = data["body"]
-
-            # Create function
-            func_code = f"def {name}(*args, _context=None, **kwargs):\n    ctx = _context or {{}}\n    {body}"
-            namespace = {}
-            exec(func_code, namespace)
-            func = namespace.get(name)
-
-            if func and register_rsi_predicate(engine, name, func):
+            name = data.get("name", "")
+            
+            # SECURITY: Skip v1 format (old exec-based predicates)
+            if "tree" not in data:
+                logger.warning(
+                    f"Skipping predicate {pred_file.name}: "
+                    f"v1 format (exec-based) no longer supported. "
+                    f"Delete this file or regenerate with v2 pipeline."
+                )
+                continue
+            
+            tree = data["tree"]
+            
+            if not name or not tree:
+                continue
+            
+            # Register as a named tree (safe — evaluated by engine, not exec'd)
+            if register_rsi_tree(engine, name, tree):
                 count += 1
+                
         except Exception as e:
             logger.warning(f"Failed to load predicate {pred_file}: {e}")
 
     return count
 
 
-def _register_predicate(predicate_name: str, fault_signature: str, body: str, correction_path: str) -> bool:
-    """Register a generated predicate in socratic-engine + persist."""
+def _register_predicate(predicate_name: str, fault_signature: str,
+                        tree: Dict[str, Any], correction_path: str) -> bool:
+    """Register a generated predicate tree in socratic-engine + persist.
+    
+    SECURITY: Registers a tree for evaluation, NOT a code string for exec().
+    """
     try:
-        from socratic_engine.engine import SocraticEngine
-        from vsf_rsi.rsi_socratic_bridge import register_rsi_predicate
+        from vsf_rsi.rsi_socratic_bridge import register_rsi_tree
 
-        engine = SocraticEngine()
+        engine = _get_or_create_engine()
 
         # Load existing predicates first
         _load_predicates(engine)
 
-        # Create predicate function
-        func_code = f"def {predicate_name}(*args, _context=None, **kwargs):\n    ctx = _context or {{}}\n    {body}"
-        namespace = {}
-        exec(func_code, namespace)
-        func = namespace.get(predicate_name)
+        # Register the tree (safe — engine evaluates it, no exec)
+        registered = register_rsi_tree(engine, predicate_name, tree)
 
-        if func:
-            # Register in engine
-            registered = register_rsi_predicate(engine, predicate_name, func)
+        # Persist to disk
+        _persist_predicate(predicate_name, fault_signature, tree, correction_path)
 
-            # Persist to disk
-            _persist_predicate(predicate_name, fault_signature, body, correction_path)
-
-            return registered
-        return False
+        return registered
 
     except Exception as e:
         logger.warning(f"Failed to register predicate: {e}")
         return False
 
 
+def _get_or_create_engine():
+    """Get or create a socratic-engine instance with RSI predicates."""
+    from socratic_engine.engine import SocraticEngine
+    engine = SocraticEngine()
+    # Register built-in RSI predicates if not already present
+    _register_rsi_predicates(engine)
+    return engine
+
+
+def _register_rsi_predicates(engine) -> None:
+    """Register safe built-in predicates for RSI condition evaluation.
+    
+    These replace the exec()-generated functions from v1.
+    """
+    from socratic_engine.engine import PredicateResult, Truth
+
+    if "ctx_equals" not in engine.predicates:
+        @engine.register("ctx_equals")
+        def ctx_equals(key: str, expected: str, **kw) -> PredicateResult:
+            """Check ctx[key] == expected (exact string match)."""
+            ctx = kw.get("_context", {})
+            actual = ctx.get(key, None)
+            if actual is None:
+                return PredicateResult(
+                    truth=Truth.UNKNOWN, certified=False,
+                    evidence={"missing_key": key}, source="ctx_equals",
+                )
+            match = str(actual) == expected
+            return PredicateResult(
+                truth=Truth.TRUE if match else Truth.FALSE,
+                certified=True,
+                evidence={"key": key, "expected": expected, "actual": actual},
+                source="ctx_equals",
+            )
+
+    if "ctx_contains" not in engine.predicates:
+        @engine.register("ctx_contains")
+        def ctx_contains(key: str, substring: str, **kw) -> PredicateResult:
+            """Check substring in str(ctx[key])."""
+            ctx = kw.get("_context", {})
+            actual = ctx.get(key, None)
+            if actual is None:
+                return PredicateResult(
+                    truth=Truth.UNKNOWN, certified=False,
+                    evidence={"missing_key": key}, source="ctx_contains",
+                )
+            match = substring in str(actual)
+            return PredicateResult(
+                truth=Truth.TRUE if match else Truth.FALSE,
+                certified=True,
+                evidence={"key": key, "substring": substring, "actual": actual},
+                source="ctx_contains",
+            )
+
+
 def _evaluate_with_predicate(predicate_name: str, context: Dict[str, Any]) -> Optional[bool]:
-    """Evaluate a tree using the registered predicate."""
+    """Evaluate a tree using the registered predicate.
+    
+    SECURITY: Uses enforce_limits=True to prevent DoS via deep/wide trees.
+    """
     try:
-        from socratic_engine.engine import SocraticEngine
+        engine = _get_or_create_engine()
 
-        engine = SocraticEngine()
-
-        if predicate_name not in engine.predicates:
+        if predicate_name not in engine._rsi_trees:
             return None
 
         tree = {
@@ -162,13 +318,18 @@ def _evaluate_with_predicate(predicate_name: str, context: Dict[str, Any]) -> Op
             "inject_context": True,
         }
 
-        result = engine.evaluate(tree, context=context)
+        # SECURITY: enforce_limits=True prevents DoS
+        result = engine.evaluate(tree, context=context, enforce_limits=True)
         return result.truth.value == "true"
 
     except Exception as e:
         logger.warning(f"Evaluation failed: {e}")
         return None
 
+
+# ============================================================
+# Main pipeline
+# ============================================================
 
 def pipeline(
     tool: str,
@@ -205,7 +366,17 @@ def pipeline(
     }
 
     # Phase 1: Record the action
-    sig = fault_signature or f"{tool}.{command.split()[0] if command else 'unknown'}"
+    # SECURITY: Sanitize fault signature components
+    raw_sig = fault_signature or f"{tool}.{command.split()[0] if command else 'unknown'}"
+    try:
+        # Validate the signature doesn't contain injection attempts
+        _sanitize_fault_signature(raw_sig)
+        sig = raw_sig
+    except ValueError as e:
+        logger.error(f"Rejected unsafe fault signature: {e}")
+        result["error"] = f"unsafe_fault_signature: {e}"
+        return result
+
     try:
         sid = record(
             decision=f"{tool}:{command[:50]}",
@@ -236,10 +407,10 @@ def pipeline(
             logger.info("No learnable patterns found")
             return result
 
-        # Phase 3: Generate predicate from best pattern
+        # Phase 3: Generate tree from best pattern (SAFE — no exec)
         best = learnable[0]
         pred_name = _generate_predicate_name(best["fault_signature"])
-        pred_body = _generate_predicate_body(best["fault_signature"], best["correction_path"])
+        pred_tree = _generate_predicate_tree(best["fault_signature"], best["correction_path"])
 
         result["predicate_name"] = pred_name
         result["predicate_generated"] = True
@@ -248,10 +419,10 @@ def pipeline(
             "count": best["count"],
             "avg_quality": best["avg_quality"],
         }
-        logger.info(f"Generated predicate: {pred_name}")
+        logger.info(f"Generated predicate tree: {pred_name}")
 
-        # Phase 4: Register in socratic-engine
-        registered = _register_predicate(pred_name, best["fault_signature"], pred_body, best["correction_path"])
+        # Phase 4: Register in socratic-engine (SAFE — tree, not code)
+        registered = _register_predicate(pred_name, best["fault_signature"], pred_tree, best["correction_path"])
         result["predicate_registered"] = registered
 
         if registered:

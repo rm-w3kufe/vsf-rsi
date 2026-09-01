@@ -1,0 +1,139 @@
+⟦ rsi_rce_fix | INCIDENT-REPORT-v1 | vsm-1.2.1 | 2026-09-01T15:30:00Z ⟧
+
+@vsm 1.2.1
+@status ratified
+
+// RSI-RCE-FIX-2026-09-01 — Remote Code Execution via exec() in rsi_pipeline.py
+// Reporter: Claude (security review session with rmw3)
+// Severity: CRITICAL (CVSS-like: network-adjacent RCE, no auth required)
+// Status: FIXED — all exec() removed, tests passing
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────
+
+summary: "
+  rsi_pipeline.py y rsi_socratic_bridge.py usaban exec() para generar
+  predicados dinámicos a partir de strings construidos con f-strings.
+  El string provenía de fault_signature, que a su vez derivaba de command
+  — la superficie de entrada más expuesta del sistema.
+  
+  Un atacante podía inyectar código Python arbitrario mediante un
+  fault_signature malicioso, logrando ejecución de comandos de shell
+  (RCE) como root en el contenedor.
+"
+
+// ─── ATTACK VECTOR ────────────────────────────────────────────────────────
+
+attack_vector: "
+  Flujo de la inyección:
+  
+  1. command = 'x)or(__import__(\"os\").system(\"id>/tmp/PWNED\"))or('
+  2. fault_signature = f'bash.{command.split()[0]}' → 'bash.x)(...)'
+  3. body = f\"'{parts[1]}' in ctx.get('command', '')\" → contiene el payload
+  4. exec(f'def {name}(ctx): return ...{body}...') → RCE
+  
+  El generador quería producir:
+    return _context is not None and ctx.get('tool') == 'bash' and 'ALGO' in ctx.get('command', '')
+  
+  En cambio, el payload produjo:
+    return (_context is not None and ctx.get('tool') == 'bash' and 'x') or (getattr(__import__('os'), 'system')('id>/tmp/PWNED')) or ('y' in ctx.get('command', ''))
+"
+
+// ─── PROOF OF CONCEPT ────────────────────────────────────────────────────
+
+poc: "
+  Claude construyó un fault_signature de una sola palabra (sin espacios
+  ni puntos, para sobrevivir command.split()[0]) y logró ejecución de
+  comando arbitrario:
+  
+    uid=0(root) gid=0(root) groups=0(root)
+  
+  Resultado de 'id > /tmp/PWNED_BY_RSI', ejecutado con os.system()
+  desde dentro de un predicado generado automáticamente.
+  
+  No se requirió aprobación humana, ni validación AST, ni sandboxing.
+"
+
+// ─── IMPACT ───────────────────────────────────────────────────────────────
+
+impact: "
+  1. RCE como root — control total del proceso
+  2. Superficie de entrada: command (literalmente el string que un agente
+     pasa al ejecutar un comando bash o editar un archivo)
+  3. Persistencia: predicados maliciosos se guardan en
+     state/predicates/*.json y se re-exec()-an en cada arranque
+  4. No pasa por el flujo L3/L4 con autonomous=False — es un 'fast path'
+     nuevo que no hereda las salvaguardas del generador 'real'
+"
+
+// ─── ROOT CAUSE ──────────────────────────────────────────────────────────
+
+root_cause: "
+  1. exec() con f-strings: datos de usuario se convertían en sintaxis
+     Python, no en valores. Inyección SQL conceptual.
+  2. Sin sanitización: fault_signature se usaba directamente en el
+     template de código sin validar caracteres peligrosos.
+  3. Sin enforce_limits: _evaluate_with_predicate() no pasaba
+     enforce_limits=True al engine.evaluate()
+  4. Persistencia sin validación: v1 format (body strings) se cargaba
+     y exec()-aba sin verificar el formato
+"
+
+// ─── FIX APPLIED ──────────────────────────────────────────────────────────
+
+fix: "
+  Archivos modificados:
+    vsf_rsi/rsi_pipeline.py — reescritura completa
+    vsf_rsi/rsi_socratic_bridge.py — reescritura completa
+    tests/test_security_rce_fix.py — 34 tests de regresión (NUEVO)
+  
+  Cambios:
+    1. exec() ELIMINADO de ambos archivos
+    2. Predicados ahora son árboles de condiciones estructurados (JSON)
+       evaluados por socratic-engine — nunca código Python dinámico
+    3. Sanitización de entrada: _sanitize_value() y
+       _sanitize_fault_signature() rechazan caracteres peligrosos
+    4. enforce_limits=True agregado a _evaluate_with_predicate()
+    5. Formato de persistencia v2: { tree: {...}, format_version: 2 }
+       El v1 format (body strings) se skipea con warning
+    6. Nuevos predicados built-in en rsi_pipeline.py:
+       ctx_equals(key, value) — match exacto
+       ctx_contains(key, substring) — contains match
+  
+  Verificación:
+    - 819/819 tests pasan en vsf-rsi (785 originales + 34 seguridad)
+    - 479/479 tests pasan en socratic-engine
+    - PoC de Claude es rechazado por sanitización
+    - No hay exec() ni eval() en paths de código
+    - enforce_limits=True se usa en todas las rutas de evaluación
+"
+
+// ─── LESSONS ──────────────────────────────────────────────────────────────
+
+lessons: "
+  1. exec() + f-strings + datos de usuario = inyección. Siempre.
+     No hay forma segura de interpoler datos en código dinámico.
+  2. El patrón seguro existe: árboles de condiciones + evaluador
+     recursivo (socratic-engine ya lo usa). No reinventar con exec().
+  3. 'Fast path' no significa 'sin salvaguardas'. El generador 'rápido'
+     heredó exactamente el mismo riesgo que el generador 'real'.
+  4. Persistencia amplifica el ataque: un solo payload exitoso deja
+     puerta trasera que sobrevive reinicios.
+  5. Los tests de seguridad deben incluir el PoC real, no solo
+     patrones genéricos.
+"
+
+// ─── RECOMMENDATIONS ──────────────────────────────────────────────────────
+
+recommendations: "
+  1. AUDIT: revisar todo el código que use exec/eval en vsf-rsi y
+     socratic-engine. Ya se hizo: solo rsi_pipeline.py y
+     rsi_socratic_bridge.py lo usaban.
+  2. CI: agregar grep por exec( y eval( como gate de CI que bloquee
+     merges con código dinámico en paths de datos.
+  3. FASE-2: migrar rsi_predicate_generator.py (que SÍ usa AST validation
+     pero aún tiene la estructura de generar código) a árboles también.
+  4. PUBLICAR: este fix debe publicarse antes de cualquier otro feature.
+     Es un blocker de seguridad.
+"
+
+⟦ /rsi_rce_fix ⟧

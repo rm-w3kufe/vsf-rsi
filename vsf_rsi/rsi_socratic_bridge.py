@@ -2,19 +2,26 @@
 
 Connects vsf-rsi predicate generation to socratic-engine dynamic registration.
 
+SECURITY FIX (2026-09-01): Eliminated exec()-based code generation.
+Predicates are now represented as structured condition trees evaluated
+by socratic-engine's safe evaluator — never as dynamically generated
+Python code. See RSI-RCE-FIX-2026-09-01 IR for details.
+
 Usage:
     from vsf_rsi.rsi_socratic_bridge import register_rsi_predicate, register_rsi_tree
 
-    # Register a generated predicate
-    register_rsi_predicate(engine, 'my_predicate', lambda *a, _context=None, **k: True)
-
-    # Register a generated tree
+    # Register a generated tree (SAFE)
     register_rsi_tree(engine, 'my_tree', tree_dict)
+
+    # Load predicates from file (SAFE — only v2 tree format)
+    load_predicates_from_file(engine, 'state/predicates/my_pred.json')
 """
 import json
+import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
-from pathlib import Path
+
+logger = logging.getLogger("vsf_rsi.socratic_bridge")
 
 
 def register_rsi_predicate(
@@ -24,6 +31,10 @@ def register_rsi_predicate(
     inject_context: bool = True,
 ) -> bool:
     """Register a vsf-rsi-generated predicate in socratic-engine.
+    
+    DEPRECATED: Prefer register_rsi_tree() for new code.
+    This function is kept for backward compatibility with existing predicates
+    that are actual Python functions (not exec-generated strings).
     
     Args:
         engine: SocraticEngine instance
@@ -39,15 +50,18 @@ def register_rsi_predicate(
     
     # Ensure function accepts _context
     import inspect
-    sig = inspect.signature(func)
-    if '_context' not in sig.parameters and '**kwargs' not in sig.parameters:
-        # Wrap function to accept _context
-        original_func = func
-        def wrapped(*args, _context=None, **kwargs):
-            return original_func(*args, **kwargs)
-        wrapped.__name__ = name
-        wrapped.__doc__ = f"RSI-generated predicate: {name}"
-        func = wrapped
+    try:
+        sig = inspect.signature(func)
+        if '_context' not in sig.parameters and '**kwargs' not in sig.parameters:
+            # Wrap function to accept _context
+            original_func = func
+            def wrapped(*args, _context=None, **kwargs):
+                return original_func(*args, **kwargs)
+            wrapped.__name__ = name
+            wrapped.__doc__ = f"RSI-generated predicate: {name}"
+            func = wrapped
+    except (ValueError, TypeError):
+        pass  # Can't inspect — let it through, engine will handle
     
     engine.register(name)(func)
     return True
@@ -61,6 +75,7 @@ def register_rsi_tree(
     """Register a vsf-rsi-generated tree for evaluation.
     
     Trees are stored in engine._rsi_trees and can be retrieved by name.
+    This is the SAFE way to register RSI-generated conditions.
     """
     if not hasattr(engine, '_rsi_trees'):
         engine._rsi_trees = {}
@@ -89,7 +104,18 @@ def list_rsi_predicates(engine) -> list:
 def load_predicates_from_file(engine, path: str) -> int:
     """Load predicates from a JSON file and register them.
     
-    File format:
+    SECURITY: Only loads v2 format (structured trees).
+    Old v1 format (exec-based code strings) is SKIPPED with a warning.
+    
+    File format (v2):
+    {
+        "predicates": [
+            {"name": "my_pred", "tree": {"op": "AND", "children": [...]}},
+            ...
+        ]
+    }
+    
+    Old format (v1 — NO LONGER LOADED):
     {
         "predicates": [
             {"name": "my_pred", "body": "return ctx.get('x', False)"},
@@ -108,17 +134,22 @@ def load_predicates_from_file(engine, path: str) -> int:
     
     for pred in data.get("predicates", []):
         name = pred.get("name")
-        body = pred.get("body")
-        if not name or not body:
+        tree = pred.get("tree")
+        
+        if not name:
             continue
         
-        # Create function from body string
-        func_code = f"def {name}(*args, _context=None, **kwargs):\n    ctx = _context or {{}}\n    {body}"
-        namespace = {}
-        exec(func_code, namespace)
-        func = namespace.get(name)
+        # SECURITY: Skip v1 format (old exec-based predicates)
+        if not tree:
+            logger.warning(
+                f"Skipping predicate '{name}' in {path}: "
+                f"v1 format (exec-based) no longer supported. "
+                f"Delete this file or regenerate with v2 pipeline."
+            )
+            continue
         
-        if func and register_rsi_predicate(engine, name, func):
+        # Register as a named tree (safe — evaluated by engine, not exec'd)
+        if register_rsi_tree(engine, name, tree):
             count += 1
     
     return count
@@ -134,7 +165,6 @@ def register_rsi_tree_from_file(
     Parses the VSM file to extract the tree structure and registers
     it for evaluation.
     """
-    import json
     p = Path(tree_path)
     if not p.exists():
         return False
