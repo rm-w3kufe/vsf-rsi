@@ -80,6 +80,72 @@ def match(fault_signature: str, threshold: float = 0.0):
     return best["id"], best["correction_path"]
 
 
+
+
+def adapt(scenario_id: str, quality: float, learned_from_failure: bool = False):
+    """Update pattern quality based on outcome. Quality ∈ [0.0, 1.0].
+    
+    - quality: how useful was this pattern (0.0 = useless, 1.0 = perfect)
+    - learned_from_failure: if True, pattern was learned from a failure
+    """
+    if not 0.0 <= quality <= 1.0:
+        raise ValueError(f"quality must be in [0.0, 1.0], got {quality}")
+    
+    store = _get_store()
+    target = store / f"{scenario_id}.json"
+    if not target.exists():
+        raise FileNotFoundError(f"scenario {scenario_id} not found")
+    
+    rec = json.loads(target.read_text())
+    rec["quality"] = quality
+    rec["learned_from_failure"] = learned_from_failure
+    rec["adapted_at"] = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+    target.write_text(json.dumps(rec, indent=2))
+    return rec
+
+
+def learn(min_occurrences: int = 3):
+    """Detect patterns that repeated ≥ min_occurrences times.
+    
+    Returns list of {fault_signature, count, avg_quality, correction_path}
+    for patterns that suggest systematic issues.
+    """
+    store = _get_store()
+    patterns = {}
+    
+    for p in store.glob("*.json"):
+        try:
+            rec = json.loads(p.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(rec, dict):
+            continue
+        
+        sig = rec.get("fault_signature", "unknown")
+        if sig not in patterns:
+            patterns[sig] = {
+                "fault_signature": sig,
+                "records": [],
+                "correction_path": rec.get("correction_path", ""),
+            }
+        patterns[sig]["records"].append(rec)
+    
+    # Find patterns that repeat enough
+    results = []
+    for sig, data in patterns.items():
+        count = len(data["records"])
+        if count >= min_occurrences:
+            qualities = [r.get("quality", 0.5) for r in data["records"]]
+            avg_quality = sum(qualities) / len(qualities) if qualities else 0.5
+            results.append({
+                "fault_signature": sig,
+                "count": count,
+                "avg_quality": avg_quality,
+                "correction_path": data["correction_path"],
+            })
+    
+    return sorted(results, key=lambda x: -x["count"])
+
 def validate_store():
     """Return ids of corrupted/forged records (missing correction_path / unparseable)."""
     bad = []
