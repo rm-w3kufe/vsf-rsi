@@ -74,6 +74,13 @@
 - [x] Fixed broken imports in rsi_demo.py (scripts.vsl.classifier → vsf_rsi)
 - [x] Removed ~80 lines of test scaffolding (no longer needed)
 
+## ✅ v0.2.3 — Context-Aware Predicate Generation
+- [x] _create_context_aware_predicate: uses avg_threshold/avg_input from pattern data
+- [x] error_class-based strategy selection (false_positive, false_negative, unknown)
+- [x] Safety margin calculation (10% around threshold)
+- [x] Fallback to static templates when pattern data unavailable
+- [x] 10 tests in tests/test_rsi_predicate_semantic.py
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)

@@ -93,8 +93,22 @@ class RSIPredicateGenerator:
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         predicate_name = pattern.get("name", "auto_generated")
         purpose = pattern.get("purpose", "Auto-generated predicate")
-        
-        # Create predicate based on template
+
+        # Use context-aware template when pattern has historical data
+        avg_threshold = pattern.get("avg_threshold")
+        avg_input = pattern.get("avg_input")
+        error_class = pattern.get("error_class", "unknown")
+
+        if avg_threshold is not None and avg_input is not None:
+            return self._create_context_aware_predicate(
+                predicate_name, purpose, timestamp,
+                avg_threshold=float(avg_threshold),
+                avg_input=float(avg_input),
+                error_class=error_class,
+                base_predicate=base_predicate or "",
+            )
+
+        # Fallback to static templates
         if pattern.get("template") == "edge_case_predicate":
             return self._create_edge_case_predicate(predicate_name, purpose, timestamp)
         elif pattern.get("template") == "fast_predicate":
@@ -150,6 +164,105 @@ PREDICATE = {{
     "type": "edge_case",
     "generated": "{timestamp}",
     "purpose": "{purpose}"
+}}
+'''
+
+    def _create_context_aware_predicate(self, name: str, purpose: str, timestamp: str,
+                                         avg_threshold: float = 0.5,
+                                         avg_input: float = 0.5,
+                                         error_class: str = "unknown",
+                                         base_predicate: str = "") -> str:
+        """Create a context-aware predicate using pattern data.
+
+        Uses avg_threshold and avg_input from historical errors to set
+        dynamic thresholds instead of hardcoded values.
+
+        Args:
+            name: Predicate function name
+            purpose: What this predicate does
+            timestamp: Generation timestamp
+            avg_threshold: Average threshold from past errors (for calibration)
+            avg_input: Average input value from past errors (for calibration)
+            error_class: Classification of the error pattern
+            base_predicate: Original predicate that was failing
+        """
+        # Derive thresholds from observed data with safety margins
+        # If avg_input was near avg_threshold, the predicate was borderline
+        margin = 0.1  # 10% safety margin
+        low_bound = max(0.0, avg_threshold - margin)
+        high_bound = min(1.0, avg_threshold + margin)
+
+        # Determine detection strategy based on error class
+        if error_class == "false_positive":
+            # Predicate was too aggressive — detect when input is safely above threshold
+            strategy = f"""
+    # Strategy: false_positive recovery — only flag when input clearly exceeds threshold
+    # Historical avg_input={avg_input:.3f}, avg_threshold={avg_threshold:.3f}
+    value = ctx.get("value", 0)
+    if value > {high_bound:.3f}:
+        return True  # Clearly above threshold
+    return False"""
+        elif error_class == "false_negative":
+            # Predicate was too conservative — detect when input is near or below threshold
+            strategy = f"""
+    # Strategy: false_negative recovery — flag borderline and below-threshold inputs
+    # Historical avg_input={avg_input:.3f}, avg_threshold={avg_threshold:.3f}
+    value = ctx.get("value", 0)
+    if value < {low_bound:.3f}:
+        return True  # Clearly below threshold
+    if {low_bound:.3f} <= value <= {high_bound:.3f}:
+        return True  # Borderline zone — was causing misses
+    return False"""
+        else:
+            # Unknown error class — use generic boundary detection
+            strategy = f"""
+    # Strategy: generic boundary detection
+    # Historical avg_input={avg_input:.3f}, avg_threshold={avg_threshold:.3f}
+    value = ctx.get("value", 0)
+    if value < {low_bound:.3f} or value > {high_bound:.3f}:
+        return True  # Outside safe zone
+    return False"""
+
+        return f'''#!/usr/bin/env python3
+"""
+{name} — Context-aware predicate
+Generated: {timestamp}
+Purpose: {purpose}
+Error class: {error_class}
+Base predicate: {base_predicate}
+Calibrated from: avg_threshold={avg_threshold:.3f}, avg_input={avg_input:.3f}
+"""
+
+from typing import Dict, Any
+
+
+def {name}(ctx: Dict[str, Any]) -> bool:
+    """
+    Context-aware predicate calibrated from historical error patterns.
+
+    Args:
+        ctx: Context dictionary with 'value' key
+
+    Returns:
+        True if the pattern indicates this predicate should trigger
+    """
+    if "value" not in ctx:
+        return False  # No data to evaluate
+
+    {strategy}
+
+
+# Register predicate
+PREDICATE = {{
+    "name": "{name}",
+    "function": {name},
+    "type": "context_aware",
+    "generated": "{timestamp}",
+    "purpose": "{purpose}",
+    "error_class": "{error_class}",
+    "avg_threshold": {avg_threshold},
+    "avg_input": {avg_input},
+    "base_predicate": "{base_predicate}",
 }}
 '''
     
