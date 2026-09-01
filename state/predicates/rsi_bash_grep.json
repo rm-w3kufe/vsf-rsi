@@ -1,0 +1,44 @@
+{
+  "name": "rsi_bash_grep",
+  "fault_signature": "bash.grep.missing",
+  "tree": {
+    "op": "AND",
+    "children": [
+      {
+        "predicate": "ctx_has",
+        "args": [
+          "tool"
+        ],
+        "inject_context": true
+      },
+      {
+        "predicate": "ctx_equals",
+        "args": [
+          "tool",
+          "bash"
+        ],
+        "inject_context": true
+      },
+      {
+        "predicate": "ctx_contains",
+        "args": [
+          "command",
+          "grep"
+        ],
+        "inject_context": true
+      },
+      {
+        "predicate": "ctx_contains",
+        "args": [
+          "command",
+          "missing"
+        ],
+        "inject_context": true
+      }
+    ],
+    "inject_context": true
+  },
+  "correction_path": "pipeline:bash:failure",
+  "created_at": "2026-09-01T16:02:41.177401+00:00",
+  "format_version": 2
+}

@@ -762,6 +762,7 @@ class RSIObserver:
             # Create a fallback result
             class FallbackResult:
                 is_true = False
+                is_unknown = True
                 truth = Truth.UNKNOWN
                 certified = False
                 metadata = {"error": "predicate_crash", "message": str(e)}
@@ -779,6 +780,7 @@ class RSIObserver:
             
             class FallbackResult:
                 is_true = False
+                is_unknown = True
                 truth = Truth.UNKNOWN
                 certified = False
                 metadata = {"error": "engine_crash", "message": str(e)}

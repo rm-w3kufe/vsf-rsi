@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-_rsi_gen_failing_pred — Edge case predicate
-Generated: 2026-08-31T20:11:25Z
+_rsi_gen_failing_pred — Context-aware predicate
+Generated: 2026-09-01T16:02:39Z
 Purpose: Auto-generated from 4 errors on failing_pred
+Error class: BLOCKING
+Base predicate: failing_pred
+Calibrated from: avg_threshold=0.700, avg_input=0.300
 """
 
 from typing import Dict, Any
@@ -10,30 +13,23 @@ from typing import Dict, Any
 
 def _rsi_gen_failing_pred(ctx: Dict[str, Any]) -> bool:
     """
-    Edge case predicate for handling misclassifications.
-    
+    Context-aware predicate calibrated from historical error patterns.
+
     Args:
-        ctx: Context dictionary
-    
+        ctx: Context dictionary with 'value' key
+
     Returns:
-        True if edge case detected
+        True if the pattern indicates this predicate should trigger
     """
-    # Edge case 1: Very high values
-    if ctx.get("value", 0) > 0.95:
-        return True
+    if "value" not in ctx:
+        return False  # No data to evaluate
+
     
-    # Edge case 2: Very low values
-    if ctx.get("value", 0) < 0.05:
-        return True
-    
-    # Edge case 3: Borderline values
-    if 0.45 <= ctx.get("value", 0) <= 0.55:
-        return True
-    
-    # Edge case 4: Rapid changes
-    if ctx.get("rate_of_change", 0) > 0.1:
-        return True
-    
+    # Strategy: generic boundary detection
+    # Historical avg_input=0.300, avg_threshold=0.700
+    value = ctx.get("value", 0)
+    if value < 0.600 or value > 0.800:
+        return True  # Outside safe zone
     return False
 
 
@@ -41,7 +37,11 @@ def _rsi_gen_failing_pred(ctx: Dict[str, Any]) -> bool:
 PREDICATE = {
     "name": "_rsi_gen_failing_pred",
     "function": _rsi_gen_failing_pred,
-    "type": "edge_case",
-    "generated": "2026-08-31T20:11:25Z",
-    "purpose": "Auto-generated from 4 errors on failing_pred"
+    "type": "context_aware",
+    "generated": "2026-09-01T16:02:39Z",
+    "purpose": "Auto-generated from 4 errors on failing_pred",
+    "error_class": "BLOCKING",
+    "avg_threshold": 0.7,
+    "avg_input": 0.3,
+    "base_predicate": "failing_pred",
 }

@@ -1,0 +1,54 @@
+{
+  "prisoner": {
+    "cv_mean": 1.0,
+    "cv_std": 0.0,
+    "baseline_random": 0.45,
+    "improvement": 0.55,
+    "fold_accuracies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "parabola": {
+    "cv_mean": 0.9875,
+    "cv_std": 0.02795084971874737,
+    "baseline_random": 0.4125,
+    "improvement": 0.5750000000000001,
+    "fold_accuracies": [
+      1.0,
+      0.9375,
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "xor": {
+    "cv_mean": 0.95,
+    "cv_std": 0.05229125165837972,
+    "baseline_random": 0.4875,
+    "improvement": 0.46249999999999997,
+    "fold_accuracies": [
+      1.0,
+      0.9375,
+      0.9375,
+      0.875,
+      1.0
+    ]
+  },
+  "noise": {
+    "cv_mean": 1.0,
+    "cv_std": 0.0,
+    "baseline_random": 0.4875,
+    "improvement": 0.5125,
+    "fold_accuracies": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  }
+}

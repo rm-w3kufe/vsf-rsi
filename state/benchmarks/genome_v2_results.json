@@ -1,0 +1,839 @@
+{
+  "results": {
+    "prisoner": {
+      "evolution": {
+        "scenario_type": "prisoner",
+        "generations": 15,
+        "population_size": 20,
+        "train_scenarios": 48,
+        "test_scenarios": 12,
+        "history": [
+          {
+            "generation": 0,
+            "best_fitness": 0.6458333333333334,
+            "avg_fitness": 0.48333333333333334
+          },
+          {
+            "generation": 1,
+            "best_fitness": 0.7916666666666666,
+            "avg_fitness": 0.6010416666666667
+          },
+          {
+            "generation": 2,
+            "best_fitness": 0.8125,
+            "avg_fitness": 0.6385416666666667
+          },
+          {
+            "generation": 3,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.5958333333333333
+          },
+          {
+            "generation": 4,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.5166666666666667
+          },
+          {
+            "generation": 5,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.6291666666666667
+          },
+          {
+            "generation": 6,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.678125
+          },
+          {
+            "generation": 7,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.684375
+          },
+          {
+            "generation": 8,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.6291666666666667
+          },
+          {
+            "generation": 9,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.6364583333333333
+          },
+          {
+            "generation": 10,
+            "best_fitness": 0.9166666666666666,
+            "avg_fitness": 0.6770833333333334
+          },
+          {
+            "generation": 11,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6927083333333334
+          },
+          {
+            "generation": 12,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6208333333333333
+          },
+          {
+            "generation": 13,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6552083333333334
+          },
+          {
+            "generation": 14,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6041666666666666
+          }
+        ],
+        "best_genome_summary": "Genome prisoner_g11_18 (gen=11, fitness=1.000)\n  Features:\n    d0 = add(cooperation_ratio)\n    d1 = mul(cooperation_ratio, d0)\n  Tree:\n    IF cooperation_ratio gt 0.61:\n      IF d1 gt 0.46:\n        \u2192 True\n      ELSE:\n        \u2192 True\n    ELSE:\n      IF cooperation_ratio lt 0.33:\n        \u2192 False\n      ELSE:\n        \u2192 False",
+        "test_results": [
+          {
+            "id": "prisoner_g11_18",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "cooperation_ratio"
+                ]
+              ],
+              [
+                "d1",
+                "mul",
+                [
+                  "cooperation_ratio",
+                  "d0"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "prisoner_g11_18_x_prisoner_g11_17",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "cooperation_ratio"
+                ]
+              ],
+              [
+                "d1",
+                "mul",
+                [
+                  "cooperation_ratio",
+                  "d0"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "prisoner_g11_18_x_prisoner_g11_17_x_prisoner_g13_13",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "sub",
+                [
+                  "cooperation_ratio"
+                ]
+              ],
+              [
+                "d1",
+                "mul",
+                [
+                  "cooperation_ratio",
+                  "d0"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "prisoner_g1_8_x_prisoner_g2_19",
+            "train_fitness": 0.9166666666666666,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "cooperation_ratio"
+                ]
+              ],
+              [
+                "d0",
+                "add",
+                [
+                  "cooperation_ratio"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "prisoner_g11_18_x_prisoner_g11_17_x_prisoner_g13_13_x_prisoner_g14_11",
+            "train_fitness": 0.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "abs",
+                [
+                  "cooperation_ratio"
+                ]
+              ],
+              [
+                "d1",
+                "mul",
+                [
+                  "cooperation_ratio",
+                  "d0"
+                ]
+              ]
+            ]
+          }
+        ]
+      },
+      "baselines": {
+        "always_true": 0.5,
+        "always_false": 0.5,
+        "random": 0.5
+      },
+      "best_ga_test_accuracy": 1.0,
+      "improvement_over_random": 0.5,
+      "evolution_time_s": 0.3
+    },
+    "parabola": {
+      "evolution": {
+        "scenario_type": "parabola",
+        "generations": 15,
+        "population_size": 20,
+        "train_scenarios": 48,
+        "test_scenarios": 12,
+        "history": [
+          {
+            "generation": 0,
+            "best_fitness": 0.5833333333333334,
+            "avg_fitness": 0.45208333333333334
+          },
+          {
+            "generation": 1,
+            "best_fitness": 0.5833333333333334,
+            "avg_fitness": 0.4979166666666667
+          },
+          {
+            "generation": 2,
+            "best_fitness": 0.7083333333333334,
+            "avg_fitness": 0.5302083333333333
+          },
+          {
+            "generation": 3,
+            "best_fitness": 0.7083333333333334,
+            "avg_fitness": 0.5479166666666667
+          },
+          {
+            "generation": 4,
+            "best_fitness": 0.7083333333333334,
+            "avg_fitness": 0.51875
+          },
+          {
+            "generation": 5,
+            "best_fitness": 0.7083333333333334,
+            "avg_fitness": 0.5354166666666667
+          },
+          {
+            "generation": 6,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.5614583333333333
+          },
+          {
+            "generation": 7,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.5770833333333334
+          },
+          {
+            "generation": 8,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.5677083333333334
+          },
+          {
+            "generation": 9,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.5614583333333333
+          },
+          {
+            "generation": 10,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.5666666666666667
+          },
+          {
+            "generation": 11,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.5916666666666667
+          },
+          {
+            "generation": 12,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.578125
+          },
+          {
+            "generation": 13,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.553125
+          },
+          {
+            "generation": 14,
+            "best_fitness": 0.7291666666666666,
+            "avg_fitness": 0.571875
+          }
+        ],
+        "best_genome_summary": "Genome parabola_g6_18 (gen=6, fitness=0.729)\n  Features:\n    d0 = square(distance, y)\n    d1 = square(x, distance)\n  Tree:\n    IF d0 lt 0.69:\n      \u2192 True\n    ELSE:\n      IF d0 gt -0.40:\n        \u2192 False\n      ELSE:\n        \u2192 True",
+        "test_results": [
+          {
+            "id": "parabola_g6_18",
+            "train_fitness": 0.7291666666666666,
+            "test_accuracy": 0.5833333333333334,
+            "features": [
+              [
+                "d0",
+                "square",
+                [
+                  "distance",
+                  "y"
+                ]
+              ],
+              [
+                "d1",
+                "square",
+                [
+                  "x",
+                  "distance"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "parabola_g11_11",
+            "train_fitness": 0.7291666666666666,
+            "test_accuracy": 0.75,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "y"
+                ]
+              ],
+              [
+                "d1",
+                "add",
+                [
+                  "distance",
+                  "x"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "parabola_g6_18_x_parabola_g6_18",
+            "train_fitness": 0.7291666666666666,
+            "test_accuracy": 0.5833333333333334,
+            "features": [
+              [
+                "d0",
+                "square",
+                [
+                  "distance",
+                  "y"
+                ]
+              ],
+              [
+                "d0",
+                "square",
+                [
+                  "distance",
+                  "y"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "parabola_g6_18_x_parabola_g6_18_x_parabola_g2_18",
+            "train_fitness": 0.7291666666666666,
+            "test_accuracy": 0.5833333333333334,
+            "features": [
+              [
+                "d1",
+                "sub",
+                [
+                  "y",
+                  "x"
+                ]
+              ],
+              [
+                "d0",
+                "square",
+                [
+                  "distance",
+                  "y"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "parabola_g6_18_x_parabola_g6_18_x_parabola_g2_18_x_parabola_g6_18_x_parabola_g6_18",
+            "train_fitness": 0.0,
+            "test_accuracy": 0.5833333333333334,
+            "features": [
+              [
+                "d1",
+                "sub",
+                [
+                  "y",
+                  "x"
+                ]
+              ],
+              [
+                "d0",
+                "square",
+                [
+                  "distance",
+                  "y"
+                ]
+              ]
+            ]
+          }
+        ]
+      },
+      "baselines": {
+        "always_true": 0.4166666666666667,
+        "always_false": 0.5833333333333334,
+        "random": 0.6666666666666666
+      },
+      "best_ga_test_accuracy": 0.75,
+      "improvement_over_random": 0.08333333333333337,
+      "evolution_time_s": 0.3
+    },
+    "xor": {
+      "evolution": {
+        "scenario_type": "xor",
+        "generations": 15,
+        "population_size": 20,
+        "train_scenarios": 48,
+        "test_scenarios": 12,
+        "history": [
+          {
+            "generation": 0,
+            "best_fitness": 0.5625,
+            "avg_fitness": 0.49166666666666664
+          },
+          {
+            "generation": 1,
+            "best_fitness": 0.5833333333333334,
+            "avg_fitness": 0.5229166666666667
+          },
+          {
+            "generation": 2,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.540625
+          },
+          {
+            "generation": 3,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5145833333333333
+          },
+          {
+            "generation": 4,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5208333333333334
+          },
+          {
+            "generation": 5,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5135416666666667
+          },
+          {
+            "generation": 6,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.509375
+          },
+          {
+            "generation": 7,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5385416666666667
+          },
+          {
+            "generation": 8,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5291666666666667
+          },
+          {
+            "generation": 9,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5375
+          },
+          {
+            "generation": 10,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.528125
+          },
+          {
+            "generation": 11,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5302083333333333
+          },
+          {
+            "generation": 12,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5458333333333333
+          },
+          {
+            "generation": 13,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5229166666666667
+          },
+          {
+            "generation": 14,
+            "best_fitness": 0.625,
+            "avg_fitness": 0.5239583333333333
+          }
+        ],
+        "best_genome_summary": "Genome xor_g2_15 (gen=2, fitness=0.625)\n  Features:\n    d0 = add(x3, x2)\n    d1 = mul(x2, x1)\n  Tree:\n    IF d0 lt -0.27:\n      IF x1 lt -0.22:\n        \u2192 False\n      ELSE:\n        \u2192 True\n    ELSE:\n      IF d0 lt 0.49:\n        \u2192 False\n      ELSE:\n        \u2192 True",
+        "test_results": [
+          {
+            "id": "xor_g2_15",
+            "train_fitness": 0.625,
+            "test_accuracy": 0.16666666666666666,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ],
+              [
+                "d1",
+                "mul",
+                [
+                  "x2",
+                  "x1"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "xor_g2_15_x_xor_g2_15",
+            "train_fitness": 0.625,
+            "test_accuracy": 0.16666666666666666,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ],
+              [
+                "d0",
+                "add",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "xor_g2_15_x_xor_g2_15_x_xor_g2_15",
+            "train_fitness": 0.625,
+            "test_accuracy": 0.16666666666666666,
+            "features": [
+              [
+                "d0",
+                "mul",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ],
+              [
+                "d0",
+                "add",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "xor_g9_16_x_xor_g2_15",
+            "train_fitness": 0.625,
+            "test_accuracy": 0.16666666666666666,
+            "features": [
+              [
+                "d0",
+                "square",
+                [
+                  "x5"
+                ]
+              ],
+              [
+                "d0",
+                "add",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "xor_g9_16_x_xor_g2_15_x_xor_g9_16_x_xor_g2_15",
+            "train_fitness": 0.0,
+            "test_accuracy": 0.16666666666666666,
+            "features": [
+              [
+                "d0",
+                "square",
+                [
+                  "x5"
+                ]
+              ],
+              [
+                "d0",
+                "add",
+                [
+                  "x3",
+                  "x2"
+                ]
+              ]
+            ]
+          }
+        ]
+      },
+      "baselines": {
+        "always_true": 0.25,
+        "always_false": 0.75,
+        "random": 0.4166666666666667
+      },
+      "best_ga_test_accuracy": 0.16666666666666666,
+      "improvement_over_random": -0.25,
+      "evolution_time_s": 0.3
+    },
+    "noise": {
+      "evolution": {
+        "scenario_type": "noise",
+        "generations": 15,
+        "population_size": 20,
+        "train_scenarios": 48,
+        "test_scenarios": 12,
+        "history": [
+          {
+            "generation": 0,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.41041666666666665
+          },
+          {
+            "generation": 1,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6
+          },
+          {
+            "generation": 2,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6
+          },
+          {
+            "generation": 3,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.7
+          },
+          {
+            "generation": 4,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6
+          },
+          {
+            "generation": 5,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.5
+          },
+          {
+            "generation": 6,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.65
+          },
+          {
+            "generation": 7,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.7666666666666667
+          },
+          {
+            "generation": 8,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.8020833333333334
+          },
+          {
+            "generation": 9,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.75
+          },
+          {
+            "generation": 10,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.6572916666666667
+          },
+          {
+            "generation": 11,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.7
+          },
+          {
+            "generation": 12,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.65
+          },
+          {
+            "generation": 13,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.7083333333333334
+          },
+          {
+            "generation": 14,
+            "best_fitness": 1.0,
+            "avg_fitness": 0.7
+          }
+        ],
+        "best_genome_summary": "Genome noise_g0_0 (gen=0, fitness=1.000)\n  Features:\n    d0 = abs(snr)\n    d1 = sub(d0, snr)\n  Tree:\n    IF snr gt -0.68:\n      \u2192 False\n    ELSE:\n      \u2192 True",
+        "test_results": [
+          {
+            "id": "noise_g0_0",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "abs",
+                [
+                  "snr"
+                ]
+              ],
+              [
+                "d1",
+                "sub",
+                [
+                  "d0",
+                  "snr"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "noise_g0_1",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "square",
+                [
+                  "snr"
+                ]
+              ],
+              [
+                "d1",
+                "add",
+                [
+                  "d0"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "noise_g0_2",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "add",
+                [
+                  "snr"
+                ]
+              ],
+              [
+                "d1",
+                "abs",
+                [
+                  "d0"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "noise_g0_4",
+            "train_fitness": 1.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "abs",
+                [
+                  "snr"
+                ]
+              ],
+              [
+                "d1",
+                "mul",
+                [
+                  "snr"
+                ]
+              ]
+            ]
+          },
+          {
+            "id": "noise_g0_4_x_noise_g14_17",
+            "train_fitness": 0.0,
+            "test_accuracy": 1.0,
+            "features": [
+              [
+                "d0",
+                "abs",
+                [
+                  "snr"
+                ]
+              ],
+              [
+                "d0",
+                "sub",
+                [
+                  "snr"
+                ]
+              ]
+            ]
+          }
+        ]
+      },
+      "baselines": {
+        "always_true": 0.0,
+        "always_false": 1.0,
+        "random": 0.3333333333333333
+      },
+      "best_ga_test_accuracy": 1.0,
+      "improvement_over_random": 0.6666666666666667,
+      "evolution_time_s": 0.3
+    }
+  },
+  "summary": {
+    "mean_improvement_over_random": 0.25,
+    "scenarios_tested": 4,
+    "total_test_scenarios": 48
+  }
+}
