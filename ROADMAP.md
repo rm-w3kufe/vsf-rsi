@@ -63,6 +63,13 @@
 - [x] All 16 rsi_*.py mapped to package components (G4)
 - [x] Coverage ≥90%
 
+## ✅ v0.2.1 — Integration Bridge
+- [x] adapt(): update pattern quality after execution
+- [x] learn(): detect repeated patterns (≥N occurrences)
+- [x] rsi_socratic_bridge.py: register predicates + trees in socratic-engine
+- [x] Bash failure capture added to tool-integration plugin
+- [x] register_rsi_tree_from_file() for generated tree loading
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
