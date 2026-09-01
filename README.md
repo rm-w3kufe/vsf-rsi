@@ -525,6 +525,17 @@ See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 
 ---
 
+## Lineage & philosophy
+
+Built on Stafford Beer's **Viable System Model** and the **Cybersyn** project (Chile, 1971) — a system is
+viable when it can be *described*, *governed*, and *audited*. "Don't trust, verify" isn't a slogan here;
+it's the reconciler and the verify-at-every-boundary discipline made mechanical. Community-first, and
+deliberately **from the Global South** — the heir to Cybersyn's bet that good cybernetics serves people.
+
 ## License
 
-Apache-2.0
+Code: **Apache-2.0** ([LICENSE](./LICENSE)) · Docs: **CC-BY-4.0**.
+
+This module is deliberately more permissive than the AGPL core it was extracted from — it is meant to be
+adopted, embedded, and improved by the community. Improvements can flow back; the module stays clean of
+AGPL code by construction.
