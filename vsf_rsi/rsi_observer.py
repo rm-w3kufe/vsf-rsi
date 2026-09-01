@@ -706,7 +706,16 @@ class RSIObserver:
         self.events: List[EvaluationEvent] = []
         self.actions: List[RSIAction] = []
         self._has_scenario_memory = _HAS_SCENARIO_MEMORY
-        logger.info(f"RSIObserver initialized: mode={self.mode}")
+
+        # Feature-detect enforce_limits support (socratic-engine >= 0.2.6)
+        import inspect
+        try:
+            sig = inspect.signature(engine.evaluate)
+            self._supports_enforce_limits = "enforce_limits" in sig.parameters
+        except (ValueError, TypeError):
+            self._supports_enforce_limits = False
+
+        logger.info(f"RSIObserver initialized: mode={self.mode} enforce_limits={self._supports_enforce_limits}")
 
     def evaluate(
         self,
@@ -741,8 +750,9 @@ class RSIObserver:
         t_start = time.monotonic()
 
         # BUG-001: Try-evaluate with type validation fallback
+        eval_kwargs = {"enforce_limits": True} if self._supports_enforce_limits else {}
         try:
-            result = self.engine.evaluate(tree, ctx, enforce_limits=True)
+            result = self.engine.evaluate(tree, ctx, **eval_kwargs)
         except TypeError as e:
             # Predicate crashed on non-numeric input
             logger.warning(f"Predicate crashed on non-numeric input: {e}")
@@ -847,7 +857,7 @@ class RSIObserver:
                 if action.action_type == "adjust_threshold" and action.autonomous:
                     # BUG-001: Wrap re-evaluation in try-except too
                     try:
-                        result = self.engine.evaluate(tree, ctx, enforce_limits=True)
+                        result = self.engine.evaluate(tree, ctx, **eval_kwargs)
                     except TypeError:
                         # Re-evaluation also crashed — keep original result
                         logger.warning("Re-evaluation after threshold adjustment failed")
