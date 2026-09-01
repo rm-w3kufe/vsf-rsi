@@ -1,5 +1,16 @@
 # Changelog — vsf-rsi
 
+## [0.2.8] — 2026-09-01
+
+### Fixed
+- **CRITICAL SECURITY: RCE via exec() in rsi_pipeline.py and rsi_socratic_bridge.py** (RSI-RCE-FIX-2026-09-01)
+  - Eliminated exec()-based code generation — predicates now use structured condition trees
+  - Added input sanitization (_sanitize_value, _sanitize_fault_signature)
+  - Added enforce_limits=True to evaluation paths
+  - Persistence format v2: trees instead of code strings
+  - New built-in predicates: ctx_equals, ctx_contains
+  - 34 security regression tests added
+
 ## [0.2.7] — 2026-09-01
 
 ### Added
