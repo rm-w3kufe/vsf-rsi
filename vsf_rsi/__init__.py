@@ -17,4 +17,5 @@ __all__ = [
     "RSIMode",
     "RSIMetrics",
     "scenario_memory",
+    "genome_v3",
 ]

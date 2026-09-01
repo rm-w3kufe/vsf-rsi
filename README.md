@@ -10,11 +10,11 @@
 
 > **Don't ask the language model to improve itself. Give the improvement a substrate.**
 
-`vsf-rsi` is a cybernetic feedback loop that observes, evaluates, and improves socratic-engine predicates and trees through four levels of recursive self-improvement (RSI).
+`vsf-rsi` is a cybernetic feedback loop that observes, evaluates, and improves socratic-engine predicates and trees through four levels of recursive self-improvement (RSI). It uses a **Genetic Algorithm (GA)** to evolve predicate structures through feature construction and decision trees.
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.5 — Adversarial benchmark suite. 775 tests, context-aware predicates, behavioral validation, 4 scenario types (prisoner, parábola, XOR 5D, señal+ruido).
+**Status:** v0.2.7 — Genoma-V3 with enriched representation. 785 tests. Checkerboard XOR solved at 100%. 5D XOR at 80%.
 
 ---
 
@@ -95,6 +95,9 @@ At its core, vsf-rsi provides:
 - **Manifest Parser** (`rsi_manifest_parser.py`) — parses RSI manifest files for tree/predicate registration
 - **Benchmark** (`rsi_benchmark.py`) — load scenarios, run benchmarks, save/load reports, compute improvement curves
 - **Adversarial Scenarios** (`rsi_adversarial.py`) — 4 scenario generators: Prisoner's Dilemma, Parábola Silenciosa, XOR 5D, Señal en Ruido
+- **Genome V3** (`rsi_genome_v3.py`) — Genetic Algorithm genome with feature construction, decision trees, sign normalization, parity detection, and Tabu memory
+- **Adversarial Harness** (`rsi_adversarial_harness.py`) — connects GA to adversarial benchmarks for fitness evaluation
+- **Stress Tests** (`rsi_stress_test.py`) — 32 tests across 7 dimensions to find breaking points
 - **Demo** (`rsi_demo.py`) — runnable demo: generate → evaluate → evolve → measurable improvement
 - **Error Recovery** — system continues with degraded functionality on failures (never crashes)
 - **Logging** — structured logging via `logging.getLogger("vsf_rsi.observer")`
@@ -492,7 +495,7 @@ Key safety properties:
 - **[docs/rsi_forests.vsm](./docs/rsi_forests.vsm)** — generated forest populations (VSM notation).
 - **[docs/rsi_generated_predicates.vsm](./docs/rsi_generated_predicates.vsm)** — generated predicates (VSM notation).
 - **[docs/rsi_generated_trees.vsm](./docs/rsi_generated_trees.vsm)** — generated trees (VSM notation).
-- **[tests/](./tests/)** — 775 tests.
+- **[tests/](./tests/)** — 785 tests.
 
 ---
 
@@ -509,11 +512,22 @@ See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 - [x] CI fix: install socratic-engine before running tests
 - [x] 775 tests
 
+### v0.2.7 — Genoma-V3: Genetic Algorithm ✅
+- [x] **Genetic Algorithm** with enriched genome representation
+- [x] Feature construction graph with variadic operations and chaining
+- [x] Sign normalization, parity detection, XOR-2 operations
+- [x] Tabu memory to avoid repeated failed feature combinations
+- [x] Checkerboard XOR solved at 100% (autonomous discovery of sign + parity)
+- [x] 5D XOR at 80% test accuracy
+- [x] Unit circle at 100%
+- [x] Stress test suite: 32 tests across 7 dimensions
+- [x] 785 tests
+
 ### v0.3.0 — Production
 - [ ] Dashboard for observation
 - [ ] Cross-validation
 - [ ] Overfitting detection
-- [ ] GA produces trees with fitness > 0.7 on real benchmark
+- [ ] Kernel integration for high-dimensional vector operations
 
 ---
 

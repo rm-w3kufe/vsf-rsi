@@ -1,5 +1,28 @@
 # Changelog — vsf-rsi
 
+## [0.2.7] — 2026-09-01
+
+### Added
+- **Genome V3** (`rsi_genome_v3.py`) — Genetic Algorithm with enriched genome representation
+  - Feature construction graph with variadic operations (mul, add with N inputs)
+  - Feature chaining: d1 can reference d0 (sequential composition)
+  - Sign normalization: `op_sign` collapses continuous to {-1, 0, +1}
+  - Parity detection: `op_parity` counts negative inputs mod 2
+  - XOR-2: `op_xor2` compares signs of two inputs
+  - Count negatives: `op_count_neg` for sign-based features
+  - TabuMemory: remembers failed feature combinations to avoid repetition
+- **Stress test suite** (`rsi_stress_test.py`) — 32 tests across 7 dimensions
+- Checkerboard XOR solved at 100% (GA autonomously discovered sign + parity)
+- 5D XOR improved to 80% test accuracy
+
+## [0.2.6] — 2026-09-01
+
+### Added
+- **rsi_adversarial_harness.py** — genome→predicate bridge, GA with adversarial fitness
+- **rsi_stress_test.py** — breaking point analysis across 7 dimensions
+- 5-fold cross-validation on all 4 scenario types
+- Results: GA improves over random by +52.5% mean
+
 ## [0.2.5] — 2026-09-01
 
 ### Added
