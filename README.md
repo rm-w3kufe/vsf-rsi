@@ -78,26 +78,49 @@ The central boundary is:
 
 At its core, vsf-rsi provides:
 
-- **Observer** (`rsi_observer.py`) — wraps `SocraticEngine.evaluate()` to capture every evaluation event, discriminate errors, and resolve them through L1-L4
-- **Bridge** (`rsi_bridge.py`) — integrates with `state-canon-mcp` for canonical state queries, metrics feedback, and rule enforcement
+**Core:**
+- **Observer** (`rsi_observer.py`) — wraps `SocraticEngine.evaluate()` to capture every evaluation event, discriminate errors, and resolve them through L1-L4. Extracted helper methods for error handling, fallback events, and resolution. Circular buffer (500 actions) for memory safety.
 - **Metrics** (`rsi_metrics.py`) — tracks classification history, accuracy, latency, and threshold adjustments
-- **Feedback Loop** (`rsi_feedback_loop.py`) — manages threshold adjustments with drift bounds and step limits
+- **Bridge** (`rsi_bridge.py`) — integrates with `state-canon-mcp` for canonical state queries, metrics feedback, and rule enforcement
+- **Socratic Bridge** (`rsi_socratic_bridge.py`) — registers RSI predicates and trees in socratic-engine
+- **Pipeline** (`rsi_pipeline.py`) — full evolution cycle orchestrator: load predicates → evaluate → learn → register. Includes input sanitization, structured condition trees (no exec()), and global engine singleton.
+
+**L3 Autonomous Cycle:**
+- **Autonomous L3** (`rsi_autonomous_l3.py`) — orchestrator: detect → generate strategies → shadow validate → activate → monitor. Uses genome V3 for strategy generation with comparison predicates (gt/lt/eq) and contradiction detection.
+- **Fault Detector** (`rsi_fault_detector.py`) — detects complex faults (≥3 BLOCKING errors in 10 evals) with fault signatures, sliding windows, and error ratios
+- **Shadow Mode** (`rsi_shadow_mode.py`) — validates strategies with 10 real evaluations before activation. Tracks baseline vs candidate accuracy.
+- **Rollback Manager** (`rsi_rollback.py`) — monitors activated strategies, auto-reverts if accuracy degrades below baseline
+
+**Learning:**
 - **Scenario Memory** (`scenario_memory.py`) — procedural learning: records failures with correction paths, matches novel faults to prior corrections
+- **Scenario Bridge** (`rsi_scenario_bridge.py`) — connects failures → gaps → corrections across modules
+- **Feedback Loop** (`rsi_feedback_loop.py`) — manages threshold adjustments with drift bounds and step limits
 - **Gap Detector** (`rsi_gap_detector.py`) — detects evaluation gaps: stale predicates, missing branches, low accuracy
 - **Pattern Detector** (`rsi_pattern_detector.py`) — identifies recurring error patterns with time-based decay (10%/day)
+
+**Generation:**
 - **Predicate Generator** (`rsi_predicate_generator.py`) — creates new predicates from error patterns (with AST validation)
 - **Tree Generator** (`rsi_tree_generator.py`) — generates evaluation trees from gap analysis
+- **Advanced Tree Generator** (`rsi_advanced_tree_generator.py`) — threshold-optimized and coverage trees
 - **Forest Generator** (`rsi_forest_generator.py`) — generates populations of trees for genetic evolution
+- **Tree Registry** (`rsi_tree_registry.py`) — manages predicate versions, prevents conflicts, tracks lineage
+
+**Genetic Algorithm:**
+- **Genome V2** (`rsi_genome_v2.py`) — base genome with dictionary dispatch for operator application
+- **Genome V3** (`rsi_genome_v3.py`) — enriched genome with feature construction, variadic ops, chaining, sign normalization, parity detection, XOR-2, and Tabu memory
 - **Genetic Algorithm v1** (`rsi_genetic_algorithm.py`) — evolves predicate populations with tournament selection, crossover, mutation, and convergence detection
 - **Genetic Algorithm v2** (`rsi_genetic_algorithm_v2.py`) — improved GA with adaptive mutation rates
-- **Tree Registry** (`rsi_tree_registry.py`) — manages predicate versions, prevents conflicts, tracks lineage
-- **Component Registry** (`rsi_component_registry.py`) — maps package components to their roles and dependencies
-- **Manifest Parser** (`rsi_manifest_parser.py`) — parses RSI manifest files for tree/predicate registration
+- **Adversarial Harness** (`rsi_adversarial_harness.py`) — connects GA to adversarial benchmarks for fitness evaluation
+- **Adversarial Harness v2** (`rsi_adversarial_harness_v2.py`) — improved adversarial fitness with raw feature extraction
+
+**Benchmarking:**
 - **Benchmark** (`rsi_benchmark.py`) — load scenarios, run benchmarks, save/load reports, compute improvement curves
 - **Adversarial Scenarios** (`rsi_adversarial.py`) — 4 scenario generators: Prisoner's Dilemma, Parábola Silenciosa, XOR 5D, Señal en Ruido
-- **Genome V3** (`rsi_genome_v3.py`) — Genetic Algorithm genome with feature construction, decision trees, sign normalization, parity detection, and Tabu memory
-- **Adversarial Harness** (`rsi_adversarial_harness.py`) — connects GA to adversarial benchmarks for fitness evaluation
 - **Stress Tests** (`rsi_stress_test.py`) — 32 tests across 7 dimensions to find breaking points
+
+**Infrastructure:**
+- **Component Registry** (`rsi_component_registry.py`) — maps package components to their roles and dependencies
+- **Manifest Parser** (`rsi_manifest_parser.py`) — parses RSI manifest files for tree/predicate registration
 - **Demo** (`rsi_demo.py`) — runnable demo: generate → evaluate → evolve → measurable improvement
 - **Error Recovery** — system continues with degraded functionality on failures (never crashes)
 - **Logging** — structured logging via `logging.getLogger("vsf_rsi.observer")`
@@ -114,8 +137,12 @@ flowchart TD
         A2["inject predicate wrappers<br/>(autonomous)"]
     end
     
-    subgraph L3["L3: Predicate Generation"]
-        A3["generate new predicates<br/>(human approval)"]
+    subgraph L3["L3: Autonomous Strategy Cycle"]
+        D["fault detector<br/>(≥3 BLOCKING in 10 evals)"]
+        G["genome V3<br/>(generate strategies)"]
+        S["shadow mode<br/>(10 real evals)"]
+        R["rollback manager<br/>(auto-revert if degrades)"]
+        D --> G --> S --> R
     end
     
     subgraph L4["L4: Genetic Evolution"]
@@ -123,15 +150,15 @@ flowchart TD
     end
     
     L1 -->|"if drift fails"| L2
-    L2 -->|"if pattern detected"| L3
-    L3 -->|"if enough data"| L4
+    L2 -->|"if pattern detected"| D
+    R -->|"if enough data"| L4
 ```
 
 | Level | What | Autonomous? | Safety |
 |---|---|---|---|
 | **L1** | Adjust existing thresholds | ✓ Yes | Reversible (JSON) |
 | **L2** | Create wrapper predicates | ✓ Yes | Validated before keeping |
-| **L3** | Generate new predicates | ✗ No | Human approval required |
+| **L3** | Detect faults → generate strategies → shadow validate → activate → monitor | ✓ Yes | Shadow mode (10 evals) + auto-rollback |
 | **L4** | Evolve predicate populations | ✗ No | Human approval required |
 
 ### state-canon-mcp integration
@@ -176,14 +203,35 @@ python -m vsf_rsi.rsi_gap_detector gaps
 python -m vsf_rsi.rsi_tree_generator generate
 python -m vsf_rsi.rsi_tree_generator list
 
+# Advanced tree generator — threshold-optimized and coverage trees
+python -m vsf_rsi.rsi_advanced_tree_generator generate
+
 # Forest generator — create populations for GA
 python -m vsf_rsi.rsi_forest_generator generate --predicate stasis_check
 python -m vsf_rsi.rsi_forest_generator evolve --predicate stasis_check
 python -m vsf_rsi.rsi_forest_generator best --predicate stasis_check
 python -m vsf_rsi.rsi_forest_generator list
 
+# Pipeline — full evolution cycle
+python -m vsf_rsi.rsi_pipeline status
+
+# Autonomous L3 — detect → generate → shadow → activate
+python -m vsf_rsi.rsi_autonomous_l3 status
+
+# Fault detector — detect complex faults
+python -m vsf_rsi.rsi_fault_detector status
+
+# Shadow mode — validate strategies
+python -m vsf_rsi.rsi_shadow_mode status
+
+# Rollback manager — monitor activated strategies
+python -m vsf_rsi.rsi_rollback status
+
 # Component registry — manage components
 python -m vsf_rsi.rsi_component_registry list
+
+# Demo — full RSI cycle
+python -m vsf_rsi.rsi_demo
 ```
 
 ---
@@ -242,10 +290,18 @@ flowchart TD
         RE["resolve: L1 / L2 / L3 / L4"]
     end
     
+    subgraph L3Cycle["L3 Autonomous Cycle"]
+        FD["fault_detector<br/>detect complex faults"]
+        G3["genome_v3<br/>generate strategies"]
+        SM["shadow_mode<br/>10 real evals"]
+        RB["rollback_manager<br/>auto-revert"]
+        FD --> G3 --> SM --> RB
+    end
+    
     subgraph RSIModules["RSI Modules"]
         MET["rsi_metrics<br/>track + aggregate"]
         FL["rsi_feedback_loop<br/>adjust thresholds"]
-        SM["scenario_memory<br/>match + record"]
+        SC["scenario_memory<br/>match + record"]
         PG["rsi_predicate_generator<br/>create predicates"]
         GA["rsi_genetic_algorithm<br/>evolve populations"]
     end
@@ -263,11 +319,12 @@ flowchart TD
     DI -->|"classify"| RE
     RE -->|"L1"| FL
     RE -->|"L2"| OB
-    RE -->|"L3"| PG
+    RE -->|"L3"| FD
     RE -->|"L4"| GA
     FL -->|"adjust"| PD
-    SM -->|"match"| RE
-    SM -->|"record"| RE
+    SC -->|"match"| RE
+    SC -->|"record"| RE
+    RB -->|"activate"| PD
     A0 -.->|"constrain"| RE
     A5 -.->|"constrain"| RE
     R17 -.->|"constrain"| RE
@@ -328,7 +385,7 @@ sequenceDiagram
     participant Observer
     participant Engine
     participant Metrics
-    participant Resolver
+    participant L3Cycle as L3 Autonomous Cycle
     
     User->>Observer: evaluate(tree, ctx)
     Observer->>Engine: original evaluate()
@@ -337,12 +394,19 @@ sequenceDiagram
     Observer->>Observer: discriminate(error)
     
     alt error detected
-        Observer->>Resolver: resolve_error(event, ctx)
-        Resolver->>Resolver: try L1 (parameter drift)
-        alt L1 fails
-            Resolver->>Resolver: try L2 (inject predicate)
+        Observer->>Observer: resolve_error(event, ctx)
+        alt L1: parameter drift
+            Observer->>Observer: adjust threshold
+        else L2: capability extension
+            Observer->>Observer: inject wrapper predicate
+        else L3: autonomous cycle
+            Observer->>L3Cycle: run_cycle(fault)
+            L3Cycle->>L3Cycle: detect faults (≥3 BLOCKING)
+            L3Cycle->>L3Cycle: generate strategies (genome V3)
+            L3Cycle->>L3Cycle: shadow validate (10 evals)
+            L3Cycle->>L3Cycle: activate + monitor
+            L3Cycle-->>Observer: L3CycleResult
         end
-        Resolver-->>Observer: action
     end
     
     Observer-->>User: event + actions
@@ -461,10 +525,10 @@ flowchart TD
     subgraph Autonomous["Autonomous (no approval)"]
         L1["L1: parameter_drift<br/>adjust thresholds"]
         L2["L2: inject_predicate<br/>create wrappers"]
+        L3["L3: autonomous cycle<br/>detect → generate → shadow → activate"]
     end
     
     subgraph HumanApproval["Human Approval Required"]
-        L3["L3: generate_predicate<br/>create new predicates"]
         L4["L4: evolve_forest<br/>genetic evolution"]
     end
     
@@ -476,15 +540,16 @@ flowchart TD
     
     L1 -->|"validate before keeping"| L1
     L2 -->|"validate before keeping"| L2
-    L3 -->|"require approval"| L3
+    L3 -->|"shadow mode + auto-rollback"| L3
     L4 -->|"require approval"| L4
 ```
 
 Key safety properties:
 - **A0/A0.1**: Purpose is inalienable — RSI cannot change system purpose
-- **A5**: Autonomy ceiling — L1 is autonomous, L2+ requires validation
+- **A5**: Autonomy ceiling — L1-L3 are autonomous, L4 requires human approval
 - **R17**: Destructive actions always require explicit human consent
 - **R4**: Trust requires independent check — RSI cannot self-certify
+- **L3 safety**: Shadow mode validates with 10 real evaluations before activation. Rollback manager auto-reverts if accuracy degrades below baseline.
 
 ---
 
