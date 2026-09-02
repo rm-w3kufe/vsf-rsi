@@ -28,7 +28,6 @@ def register_rsi_predicate(
     engine,
     name: str,
     func: Callable,
-    inject_context: bool = True,
 ) -> bool:
     """Register a vsf-rsi-generated predicate in socratic-engine.
     
@@ -40,7 +39,6 @@ def register_rsi_predicate(
         engine: SocraticEngine instance
         name: predicate name (must be unique)
         func: predicate function (must accept _context kwarg)
-        inject_context: whether to inject context (default True)
     
     Returns:
         True if registered, False if name already exists

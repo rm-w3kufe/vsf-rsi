@@ -22,7 +22,7 @@ import copy
 import random
 import math
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
 # ── Feature Construction ─────────────────────────────────────────────
@@ -187,33 +187,23 @@ def evaluate_features(
 
 def _apply_op(op: str, inputs: List[float], constant: float = 0.0) -> float:
     """Apply an operation to input values."""
-    if op == "add":
-        return sum(inputs) if inputs else 0.0
-    elif op == "sub":
-        return inputs[0] - inputs[1] if len(inputs) >= 2 else inputs[0] if inputs else 0.0
-    elif op == "mul":
-        result = 1.0
-        for v in inputs:
-            result *= v
-        return result
-    elif op == "abs":
-        return abs(inputs[0]) if inputs else 0.0
-    elif op == "square":
-        return inputs[0] ** 2 if inputs else 0.0
-    elif op == "constant":
-        return constant
-    elif op == "gt":
-        return 1.0 if inputs[0] > inputs[1] else 0.0 if len(inputs) >= 2 else 0.0
-    elif op == "lt":
-        return 1.0 if inputs[0] < inputs[1] else 0.0 if len(inputs) >= 2 else 0.0
-    elif op == "and":
-        return 1.0 if all(v > 0.5 for v in inputs) else 0.0
-    elif op == "or":
-        return 1.0 if any(v > 0.5 for v in inputs) else 0.0
-    elif op == "not":
-        return 0.0 if inputs and inputs[0] > 0.5 else 1.0
-    else:
-        return 0.0
+    # Operation handlers
+    ops = {
+        "add": lambda: sum(inputs) if inputs else 0.0,
+        "sub": lambda: inputs[0] - inputs[1] if len(inputs) >= 2 else inputs[0] if inputs else 0.0,
+        "mul": lambda: __import__('functools').reduce(lambda a, b: a * b, inputs, 1.0),
+        "abs": lambda: abs(inputs[0]) if inputs else 0.0,
+        "square": lambda: inputs[0] ** 2 if inputs else 0.0,
+        "constant": lambda: constant,
+        "gt": lambda: 1.0 if inputs[0] > inputs[1] else 0.0 if len(inputs) >= 2 else 0.0,
+        "lt": lambda: 1.0 if inputs[0] < inputs[1] else 0.0 if len(inputs) >= 2 else 0.0,
+        "and": lambda: 1.0 if all(v > 0.5 for v in inputs) else 0.0,
+        "or": lambda: 1.0 if any(v > 0.5 for v in inputs) else 0.0,
+        "not": lambda: 0.0 if inputs and inputs[0] > 0.5 else 1.0,
+    }
+    
+    handler = ops.get(op, lambda: 0.0)
+    return handler()
 
 
 # ── Tree Evaluation ──────────────────────────────────────────────────

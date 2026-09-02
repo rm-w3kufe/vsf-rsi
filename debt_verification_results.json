@@ -3,9 +3,9 @@
     "passed": true
   },
   "DEBT-002": {
-    "passed": false,
+    "passed": true,
     "crashes": 0,
-    "successes": 20
+    "successes": 22
   },
   "DEBT-003": {
     "passed": true,

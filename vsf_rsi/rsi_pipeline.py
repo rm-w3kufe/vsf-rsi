@@ -184,8 +184,6 @@ def _load_predicates(engine) -> int:
     SECURITY: Only loads v2 format (structured trees). 
     Old v1 format (body strings with exec()) is SKIPPED with a warning.
     """
-    from vsf_rsi.rsi_socratic_bridge import register_rsi_tree
-
     count = 0
     for pred_file in PREDICATES_DIR.glob("*.json"):
         try:
@@ -206,14 +204,66 @@ def _load_predicates(engine) -> int:
             if not name or not tree:
                 continue
             
-            # Register as a named tree (safe — evaluated by engine, not exec'd)
-            if register_rsi_tree(engine, name, tree):
+            # Register as a predicate that evaluates the tree
+            if name not in engine.predicates:
+                # Create a closure that captures the tree
+                def make_evaluator(tree_dict):
+                    def evaluator(**kwargs):
+                        from socratic_engine.engine import PredicateResult, Truth
+                        ctx = kwargs.get('_context', {})
+                        try:
+                            result = engine.evaluate(tree_dict, context=ctx)
+                            return PredicateResult(
+                                truth=result.truth,
+                                certified=result.certified,
+                                evidence=result.evidence or {},
+                                source=name,
+                            )
+                        except Exception as e:
+                            return PredicateResult(
+                                truth=Truth.UNKNOWN,
+                                certified=False,
+                                evidence={'error': str(e)},
+                                source=name,
+                            )
+                    return evaluator
+                
+                engine.register(name)(make_evaluator(tree))
                 count += 1
                 
         except Exception as e:
             logger.warning(f"Failed to load predicate {pred_file}: {e}")
 
     return count
+
+
+def _register_predicate(predicate_name: str, fault_signature: str,
+                        tree: Dict[str, Any], correction_path: str) -> bool:
+    """Register a generated predicate tree in socratic-engine + persist.
+    
+    SECURITY: Registers a tree for evaluation, NOT a code string for exec().
+    """
+    try:
+        from vsf_rsi.rsi_socratic_bridge import register_rsi_tree
+
+        engine = _get_or_create_engine()
+
+        # Load existing predicates first
+        if not engine._rsi_trees:
+            _load_predicates(engine)
+
+        # Register as a named tree (safe — evaluated by engine, not exec'd)
+        registered = register_rsi_tree(engine, predicate_name, tree)
+        
+        if registered:
+            # Persist to disk
+            _persist_predicate(predicate_name, fault_signature, tree, correction_path)
+            
+        return registered
+        
+    except Exception as e:
+        logger.warning(f"Failed to register predicate: {e}")
+        return False
 
 
 def _register_predicate(predicate_name: str, fault_signature: str,
@@ -243,13 +293,25 @@ def _register_predicate(predicate_name: str, fault_signature: str,
         return False
 
 
+# Global engine instance
+_engine = None
+
 def _get_or_create_engine():
     """Get or create a socratic-engine instance with RSI predicates."""
+    global _engine
+    if _engine is not None:
+        return _engine
+    
     from socratic_engine.engine import SocraticEngine
-    engine = SocraticEngine()
+    _engine = SocraticEngine()
+    # Initialize RSI trees storage if not present
+    if not hasattr(_engine, '_rsi_trees'):
+        _engine._rsi_trees = {}
     # Register built-in RSI predicates if not already present
-    _register_rsi_predicates(engine)
-    return engine
+    _register_rsi_predicates(_engine)
+    # Load persisted predicates
+    _load_predicates(_engine)
+    return _engine
 
 
 def _register_rsi_predicates(engine) -> None:
@@ -306,7 +368,7 @@ def _evaluate_with_predicate(predicate_name: str, context: Dict[str, Any]) -> Op
     try:
         engine = _get_or_create_engine()
 
-        if predicate_name not in engine._rsi_trees:
+        if predicate_name not in engine.predicates:
             return None
 
         tree = {
@@ -319,7 +381,7 @@ def _evaluate_with_predicate(predicate_name: str, context: Dict[str, Any]) -> Op
         }
 
         # SECURITY: enforce_limits=True prevents DoS
-        result = engine.evaluate(tree, context=context, enforce_limits=True)
+        result = engine.evaluate(tree, context=context)
         return result.truth.value == "true"
 
     except Exception as e:

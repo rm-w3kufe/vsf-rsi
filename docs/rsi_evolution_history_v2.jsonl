@@ -98,3 +98,17 @@
 {"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-01T22:59:28.401189+00:00"}
 {"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-01T23:00:35.737410+00:00"}
 {"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-01T23:00:35.743585+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T19:27:06.358068+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T19:27:06.363470+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T20:58:37.191938+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T20:58:37.203665+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T21:12:33.229749+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T21:12:33.236627+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T21:45:36.483685+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T21:45:36.491474+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T21:48:31.006920+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T21:48:31.013345+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T22:17:48.152444+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T22:17:48.161103+00:00"}
+{"generation": 0, "avg_fitness": 0.1325, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T22:27:57.135844+00:00"}
+{"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-02T22:27:57.144770+00:00"}

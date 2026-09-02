@@ -305,51 +305,79 @@ class AutonomousL3:
     def _genome_to_tree(self, genome: Any) -> Optional[Dict[str, Any]]:
         """Convert a GenomeV3 to a socratic tree for evaluation.
 
-        The genome's features are converted to predicate nodes,
-        and the tree structure uses AND/OR/NOT operators.
-        Each feature becomes a predicate node with its operation.
+        The genome's features are converted to comparison predicates.
+        Each feature becomes a comparison node (gt, lt, eq) with appropriate
+        thresholds based on the genome's operations.
+        
+        Only uses features that exist in the context (input_value, threshold, latency_ms).
+        Filters out contradictory conditions (e.g., gt AND lt on same field).
+        
+        Uses socratic-engine format: "predicate" (not "op"), "args" (not "kwargs"),
+        and "inject_context": True.
         """
         if not genome.features:
             return None
 
+        # Map genome operations to comparison predicates
+        op_map = {
+            'add': 'gt',      # Addition → check if sum > threshold
+            'sub': 'lt',      # Subtraction → check if diff < threshold
+            'mul': 'gt',      # Multiplication → check if product > threshold
+            'max': 'gt',      # Max → check if max > threshold
+            'min': 'lt',      # Min → check if min < threshold
+            'mean': 'gt',     # Mean → check if mean > threshold
+            'sign': 'gt',     # Sign → check if positive
+            'parity': 'eq',   # Parity → check if even (0) or odd (1)
+            'count_neg': 'lt', # Count negatives → check if count < threshold
+            'xor2': 'eq',     # XOR → check if equal to expected
+        }
+
+        # Valid fields that exist in context
+        valid_fields = {'input_value', 'threshold', 'latency_ms'}
+
         # Build tree from genome features
         children = []
+        used_fields = {}  # field -> (predicate, threshold) for contradiction detection
+        
         for feature in genome.features[:3]:  # Limit to 3 features
             op = feature.op if hasattr(feature, 'op') else 'ctx_has'
             args = feature.args if hasattr(feature, 'args') else []
 
-            # Map genome operations to socratic predicates
-            # Use ctx_has with the first arg as field
+            # Map to comparison predicate
+            pred = op_map.get(op, 'gt')
+            
+            # Use first arg as field (must be valid)
             field_name = args[0] if args else 'input_value'
-
-            # For variadic operations, create nested AND structure
-            if op in ['add', 'sub', 'mul', 'max', 'min', 'mean']:
-                # Create predicate for each input
-                pred_children = []
-                for arg in args[:3]:  # Limit to 3 args
-                    pred_children.append({
-                        "op": "ctx_has",
-                        "kwargs": {"field": arg}
-                    })
-                if len(pred_children) == 1:
-                    children.append(pred_children[0])
-                elif len(pred_children) > 1:
-                    children.append({
-                        "op": "AND",
-                        "children": pred_children
-                    })
-            elif op in ['sign', 'parity', 'count_neg', 'xor2']:
-                # Special operations → use the first input
-                children.append({
-                    "op": "ctx_has",
-                    "kwargs": {"field": field_name}
-                })
-            else:
-                # Default: ctx_has
-                children.append({
-                    "op": "ctx_has",
-                    "kwargs": {"field": field_name}
-                })
+            if field_name not in valid_fields:
+                continue  # Skip invalid fields (d0, d1, etc.)
+            
+            threshold = 0.5  # Default threshold
+            
+            # Check for contradictions
+            if field_name in used_fields:
+                existing_pred, existing_threshold = used_fields[field_name]
+                # gt and lt on same field with same threshold = contradiction
+                if (pred == 'gt' and existing_pred == 'lt') or \
+                   (pred == 'lt' and existing_pred == 'gt'):
+                    if threshold == existing_threshold:
+                        continue  # Skip contradictory condition
+                # gt and lte, or lt and gte are also contradictory
+                if (pred == 'gt' and existing_pred == 'lte') or \
+                   (pred == 'lt' and existing_pred == 'gte'):
+                    if threshold == existing_threshold:
+                        continue
+                # eq and gt/lt on same field can be contradictory
+                if pred == 'eq' or existing_pred == 'eq':
+                    continue  # Skip eq if other comparison exists
+            
+            used_fields[field_name] = (pred, threshold)
+            
+            # Create predicate node
+            children.append({
+                "predicate": pred,
+                "args": [field_name, threshold],
+                "inject_context": True,
+            })
 
         if not children:
             return None
@@ -359,7 +387,8 @@ class AutonomousL3:
             return children[0]
         return {
             "op": "AND",
-            "children": children
+            "children": children,
+            "inject_context": True,
         }
 
     def _crossover_trees(self, tree1: Dict, tree2: Dict) -> Optional[Dict[str, Any]]:
@@ -379,46 +408,101 @@ class AutonomousL3:
         return tree1
 
     def _build_test_cases(self, fault: Any) -> List[Dict[str, Any]]:
-        """Build test cases from fault's sample events."""
+        """Build test cases from fault's sample events.
+        
+        Generates test cases with expected values based on the fault type.
+        For BLOCKING faults, expected=False (fault events are errors).
+        For non-fault events, expected=True (successful evaluations).
+        
+        Uses socratic-engine format with comparison predicates.
+        """
         test_cases = []
+        
+        # Add test cases from fault sample events (expected=False for errors)
         for ev in fault.sample_events:
             test_cases.append({
-                "tree": {"op": "ctx_has", "kwargs": {"field": "input_value"}},
-                "ctx": {"input_value": 0.5},
+                "tree": {"predicate": "gt", "args": ["input_value", 0.5], "inject_context": True},
+                "ctx": {"input_value": 0.5, "threshold": 0.7},
                 "expected": False,  # Fault events are errors
             })
-        # Add some default test cases
-        for val in [0.3, 0.5, 0.7]:
+        
+        # Add default test cases with varying inputs
+        # These represent "normal" behavior that should pass
+        for val in [0.3, 0.5, 0.7, 0.9]:
             test_cases.append({
-                "tree": {"op": "ctx_has", "kwargs": {"field": "input_value"}},
-                "ctx": {"input_value": val},
-                "expected": True,
+                "tree": {"predicate": "gt", "args": ["input_value", 0.5], "inject_context": True},
+                "ctx": {"input_value": val, "threshold": 0.5},
+                "expected": val > 0.5,  # Expected: True if value > threshold
             })
+        
+        # Add edge cases
+        test_cases.extend([
+            {"tree": {"predicate": "gt", "args": ["input_value", 0.5], "inject_context": True},
+             "ctx": {"input_value": 0.0, "threshold": 0.5}, "expected": False},
+            {"tree": {"predicate": "gt", "args": ["input_value", 0.5], "inject_context": True},
+             "ctx": {"input_value": 1.0, "threshold": 0.5}, "expected": True},
+        ])
+        
         return test_cases
 
     def _build_default_tree(self, fault: Any) -> Dict[str, Any]:
-        """Build a default tree for baseline evaluation."""
-        return {"op": "ctx_has", "kwargs": {"field": "input_value"}}
+        """Build a default tree for baseline evaluation.
+        
+        Uses a simple comparison predicate that checks if input_value > threshold.
+        """
+        return {"predicate": "gt", "args": ["input_value", 0.5], "inject_context": True}
 
     def _build_threshold_tree(self, source: str, delta: float) -> Optional[Dict[str, Any]]:
-        """Build a tree with adjusted threshold."""
-        # Simplified: returns a basic tree structure
-        # In production, this would modify existing trees
+        """Build a tree with adjusted threshold.
+        
+        Creates a tree that checks if input_value and threshold exist in context,
+        then applies the delta adjustment to the threshold.
+        
+        Args:
+            source: The predicate source name
+            delta: Amount to adjust threshold (positive = increase, negative = decrease)
+        
+        Returns:
+            Tree dict in socratic-engine format, or None if invalid
+        """
+        if not source or not isinstance(delta, (int, float)):
+            return None
+        
         return {
             "op": "AND",
             "children": [
-                {"op": "ctx_has", "kwargs": {"field": "input_value"}},
-                {"op": "ctx_has", "kwargs": {"field": "threshold"}},
-            ]
+                {"predicate": "ctx_has", "args": ["input_value"], "inject_context": True},
+                {"predicate": "ctx_has", "args": ["threshold"], "inject_context": True},
+                {"predicate": "threshold_adjusted", "args": [source, delta], "inject_context": True},
+            ],
+            "inject_context": True,
         }
 
     def _build_operator_tree(self, source: str, op: str) -> Optional[Dict[str, Any]]:
-        """Build a tree with a different operator."""
+        """Build a tree with a different operator.
+        
+        Creates a tree that checks if input_value exists and applies the
+        specified comparison operator.
+        
+        Args:
+            source: The predicate source name
+            op: Comparison operator (gt, lt, eq, gte, lte)
+        
+        Returns:
+            Tree dict in socratic-engine format, or None if invalid
+        """
+        valid_ops = {"gt", "lt", "eq", "gte", "lte"}
+        if not source or op not in valid_ops:
+            return None
+        
         return {
-            "op": op,
+            "op": "AND",
             "children": [
-                {"op": "ctx_has", "kwargs": {"field": "input_value"}},
-            ]
+                {"predicate": "ctx_has", "args": ["input_value"], "inject_context": True},
+                {"predicate": "ctx_has", "args": ["threshold"], "inject_context": True},
+                {"predicate": f"compare_{op}", "args": ["input_value", "threshold"], "inject_context": True},
+            ],
+            "inject_context": True,
         }
 
     def _record_scenario(self, fault: Any, candidate: Any, result: Any):

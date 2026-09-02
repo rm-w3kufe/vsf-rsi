@@ -307,5 +307,97 @@ class TestObserverIntegration(unittest.TestCase):
         self.assertTrue(len(obs.events) >= 1)
 
 
+class TestBuildThresholdTree(unittest.TestCase):
+    """Test _build_threshold_tree (DEBT-001 fix)."""
+
+    def setUp(self):
+        self.l3 = AutonomousL3.__new__(AutonomousL3)
+
+    def test_returns_valid_tree(self):
+        tree = self.l3._build_threshold_tree("test_pred", 0.05)
+        self.assertIsNotNone(tree)
+        self.assertEqual(tree["op"], "AND")
+        self.assertIn("children", tree)
+        self.assertEqual(len(tree["children"]), 3)
+
+    def test_tree_has_inject_context(self):
+        tree = self.l3._build_threshold_tree("test_pred", 0.05)
+        self.assertTrue(tree.get("inject_context", False))
+        for child in tree["children"]:
+            self.assertTrue(child.get("inject_context", False))
+
+    def test_tree_uses_predicate_format(self):
+        tree = self.l3._build_threshold_tree("test_pred", 0.05)
+        for child in tree["children"]:
+            self.assertIn("predicate", child)
+            self.assertNotIn("op", child)  # Should NOT use "op" for predicates
+
+    def test_returns_none_on_empty_source(self):
+        tree = self.l3._build_threshold_tree("", 0.05)
+        self.assertIsNone(tree)
+
+    def test_returns_none_on_invalid_delta(self):
+        tree = self.l3._build_threshold_tree("test_pred", "invalid")
+        self.assertIsNone(tree)
+
+    def test_tree_structure_matches_socratic_engine(self):
+        """Verify tree can be evaluated by socratic-engine."""
+        from socratic_engine.engine import SocraticEngine
+        engine = SocraticEngine()
+        
+        # Register a mock predicate for threshold_adjusted
+        @engine.register("threshold_adjusted")
+        def threshold_adjusted(ctx, source=None, delta=0.0, **kw):
+            from socratic_engine.engine import PredicateResult, Truth
+            return PredicateResult(
+                truth=Truth.TRUE,
+                certified=True,
+                evidence={"source": source, "delta": delta},
+                source="threshold_adjusted",
+            )
+        
+        tree = self.l3._build_threshold_tree("test_pred", 0.05)
+        ctx = {"input_value": 0.5, "threshold": 0.7}
+        
+        # This should NOT raise "Operador desconocido"
+        result = engine.evaluate(tree, ctx)
+        self.assertIsNotNone(result)
+
+
+class TestBuildOperatorTree(unittest.TestCase):
+    """Test _build_operator_tree (DEBT-001 fix)."""
+
+    def setUp(self):
+        self.l3 = AutonomousL3.__new__(AutonomousL3)
+
+    def test_returns_valid_tree_for_gt(self):
+        tree = self.l3._build_operator_tree("test_pred", "gt")
+        self.assertIsNotNone(tree)
+        self.assertEqual(tree["op"], "AND")
+        self.assertEqual(len(tree["children"]), 3)
+
+    def test_returns_valid_tree_for_lt(self):
+        tree = self.l3._build_operator_tree("test_pred", "lt")
+        self.assertIsNotNone(tree)
+
+    def test_returns_valid_tree_for_eq(self):
+        tree = self.l3._build_operator_tree("test_pred", "eq")
+        self.assertIsNotNone(tree)
+
+    def test_returns_none_on_invalid_op(self):
+        tree = self.l3._build_operator_tree("test_pred", "invalid_op")
+        self.assertIsNone(tree)
+
+    def test_returns_none_on_empty_source(self):
+        tree = self.l3._build_operator_tree("", "gt")
+        self.assertIsNone(tree)
+
+    def test_tree_has_inject_context(self):
+        tree = self.l3._build_operator_tree("test_pred", "gt")
+        self.assertTrue(tree.get("inject_context", False))
+        for child in tree["children"]:
+            self.assertTrue(child.get("inject_context", False))
+
+
 if __name__ == "__main__":
     unittest.main()

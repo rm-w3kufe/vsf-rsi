@@ -109,6 +109,7 @@ THRESHOLD_STEP: float = 0.05
 
 # BUG-003: Memory leak prevention (circular buffer for events)
 MAX_EVENTS: int = 1000
+MAX_ACTIONS: int = 500
 
 # BUG-001: Type validation (valid input types for comparison)
 VALID_INPUT_TYPES = (int, float)
@@ -728,6 +729,60 @@ class RSIObserver:
 
         logger.info(f"RSIObserver initialized: mode={self.mode} enforce_limits={self._supports_enforce_limits}")
 
+    def _handle_evaluation_error(self, error: Exception, error_type: str, t_start: float) -> tuple:
+        """Handle evaluation errors and return fallback result."""
+        t_end = time.monotonic()
+        latency_ms = (t_end - t_start) * 1000.0
+        
+        class FallbackResult:
+            is_true = False
+            is_unknown = True
+            truth = Truth.UNKNOWN
+            certified = False
+            metadata = {"error": error_type, "message": str(error)}
+            source = "unknown"
+        
+        return FallbackResult(), latency_ms
+    
+    def _build_fallback_event(self, tree_id: str, latency_ms: float) -> EvaluationEvent:
+        """Build a minimal fallback event when event building fails."""
+        return EvaluationEvent(
+            tree_id=tree_id,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            latency_ms=latency_ms,
+            source="unknown",
+            truth="UNKNOWN",
+            expected=False,
+            actual=False,
+            error_class=ErrorClass.NONE.value,
+        )
+    
+    def _handle_error_resolution(self, event: EvaluationEvent, ctx: Dict, tree: Any) -> Optional[RSIAction]:
+        """Handle error resolution with scenario matching."""
+        try:
+            fault_sig = f"{event.source}:error={event.error_class}"
+            scenario_correction = match_scenario(fault_sig)
+
+            if scenario_correction:
+                return RSIAction(
+                    event=event,
+                    level=ActionLevel.L1.value,
+                    action_type="scenario_match",
+                    params={"correction": scenario_correction},
+                    autonomous=True,
+                    resolution=f"scenario_matched:{scenario_correction}",
+                )
+            else:
+                return resolve_error(
+                    event, ctx,
+                    mode=self.mode,
+                    engine=self.engine,
+                    tree=tree,
+                )
+        except Exception as e:
+            logger.error(f"Error in error resolution: {e}")
+            return None
+    
     def evaluate(
         self,
         tree: Any,
@@ -765,39 +820,10 @@ class RSIObserver:
         try:
             result = self.engine.evaluate(tree, ctx, **eval_kwargs)
         except TypeError as e:
-            # Predicate crashed on non-numeric input
-            logger.warning(f"Predicate crashed on non-numeric input: {e}")
-            t_end = time.monotonic()
-            latency_ms = (t_end - t_start) * 1000.0
-            
-            # Create a fallback result
-            class FallbackResult:
-                is_true = False
-                is_unknown = True
-                truth = Truth.UNKNOWN
-                certified = False
-                metadata = {"error": "predicate_crash", "message": str(e)}
-                source = "unknown"
-            
-            result = FallbackResult()
-            
-            # Override input_value to prevent re-crash in _build_event
+            result, latency_ms = self._handle_evaluation_error(e, "predicate_crash", t_start)
             ctx["input_value"] = 0.5
         except Exception as e:
-            # DEBT-002: Catch-all for unexpected errors
-            logger.error(f"Unexpected error in engine.evaluate(): {e}")
-            t_end = time.monotonic()
-            latency_ms = (t_end - t_start) * 1000.0
-            
-            class FallbackResult:
-                is_true = False
-                is_unknown = True
-                truth = Truth.UNKNOWN
-                certified = False
-                metadata = {"error": "engine_crash", "message": str(e)}
-                source = "unknown"
-            
-            result = FallbackResult()
+            result, latency_ms = self._handle_evaluation_error(e, "engine_crash", t_start)
             ctx["input_value"] = 0.5
 
         t_end = time.monotonic()
@@ -808,17 +834,7 @@ class RSIObserver:
             event = self._build_event(result, ctx, tree_id, latency_ms)
         except Exception as e:
             logger.error(f"Error building event: {e}")
-            # Create a minimal fallback event
-            event = EvaluationEvent(
-                tree_id=tree_id,
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                latency_ms=latency_ms,
-                source="unknown",
-                truth="UNKNOWN",
-                expected=False,
-                actual=False,
-                error_class=ErrorClass.NONE.value,
-            )
+            event = self._build_fallback_event(tree_id, latency_ms)
 
         # BUG-003: Circular buffer to prevent memory leak
         self.events.append(event)
@@ -834,45 +850,20 @@ class RSIObserver:
         # Discriminate and resolve (with error recovery)
         if event.is_error:
             logger.info(f"Error detected: source={event.source}, class={event.error_class}")
-            try:
-                # Try scenario_memory match first
-                fault_sig = f"{event.source}:error={event.error_class}"
-                scenario_correction = match_scenario(fault_sig)
-
-                if scenario_correction:
-                    # Found a matching scenario — apply its correction
-                    logger.info(f"Scenario match found: {scenario_correction}")
-                    action = RSIAction(
-                        event=event,
-                        level=ActionLevel.L1.value,
-                        action_type="scenario_match",
-                        params={"correction": scenario_correction},
-                        autonomous=True,
-                        resolution=f"scenario_matched:{scenario_correction}",
-                    )
-                else:
-                    # No match — use standard resolution
-                    action = resolve_error(
-                        event, ctx,
-                        mode=self.mode,
-                        engine=self.engine,
-                        tree=tree,
-                    )
-            except Exception as e:
-                logger.error(f"Error in error resolution: {e}")
-                action = None
-
+            action = self._handle_error_resolution(event, ctx, tree)
+            
             if action is not None:
                 self.actions.append(action)
+                # BUG-003: Circular buffer for actions
+                if len(self.actions) > MAX_ACTIONS:
+                    self.actions = self.actions[-MAX_ACTIONS:]
                 logger.debug(f"Action taken: {action.action_type} - {action.resolution}")
 
                 # If parameter_drift modified ctx, re-evaluate
                 if action.action_type == "adjust_threshold" and action.autonomous:
-                    # BUG-001: Wrap re-evaluation in try-except too
                     try:
                         result = self.engine.evaluate(tree, ctx, **eval_kwargs)
                     except TypeError:
-                        # Re-evaluation also crashed — keep original result
                         logger.warning("Re-evaluation after threshold adjustment failed")
 
                 # Record the scenario for future matching
@@ -882,8 +873,6 @@ class RSIObserver:
                     logger.error(f"Error recording scenario: {e}")
 
         # ── L3 Autonomous Cycle (if enabled) ────────────────────────
-        # Feed event to fault detector; if complex fault detected,
-        # triggers GA generation → shadow validation → activation
         if self._autonomous_l3 is not None and event.is_error:
             try:
                 cycle_result = self._autonomous_l3.process_event(event)
@@ -1077,6 +1066,9 @@ class RSIObserver:
             self.events, self.engine, min_occurrences
         )
         self.actions.extend(actions)
+        # BUG-003: Circular buffer for actions
+        if len(self.actions) > MAX_ACTIONS:
+            self.actions = self.actions[-MAX_ACTIONS:]
         return actions
 
     def evolve_predicates(
@@ -1093,4 +1085,7 @@ class RSIObserver:
             self.events, min_errors, generations
         )
         self.actions.extend(actions)
+        # BUG-003: Circular buffer for actions
+        if len(self.actions) > MAX_ACTIONS:
+            self.actions = self.actions[-MAX_ACTIONS:]
         return actions
