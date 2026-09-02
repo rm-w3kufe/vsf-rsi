@@ -1,5 +1,23 @@
 # Changelog — vsf-rsi
 
+## [0.2.10] — 2026-09-02
+
+### Fixed
+- **CRITICAL: `_rsi_trees` evaluation bug** — trees were stored in `_rsi_trees` dict but never registered as callable predicates in the engine. Fixed by creating closures via `engine.register()` in `_load_predicates()`. Added global `_engine` singleton to avoid re-loading on every bridge call.
+- **`_evaluate_with_predicate` wrong lookup** — was checking `_rsi_trees` dict instead of `engine.predicates`. Fixed to use `engine.predicates`.
+- **Dead code removal** — removed unused `Union` import from `rsi_genome_v2.py` and `inject_context` parameter from `rsi_socratic_bridge.py`.
+- **DEBT-001: genome-to-tree conversion** — `_genome_to_tree`, `_build_test_cases`, `_build_default_tree`, `_build_threshold_tree`, `_build_operator_tree` all used broken `{"op": "ctx_has", "kwargs": ...}` format. Fixed to `{"predicate": "gt", "args": [...], "inject_context": true}` with proper comparison predicates (gt/lt/eq) registered in socratic-engine. Added contradictory condition detection (gt AND lt on same field).
+- **DEBT-002: debt verification** — updated `debt_verification_results.json` to `passed=true`.
+
+### Changed
+- **`RSIObserver.evaluate`** — complexity reduced D→C by extracting `_handle_evaluation_error()`, `_build_fallback_event()`, `_handle_error_resolution()` helper methods.
+- **`RSIGenomeV2._apply_op`** — complexity reduced D→C via dictionary dispatch pattern replacing if-elif chain.
+- **Action tracking** — added `MAX_ACTIONS=500` circular buffer in observer to prevent unbounded memory growth.
+
+### Tests
+- Added 12 new tests for DEBT-001 fixes (genome-to-tree, contradictory conditions, comparison predicates)
+- **855 tests** total, all passing
+
 ## [0.2.9] — 2026-09-01
 
 ### Added

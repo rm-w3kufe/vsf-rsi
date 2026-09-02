@@ -14,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.9 — L3 Autonomous Cycle. 843 tests. Fault detection → shadow validation → auto-rollback. System operates proactively without agent invocation.
+**Status:** v0.2.10 — L3 Autonomous Cycle. 855 tests. Fault detection → shadow validation → auto-rollback. System operates proactively without agent invocation.
 
 ---
 
@@ -211,7 +211,7 @@ The demo demonstrates the full RSI cycle:
 ## Testing
 
 ```bash
-# Run full suite (708 tests, 99% coverage)
+# Run full suite (855 tests, 99% coverage)
 pytest tests/ -v
 
 # Run with coverage
@@ -495,7 +495,7 @@ Key safety properties:
 - **[docs/rsi_forests.vsm](./docs/rsi_forests.vsm)** — generated forest populations (VSM notation).
 - **[docs/rsi_generated_predicates.vsm](./docs/rsi_generated_predicates.vsm)** — generated predicates (VSM notation).
 - **[docs/rsi_generated_trees.vsm](./docs/rsi_generated_trees.vsm)** — generated trees (VSM notation).
-- **[tests/](./tests/)** — 785 tests.
+- **[tests/](./tests/)** — 855 tests.
 
 ---
 
@@ -522,6 +522,19 @@ See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 - [x] Unit circle at 100%
 - [x] Stress test suite: 32 tests across 7 dimensions
 - [x] 785 tests
+
+### v0.2.10 — L3 Fixes & Comprehensive Cleanup ✅
+- [x] Fix `_rsi_trees` evaluation: register trees as callable predicates via `engine.register()` closures
+- [x] Add global `_engine` singleton to avoid re-loading predicates on every bridge call
+- [x] Fix `_evaluate_with_predicate` to check `engine.predicates` (not `_rsi_trees`)
+- [x] Remove dead code: `Union` import, `inject_context` parameter
+- [x] Reduce `RSIObserver.evaluate` complexity D→C via extracted helper methods
+- [x] Reduce `RSIGenomeV2._apply_op` complexity D→C via dictionary dispatch
+- [x] Add `MAX_ACTIONS=500` circular buffer for action tracking in observer
+- [x] Fix DEBT-001: correct genome-to-tree conversion with comparison predicates (gt/lt/eq)
+- [x] Fix contradictory condition detection in L3 genome_to_tree
+- [x] Fix DEBT-002: update debt_verification_results.json passed=true
+- [x] 855 tests
 
 ### v0.3.0 — Production
 - [ ] Dashboard for observation

@@ -131,6 +131,18 @@
 - [x] 24 new tests for autonomous cycle (843 total)
 - [x] Bridge to L4: shadow mode = fitness eval, rollback = natural selection
 
+## ✅ v0.2.10 — L3 Fixes & Comprehensive Cleanup (2026-09-02)
+- [x] Fix `_rsi_trees` evaluation: trees registered as callable predicates via `engine.register()` closures
+- [x] Global `_engine` singleton to avoid re-loading predicates on every bridge call
+- [x] Fix `_evaluate_with_predicate` to check `engine.predicates` (not `_rsi_trees`)
+- [x] Dead code removal: `Union` import, `inject_context` parameter
+- [x] `RSIObserver.evaluate` complexity D→C via extracted helper methods
+- [x] `RSIGenomeV2._apply_op` complexity D→C via dictionary dispatch
+- [x] `MAX_ACTIONS=500` circular buffer for action tracking
+- [x] DEBT-001: genome-to-tree with comparison predicates (gt/lt/eq), contradiction detection
+- [x] DEBT-002: debt_verification_results.json updated passed=true
+- [x] 855 tests total, all passing
+
 ## ✅ Phase P2 — Dashboard (2026-09-01)
 - [x] Dashboard HTML with metrics visualization
 - [x] Summary: total evaluations, accuracy, active sources
