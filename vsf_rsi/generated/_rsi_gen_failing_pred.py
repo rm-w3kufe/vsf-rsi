@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 _rsi_gen_failing_pred — Context-aware predicate
-Generated: 2026-09-02T22:56:29Z
+Generated: 2026-09-02T23:21:57Z
 Purpose: Auto-generated from 4 errors on failing_pred
 Error class: BLOCKING
 Base predicate: failing_pred
@@ -38,7 +38,7 @@ PREDICATE = {
     "name": "_rsi_gen_failing_pred",
     "function": _rsi_gen_failing_pred,
     "type": "context_aware",
-    "generated": "2026-09-02T22:56:29Z",
+    "generated": "2026-09-02T23:21:57Z",
     "purpose": "Auto-generated from 4 errors on failing_pred",
     "error_class": "BLOCKING",
     "avg_threshold": 0.7,
