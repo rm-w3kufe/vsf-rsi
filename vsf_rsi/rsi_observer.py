@@ -699,7 +699,11 @@ class RSIObserver:
         engine: Any,
         mode: str = None,
         metrics: Optional[RSIMetrics] = None,
-        autonomous_l3: bool = True,
+        # NOTE: When True, enables L3StrategySearch — the NON-human-gated
+        # L3 pathway (GA generates + validates + activates without approval).
+        # The other L3 pathway (RSIAction with autonomous=False) DOES require
+        # human approval. Default: False (safer).
+        enable_l3_strategy_search: bool = False,
     ):
         self.engine = engine
         self.mode = mode or os.environ.get("RSI_MODE", RSIMode.CAPABILITY.value)
@@ -710,11 +714,11 @@ class RSIObserver:
         self._has_scenario_memory = _HAS_SCENARIO_MEMORY
 
         # L3 Autonomous Cycle (optional, enabled by default)
-        self._autonomous_l3 = None
-        if autonomous_l3:
+        self._l3_strategy_search = None
+        if enable_l3_strategy_search:
             try:
-                from .rsi_autonomous_l3 import AutonomousL3
-                self._autonomous_l3 = AutonomousL3(engine, self.metrics)
+                from .rsi_autonomous_l3 import L3StrategySearch
+                self._l3_strategy_search = L3StrategySearch(engine, self.metrics)
                 logger.info("L3 Autonomous Cycle enabled")
             except Exception as e:
                 logger.warning(f"L3 Autonomous init failed (disabled): {e}")
@@ -872,10 +876,10 @@ class RSIObserver:
                 except Exception as e:
                     logger.error(f"Error recording scenario: {e}")
 
-        # ── L3 Autonomous Cycle (if enabled) ────────────────────────
-        if self._autonomous_l3 is not None and event.is_error:
+        # ── L3 Strategy Search (if enabled, NON-human-gated) ─────────
+        if self._l3_strategy_search is not None and event.is_error:
             try:
-                cycle_result = self._autonomous_l3.process_event(event)
+                cycle_result = self._l3_strategy_search.process_event(event)
                 if cycle_result is not None:
                     logger.info(f"L3 cycle {cycle_result.cycle_id}: "
                                f"{cycle_result.status} "

@@ -291,17 +291,17 @@ class TestObserverIntegration(unittest.TestCase):
 
     def test_observer_creates_l3(self):
         from vsf_rsi.rsi_observer import RSIObserver
-        obs = RSIObserver(self.engine, autonomous_l3=True)
-        self.assertIsNotNone(obs._autonomous_l3)
+        obs = RSIObserver(self.engine, enable_l3_strategy_search=True)
+        self.assertIsNotNone(obs._l3_strategy_search)
 
     def test_observer_without_l3(self):
         from vsf_rsi.rsi_observer import RSIObserver
-        obs = RSIObserver(self.engine, autonomous_l3=False)
-        self.assertIsNone(obs._autonomous_l3)
+        obs = RSIObserver(self.engine, enable_l3_strategy_search=False)
+        self.assertIsNone(obs._l3_strategy_search)
 
     def test_observer_evaluate_works(self):
         from vsf_rsi.rsi_observer import RSIObserver
-        obs = RSIObserver(self.engine, autonomous_l3=True)
+        obs = RSIObserver(self.engine, enable_l3_strategy_search=True)
         result = obs.evaluate({"op": "ctx_has", "kwargs": {"field": "x"}}, {"x": 1})
         self.assertIsNotNone(result)
         self.assertTrue(len(obs.events) >= 1)

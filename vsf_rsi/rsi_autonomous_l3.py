@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-logger = logging.getLogger("vsf_rsi.autonomous_l3")
+logger = logging.getLogger("vsf_rsi.l3_strategy_search")
 
 # ── Configuration ──────────────────────────────────────────────────
 L3_DIR = Path(os.environ.get(
@@ -54,8 +54,13 @@ class L3CycleResult:
         return asdict(self)
 
 
-class AutonomousL3:
-    """Orchestrates the autonomous L3 cycle.
+class L3StrategySearch:
+    """Autonomous L3 strategy search via genetic algorithm.
+
+    NOTE: This is the NON-HUMAN-GATED L3 pathway. It generates, validates,
+    and activates candidate strategies without human approval. The other L3
+    pathway (RSIAction with autonomous=False in rsi_observer.py) DOES
+    require human approval.
 
     Components:
       - FaultDetector: identifies complex faults
@@ -64,7 +69,7 @@ class AutonomousL3:
       - RollbackManager: monitors activated strategies
 
     Usage:
-        l3 = AutonomousL3(engine)
+        l3 = L3StrategySearch(engine)
         result = l3.run_cycle(fault)
         # or run continuously:
         l3.run_continuous()
@@ -560,13 +565,15 @@ class AutonomousL3:
         }
 
 
+# Backwards-compatible alias (old name → new name)
+AutonomousL3 = L3StrategySearch
+
 # ── CLI ────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python -m vsf_rsi.rsi_autonomous_l3 <command>")
         print("Commands:")
         print("  cycle  — run one L3 cycle for pending faults")
         print("  stats  — show L3 autonomous statistics")
@@ -575,7 +582,7 @@ if __name__ == "__main__":
 
     from socratic_engine.engine import SocraticEngine
     engine = SocraticEngine()
-    l3 = AutonomousL3(engine)
+    l3 = L3StrategySearch(engine)
 
     cmd = sys.argv[1]
     if cmd == "cycle":
