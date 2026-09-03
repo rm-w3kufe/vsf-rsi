@@ -1,4 +1,4 @@
-⟦ rsi_forests | MANIFEST-v1 | vsm-1.2.1 | 2026-09-03T23:04:51Z ⟧
+⟦ rsi_forests | MANIFEST-v1 | vsm-1.2.1 | 2026-09-03T23:20:33Z ⟧
 
 @vsm 1.2.1
 @status active
@@ -8,6 +8,7 @@
 
 forests = [
   { predicate: "ac_stasis_critical", path: "/tmp/tmpe4mmaebq/forests/ac_stasis_critical", created: "2026-08-31T19:01:14Z", status: "active", 31T19: 1, population_size: 10 },
+  { predicate: "test_pred", path: "/home/rmw3/packages/.opencode/plugins/support/trees/forests/test_pred", created: "2026-09-03T23:12:26Z", status: "active", 03T23: 12, population_size: 10 },
 ]
 
 ⟦ /rsi_forests ⟧
