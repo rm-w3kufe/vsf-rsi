@@ -647,7 +647,7 @@ def _try_capability_extension(
     try:
         test_ctx = {"_rsi_thresholds": ctx.get("_rsi_thresholds", {})}
         test_node = {"predicate": new_name, "args": ["$ctx"]}
-        test_result = engine.evaluate(test_node, test_ctx)
+        test_result = engine.evaluate(test_node, test_ctx, enforce_limits=True)
         if not hasattr(test_result, "truth"):
             raise ValueError("Wrapper validation failed: no truth attribute")
     except Exception:

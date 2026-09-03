@@ -212,7 +212,7 @@ def _load_predicates(engine) -> int:
                         from socratic_engine.engine import PredicateResult, Truth
                         ctx = kwargs.get('_context', {})
                         try:
-                            result = engine.evaluate(tree_dict, context=ctx)
+                            result = engine.evaluate(tree_dict, context=ctx, enforce_limits=True)
                             return PredicateResult(
                                 truth=result.truth,
                                 certified=result.certified,

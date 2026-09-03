@@ -105,7 +105,8 @@ class ShadowMode:
             try:
                 result = self.engine.evaluate(
                     tc.get("tree", tree),
-                    tc.get("ctx", {})
+                    tc.get("ctx", {}),
+                    enforce_limits=True,
                 )
                 is_true = getattr(result, "is_true", False)
             except Exception:
@@ -154,7 +155,8 @@ class ShadowMode:
             try:
                 result = self.engine.evaluate(
                     candidate.tree,
-                    tc.get("ctx", {})
+                    tc.get("ctx", {}),
+                    enforce_limits=True,
                 )
                 is_true = getattr(result, "is_true", False)
             except Exception:
