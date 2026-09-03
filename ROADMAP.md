@@ -143,6 +143,13 @@
 - [x] DEBT-002: debt_verification_results.json updated passed=true
 - [x] 855 tests total, all passing
 
+## ✅ v0.2.11 — L3 Activation Loop Closure (2026-09-02)
+- [x] `_feed_rollback_evaluations()` added to RSIObserver
+- [x] RollbackManager.record_evaluation() now called after every evaluation
+- [x] Matching: source/fault_id/strategy_id triple check
+- [x] 3 new tests in TestRollbackLoop class
+- [x] 858 tests total, all passing
+
 ## ✅ Phase P2 — Dashboard (2026-09-01)
 - [x] Dashboard HTML with metrics visualization
 - [x] Summary: total evaluations, accuracy, active sources

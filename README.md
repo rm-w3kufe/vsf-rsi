@@ -14,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.10 — L3 Autonomous Cycle. 855 tests. Fault detection → shadow validation → auto-rollback. System operates proactively without agent invocation.
+**Status:** v0.2.11 — L3 Activation Loop Closure. 858 tests. Rollback feedback loop closed. System monitors activated strategies and auto-confirms or auto-reverts.
 
 ---
 
@@ -259,7 +259,7 @@ The demo demonstrates the full RSI cycle:
 ## Testing
 
 ```bash
-# Run full suite (855 tests, 99% coverage)
+# Run full suite (858 tests, 99% coverage)
 pytest tests/ -v
 
 # Run with coverage
@@ -560,7 +560,7 @@ Key safety properties:
 - **[docs/rsi_forests.vsm](./docs/rsi_forests.vsm)** — generated forest populations (VSM notation).
 - **[docs/rsi_generated_predicates.vsm](./docs/rsi_generated_predicates.vsm)** — generated predicates (VSM notation).
 - **[docs/rsi_generated_trees.vsm](./docs/rsi_generated_trees.vsm)** — generated trees (VSM notation).
-- **[tests/](./tests/)** — 855 tests.
+- **[tests/](./tests/)** — 858 tests.
 
 ---
 
@@ -600,6 +600,13 @@ See [ROADMAP.md](ROADMAP.md) for detailed version history and future plans.
 - [x] Fix contradictory condition detection in L3 genome_to_tree
 - [x] Fix DEBT-002: update debt_verification_results.json passed=true
 - [x] 855 tests
+
+### v0.2.11 — L3 Activation Loop Closure ✅
+- [x] `_feed_rollback_evaluations()` in RSIObserver — closes activate → monitor → record_eval → confirm/rollback
+- [x] RollbackManager.record_evaluation() now called after every evaluation
+- [x] Matching: source/fault_id/strategy_id triple check
+- [x] 3 new tests in TestRollbackLoop class
+- [x] 858 tests
 
 ### v0.3.0 — Production
 - [ ] Dashboard for observation

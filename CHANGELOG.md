@@ -1,5 +1,20 @@
 # Changelog — vsf-rsi
 
+## [0.2.11] — 2026-09-02
+
+### Fixed
+- **L3 activation loop closed** — `_feed_rollback_evaluations()` added to RSIObserver. After every evaluation, checks monitored strategies for predicate match (source/fault_id/strategy_id) and feeds correctness feedback to RollbackManager via `record_evaluation()`. Closes the loop: activate → monitor → record_eval → confirm/rollback. Previously `record_evaluation()` was defined but never called from any component.
+
+### Added
+- `TestRollbackLoop` class with 3 new tests:
+  - `test_feed_rollback_evaluations_closes_loop` — verifies feedback reaches rollback monitor
+  - `test_feed_rollback_skips_when_no_l3` — verifies no-op when L3 disabled
+  - `test_rollback_confirms_after_window` — verifies confirmation after MONITOR_WINDOW evals
+- Import of `SocraticEngine` in test file for real engine integration
+
+### Tests
+- **858 tests** total, all passing
+
 ## [0.2.10] — 2026-09-02
 
 ### Fixed
