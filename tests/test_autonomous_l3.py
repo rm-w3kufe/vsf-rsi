@@ -11,6 +11,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from socratic_engine import SocraticEngine
+
 from vsf_rsi.rsi_fault_detector import FaultDetector, FaultSignature, FaultWindow
 from vsf_rsi.rsi_shadow_mode import ShadowMode, StrategyCandidate, ShadowResult
 from vsf_rsi.rsi_rollback import RollbackManager, MonitoredStrategy, RollbackEvent
@@ -397,6 +399,98 @@ class TestBuildOperatorTree(unittest.TestCase):
         self.assertTrue(tree.get("inject_context", False))
         for child in tree["children"]:
             self.assertTrue(child.get("inject_context", False))
+
+
+class TestRollbackLoop(unittest.TestCase):
+    """Test that _feed_rollback_evaluations closes the activation loop."""
+
+    def setUp(self):
+        self.engine = SocraticEngine()
+        # Clean rollback state so tests don't interfere with each other
+        from vsf_rsi.rsi_rollback import ROLLBACK_FILE
+        if ROLLBACK_FILE.exists():
+            ROLLBACK_FILE.unlink()
+
+    def test_feed_rollback_evaluations_closes_loop(self):
+        """Verify _feed_rollback_evaluations feeds results back to rollback."""
+        from vsf_rsi.rsi_observer import RSIObserver
+
+        obs = RSIObserver(self.engine, enable_l3_strategy_search=True)
+
+        # Manually activate a strategy for monitoring
+        rollback = obs._l3_strategy_search.rollback
+        strategy_id = "test-strategy-001"
+        rollback.activate(
+            strategy_id=strategy_id,
+            fault_id="test_fault",
+            tree={"predicate": "test_pred", "args": []},
+            baseline_accuracy=0.8,
+        )
+        self.assertEqual(len(rollback.get_monitored()), 1)
+
+        # Create a mock result that matches the strategy's fault_id
+        from unittest.mock import MagicMock
+        mock_result = MagicMock()
+        mock_result.source = "test_fault"
+        mock_result.certified = True
+        mock_result.truth = MagicMock(name="TRUE")
+        mock_result.evidence = {}
+
+        mock_event = MagicMock()
+        mock_event.is_error = False  # correct evaluation
+
+        # Call _feed_rollback_evaluations
+        obs._feed_rollback_evaluations(mock_result, mock_event)
+
+        # Verify: record_evaluation was called, evals increased
+        all_strategies = rollback._monitored
+        self.assertIn(strategy_id, all_strategies)
+        self.assertEqual(all_strategies[strategy_id].evals_since_activation, 1)
+        self.assertEqual(all_strategies[strategy_id].recent_correct, 1)
+
+    def test_feed_rollback_skips_when_no_l3(self):
+        """Verify _feed_rollback_evaluations is a no-op when L3 is disabled."""
+        from vsf_rsi.rsi_observer import RSIObserver
+        from unittest.mock import MagicMock
+
+        obs = RSIObserver(self.engine, enable_l3_strategy_search=False)
+        # Should not raise
+        obs._feed_rollback_evaluations(MagicMock(), MagicMock())
+
+    def test_rollback_confirms_after_window(self):
+        """Verify strategy gets confirmed after MONITOR_WINDOW correct evals."""
+        from vsf_rsi.rsi_observer import RSIObserver
+        from vsf_rsi.rsi_rollback import MONITOR_WINDOW
+        from unittest.mock import MagicMock
+
+        obs = RSIObserver(self.engine, enable_l3_strategy_search=True)
+        rollback = obs._l3_strategy_search.rollback
+
+        rollback.activate(
+            strategy_id="confirm-test",
+            fault_id="fault_x",
+            tree={"predicate": "pred_x", "args": []},
+            baseline_accuracy=0.8,
+        )
+
+        # Feed MONITOR_WINDOW correct evaluations
+        for _ in range(MONITOR_WINDOW):
+            mock_result = MagicMock()
+            mock_result.source = "fault_x"
+            mock_event = MagicMock()
+            mock_event.is_error = False
+            obs._feed_rollback_evaluations(mock_result, mock_event)
+
+        # Should be confirmed now
+        self.assertEqual(len(rollback.get_monitored()), 0)
+        self.assertEqual(len(rollback.get_confirmed()), 1)
+        confirmed = rollback.get_confirmed()[0]
+        self.assertEqual(confirmed.status, "confirmed")
+        self.assertEqual(confirmed.evals_since_activation, MONITOR_WINDOW)
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 
 if __name__ == "__main__":

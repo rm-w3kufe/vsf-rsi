@@ -888,7 +888,67 @@ class RSIObserver:
             except Exception as e:
                 logger.error(f"L3 autonomous cycle error: {e}")
 
+        # ── Feed rollback monitoring (close the activation loop) ─────
+        # After every evaluation, check if any monitored strategy's
+        # predicate was involved, and record the result for rollback
+        # tracking (monitoring → confirmed / rolled_back).
+        self._feed_rollback_evaluations(result, event)
+
         return result
+
+    def _feed_rollback_evaluations(self, result: Any, event: Any):
+        """Feed evaluation results to rollback monitoring.
+
+        After each evaluation, checks if any monitored strategy's predicate
+        was involved. If so, calls record_evaluation() to track accuracy
+        and potentially confirm or rollback the strategy.
+
+        This closes the activation loop: activate → monitor → confirm/rollback.
+        """
+        if self._l3_strategy_search is None:
+            return
+
+        rollback = self._l3_strategy_search.rollback
+        if not rollback:
+            return
+
+        monitored = rollback.get_monitored()
+        if not monitored:
+            return
+
+        # Get the source predicate from the evaluation result
+        eval_source = getattr(result, "source", None) or ""
+        # Also check the tree structure for predicate names
+        eval_tree = getattr(result, "tree", None)
+
+        correct = not getattr(event, "is_error", True)
+
+        for strategy in monitored:
+            # Match if: the evaluated source matches a predicate in the
+            # monitored strategy's tree, OR the fault_id appears in the source
+            tree = strategy.tree
+            matched = False
+
+            # Direct source match
+            if eval_source and eval_source in str(tree):
+                matched = True
+
+            # fault_id substring match (e.g., "plugin.bash.test" in source)
+            if strategy.fault_id and strategy.fault_id in eval_source:
+                matched = True
+
+            # tree_id match (strategy_id encoded in tree metadata)
+            if hasattr(result, "tree_id") and result.tree_id == strategy.strategy_id:
+                matched = True
+
+            if matched:
+                try:
+                    status = rollback.record_evaluation(strategy.strategy_id, correct)
+                    if status:
+                        logger.info(f"Rollback monitoring: strategy "
+                                   f"{strategy.strategy_id} → {status}")
+                except Exception as e:
+                    logger.error(f"Rollback record_evaluation error: {e}")
 
     def _build_event(
         self,
