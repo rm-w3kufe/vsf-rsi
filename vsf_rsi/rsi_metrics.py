@@ -124,9 +124,11 @@ class RSIMetrics:
         
         if threshold is not None:
             # Get accuracy for specific threshold
-            if str(threshold) not in pm["thresholds"]:
+            # BUG-004: Round threshold to avoid float precision mismatch in str()
+            threshold_key = str(round(threshold, 6))
+            if threshold_key not in pm["thresholds"]:
                 return 0.0
-            tm = pm["thresholds"][str(threshold)]
+            tm = pm["thresholds"][threshold_key]
             if tm["total"] == 0:
                 return 0.0
             return tm["correct"] / tm["total"]

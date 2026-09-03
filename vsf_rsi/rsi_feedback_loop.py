@@ -122,10 +122,12 @@ class RSIFeedbackLoop:
             return False
         
         pm = metrics[predicate_name]
-        if str(threshold) not in pm["thresholds"]:
+        # BUG-004: Round threshold to avoid float precision mismatch in str()
+        threshold_key = str(round(threshold, 6))
+        if threshold_key not in pm["thresholds"]:
             return False
         
-        tm = pm["thresholds"][str(threshold)]
+        tm = pm["thresholds"][threshold_key]
         if tm["total"] < MIN_SAMPLES:
             return False
         
