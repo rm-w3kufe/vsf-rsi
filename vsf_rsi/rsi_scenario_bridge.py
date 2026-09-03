@@ -56,7 +56,7 @@ def failures_to_gaps(predicate_name: Optional[str] = None) -> Dict:
     scenarios = sm._load_all()
 
     # Filter to failures
-    failures = [s for s in scenarios if s.get("quality") == "fail"]
+    failures = [s for s in scenarios if s.get("outcome") == "failure"]
 
     if predicate_name:
         failures = [s for s in failures if predicate_name in s.get("fault_signature", "")]
