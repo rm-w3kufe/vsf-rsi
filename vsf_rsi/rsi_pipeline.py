@@ -380,8 +380,8 @@ def _evaluate_with_predicate(predicate_name: str, context: Dict[str, Any]) -> Op
             "inject_context": True,
         }
 
-        # SECURITY: enforce_limits=True prevents DoS
-        result = engine.evaluate(tree, context=context)
+        # SECURITY: enforce_limits=True prevents DoS via deep/wide auto-generated trees
+        result = engine.evaluate(tree, context=context, enforce_limits=True)
         return result.truth.value == "true"
 
     except Exception as e:
