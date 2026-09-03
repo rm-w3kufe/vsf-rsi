@@ -279,8 +279,11 @@ class RSIComponentRegistry:
     def _load_registry(self) -> Dict:
         """Load registry from file."""
         if REGISTRY_FILE.exists():
-            with open(REGISTRY_FILE, 'r') as f:
-                return json.load(f)
+            try:
+                with open(REGISTRY_FILE, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                return {"components": []}
         return {"components": []}
     
     def _save_registry(self, registry: Dict) -> None:

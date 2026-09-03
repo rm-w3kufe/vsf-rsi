@@ -134,8 +134,11 @@ class RSIFeedbackLoop:
     def _load_thresholds(self) -> Dict:
         """Load thresholds from file."""
         if THRESHOLDS_FILE.exists():
-            with open(THRESHOLDS_FILE, 'r') as f:
-                return json.load(f)
+            try:
+                with open(THRESHOLDS_FILE, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                return DEFAULT_THRESHOLDS.copy()
         return DEFAULT_THRESHOLDS.copy()
     
     def _save_thresholds(self, thresholds: Dict) -> None:

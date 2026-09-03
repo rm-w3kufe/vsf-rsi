@@ -277,8 +277,11 @@ class RSIMetrics:
         """Load metrics from file."""
         mf = self._metrics_file
         if mf.exists():
-            with open(mf, 'r') as f:
-                return json.load(f)
+            try:
+                with open(mf, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                return {}
         return {}
     
     def _save_metrics(self, metrics: Dict) -> None:
