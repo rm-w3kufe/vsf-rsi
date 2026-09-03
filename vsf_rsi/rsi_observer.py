@@ -896,6 +896,24 @@ class RSIObserver:
 
         return result
 
+    @staticmethod
+    def _extract_predicate_names(eval_result: Any) -> set:
+        """Extract all predicate names from an Evaluation tree.
+
+        Walks the Evaluation's children recursively to find all leaf
+        nodes whose source is a predicate name (not an operator like
+        "op:AND"). Returns a set of predicate name strings.
+        """
+        names = set()
+        source = getattr(eval_result, "source", None) or ""
+        # Leaf predicate: source is not an operator prefix
+        if source and not source.startswith("op:"):
+            names.add(source)
+        # Recurse into children (compound trees have child evaluations)
+        for child in getattr(eval_result, "children", []) or []:
+            names.update(RSIObserver._extract_predicate_names(child))
+        return names
+
     def _feed_rollback_evaluations(self, result: Any, event: Any):
         """Feed evaluation results to rollback monitoring.
 
@@ -904,6 +922,12 @@ class RSIObserver:
         and potentially confirm or rollback the strategy.
 
         This closes the activation loop: activate → monitor → confirm/rollback.
+
+        FIX (2026-09-03, found by Claude audit): For compound trees
+        (AND/OR), result.source is "op:AND"/"op:OR", not the predicate
+        name. The old code matched against result.source directly, which
+        meant compound trees NEVER matched any monitored strategy.
+        Now we walk result.children to extract all predicate names.
         """
         if self._l3_strategy_search is None:
             return
@@ -916,26 +940,30 @@ class RSIObserver:
         if not monitored:
             return
 
-        # Get the source predicate from the evaluation result
+        # Extract all predicate names from the evaluation tree
+        eval_predicates = self._extract_predicate_names(result)
+        # Fallback: also include top-level source if it's a predicate
         eval_source = getattr(result, "source", None) or ""
-        # Also check the tree structure for predicate names
-        eval_tree = getattr(result, "tree", None)
+        if eval_source and not eval_source.startswith("op:"):
+            eval_predicates.add(eval_source)
 
         correct = not getattr(event, "is_error", True)
 
         for strategy in monitored:
-            # Match if: the evaluated source matches a predicate in the
-            # monitored strategy's tree, OR the fault_id appears in the source
             tree = strategy.tree
             matched = False
 
-            # Direct source match
-            if eval_source and eval_source in str(tree):
-                matched = True
-
-            # fault_id substring match (e.g., "plugin.bash.test" in source)
-            if strategy.fault_id and strategy.fault_id in eval_source:
-                matched = True
+            # Match if any evaluated predicate name appears in the
+            # strategy's tree (as a substring) or matches the fault_id
+            for pred_name in eval_predicates:
+                # predicate name appears in strategy's tree representation
+                if pred_name in str(tree):
+                    matched = True
+                    break
+                # fault_id matches the predicate name exactly
+                if strategy.fault_id and strategy.fault_id == pred_name:
+                    matched = True
+                    break
 
             # tree_id match (strategy_id encoded in tree metadata)
             if hasattr(result, "tree_id") and result.tree_id == strategy.strategy_id:
