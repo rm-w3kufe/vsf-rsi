@@ -66,8 +66,9 @@ class RSIMetrics:
             }
         
         # Initialize threshold metrics if not exists
-        if str(threshold) not in metrics[predicate_name]["thresholds"]:
-            metrics[predicate_name]["thresholds"][str(threshold)] = {
+        threshold_key = str(round(threshold, 6))
+        if threshold_key not in metrics[predicate_name]["thresholds"]:
+            metrics[predicate_name]["thresholds"][threshold_key] = {
                 "total": 0,
                 "correct": 0,
                 "latencies": []
@@ -75,7 +76,7 @@ class RSIMetrics:
         
         # Update metrics
         pm = metrics[predicate_name]
-        tm = pm["thresholds"][str(threshold)]
+        tm = pm["thresholds"][threshold_key]
         
         pm["total_classifications"] += 1
         tm["total"] += 1
@@ -159,9 +160,10 @@ class RSIMetrics:
         
         if threshold is not None:
             # Get latency for specific threshold
-            if str(threshold) not in pm["thresholds"]:
+            threshold_key = str(round(threshold, 6))
+            if threshold_key not in pm["thresholds"]:
                 return 0.0
-            tm = pm["thresholds"][str(threshold)]
+            tm = pm["thresholds"][threshold_key]
             if not tm["latencies"]:
                 return 0.0
             return sum(tm["latencies"]) / len(tm["latencies"])
@@ -335,7 +337,7 @@ class RSIMetrics:
                 pm = metrics[predicate]
                 
                 # Initialize threshold if not exists
-                threshold_key = str(threshold)
+                threshold_key = str(round(threshold, 6))
                 if threshold_key not in pm["thresholds"]:
                     pm["thresholds"][threshold_key] = {
                         "total": 0,

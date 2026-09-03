@@ -234,7 +234,10 @@ class RSIForestGenerator:
         """Load manifest from file."""
         from vsf_rsi.rsi_manifest_parser import load_manifest
         if MANIFEST_FILE.exists():
-            return load_manifest(MANIFEST_FILE)
+            try:
+                return load_manifest(MANIFEST_FILE)
+            except Exception:
+                return {"forests": []}
         return {"forests": []}
     
     def _save_manifest(self, manifest: Dict) -> None:

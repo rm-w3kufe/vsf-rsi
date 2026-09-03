@@ -181,7 +181,10 @@ class RSITreeGenerator:
         """Load manifest from file."""
         from vsf_rsi.rsi_manifest_parser import load_manifest
         if MANIFEST_FILE.exists():
-            return load_manifest(MANIFEST_FILE)
+            try:
+                return load_manifest(MANIFEST_FILE)
+            except Exception:
+                return {"trees": []}
         return {"trees": []}
     
     def _save_manifest(self, manifest: Dict) -> None:

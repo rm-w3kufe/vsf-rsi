@@ -299,8 +299,11 @@ class RSIPatternDetector:
     def _load_patterns(self) -> Dict:
         """Load patterns from file."""
         if PATTERNS_FILE.exists():
-            with open(PATTERNS_FILE, 'r') as f:
-                return json.load(f)
+            try:
+                with open(PATTERNS_FILE, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                return {}
         return {}
     
     def get_patterns_summary(self) -> Dict:

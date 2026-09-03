@@ -192,8 +192,11 @@ class RSIGapDetector:
     def _load_gaps(self) -> Dict:
         """Load gaps from file."""
         if GAPS_FILE.exists():
-            with open(GAPS_FILE, 'r') as f:
-                return json.load(f)
+            try:
+                with open(GAPS_FILE, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                return {}
         return {}
     
     def get_gaps_summary(self) -> Dict:

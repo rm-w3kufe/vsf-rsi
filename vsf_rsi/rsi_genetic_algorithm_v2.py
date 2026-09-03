@@ -513,10 +513,13 @@ class RSIGeneticAlgorithmV2:
     def _load_forest(self, predicate_name: str) -> List[TreeGenome]:
         """Load forest from file."""
         if FOREST_FILE.exists():
-            with open(FOREST_FILE, 'r') as f:
-                data = json.load(f)
-                if data.get("predicate") == predicate_name:
-                    return [TreeGenome(**t) for t in data.get("trees", [])]
+            try:
+                with open(FOREST_FILE, 'r') as f:
+                    data = json.load(f)
+                    if data.get("predicate") == predicate_name:
+                        return [TreeGenome(**t) for t in data.get("trees", [])]
+            except (json.JSONDecodeError, OSError, TypeError):
+                return []
         return []
     
     def _append_history(self, record: Dict) -> None:
