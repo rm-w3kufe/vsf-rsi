@@ -47,8 +47,8 @@ class TestFailuresToGaps(TestCase):
         """failures_to_gaps returns empty when no failures."""
         mock_sm = MagicMock()
         mock_sm._load_all.return_value = [
-            {"quality": "pass", "id": "s1"},
-            {"quality": "pass", "id": "s2"},
+            {"outcome": "success", "id": "s1"},
+            {"outcome": "success", "id": "s2"},
         ]
         mock_import.return_value = mock_sm
         result = bridge.failures_to_gaps()
@@ -61,23 +61,21 @@ class TestFailuresToGaps(TestCase):
         mock_sm = MagicMock()
         mock_sm._load_all.return_value = [
             {
-                "quality": "fail",
+                "outcome": "failure",
                 "id": "s1",
                 "fault_signature": "ac_stasis_crash",
                 "decision": "wrong",
-                "outcome": "failure",
                 "correction_path": "/fix/1",
             },
             {
-                "quality": "pass",
+                "outcome": "success",
                 "id": "s2",
             },
             {
-                "quality": "fail",
+                "outcome": "failure",
                 "id": "s3",
                 "fault_signature": "ac_stasis_other",
                 "decision": "bad",
-                "outcome": "crash",
                 "correction_path": "/fix/2",
             },
         ]
@@ -94,12 +92,12 @@ class TestFailuresToGaps(TestCase):
         mock_sm = MagicMock()
         mock_sm._load_all.return_value = [
             {
-                "quality": "fail",
+                "outcome": "failure",
                 "id": "s1",
                 "fault_signature": "ac_stasis_crash",
             },
             {
-                "quality": "fail",
+                "outcome": "failure",
                 "id": "s2",
                 "fault_signature": "other_crash",
             },
