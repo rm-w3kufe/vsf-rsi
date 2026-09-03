@@ -109,7 +109,7 @@ def gaps_to_corrections(predicate_name: str) -> Dict:
         fault_sig = f"{predicate_name}_{gap['type']}"
 
         # Try scenario-memory match
-        match_result = sm.adapt(fault_sig, threshold=0.05)
+        match_result = sm.match(fault_sig, threshold=0.05)
 
         enriched_gap = {
             **gap,
@@ -117,12 +117,11 @@ def gaps_to_corrections(predicate_name: str) -> Dict:
         }
 
         if match_result:
+            # match() returns (id, correction_path) tuple
+            sid, correction_path = match_result
             enriched_gap["scenario_correction"] = {
-                "id": match_result["id"],
-                "correction_path": match_result["correction_path"],
-                "quality": match_result["quality"],
-                "learned_from_failure": match_result["learned_from_failure"],
-                "score": match_result["score"],
+                "id": sid,
+                "correction_path": correction_path,
             }
 
         enriched_gaps.append(enriched_gap)

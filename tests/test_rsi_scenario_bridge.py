@@ -148,13 +148,7 @@ class TestGapsToCorrections(TestCase):
         mock_det_import.return_value = mock_detector
 
         mock_sm = MagicMock()
-        mock_sm.adapt.return_value = {
-            "id": "s1",
-            "correction_path": "/fix/1",
-            "quality": "pass",
-            "learned_from_failure": True,
-            "score": 0.95,
-        }
+        mock_sm.match.return_value = ("s1", "/fix/1")
         mock_sm_import.return_value = mock_sm
 
         result = bridge.gaps_to_corrections("test_pred")
@@ -175,7 +169,7 @@ class TestGapsToCorrections(TestCase):
         mock_det_import.return_value = mock_detector
 
         mock_sm = MagicMock()
-        mock_sm.adapt.return_value = None
+        mock_sm.match.return_value = None
         mock_sm_import.return_value = mock_sm
 
         result = bridge.gaps_to_corrections("test_pred")

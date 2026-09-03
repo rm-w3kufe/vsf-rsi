@@ -31,6 +31,22 @@ def _get_store() -> pathlib.Path:
 STORE = _get_store()
 
 
+def _load_all() -> list:
+    """Load all scenarios from the store. Returns list of dicts."""
+    store = _get_store()
+    scenarios = []
+    if not store.exists():
+        return scenarios
+    for p in store.glob("*.json"):
+        try:
+            rec = json.loads(p.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        if isinstance(rec, dict) and "id" in rec:
+            scenarios.append(rec)
+    return scenarios
+
+
 def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "").strip().lower())
 
