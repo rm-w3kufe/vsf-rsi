@@ -112,6 +112,16 @@ class RSIFeedbackLoop:
         # Get accuracy for new threshold
         accuracy = self.metrics.get_accuracy(predicate_name, threshold)
         
+        # If no data at this threshold (accuracy=0), allow adjustment (exploration)
+        if accuracy == 0.0:
+            # But check if there's ANY data for this predicate
+            metrics = self.metrics._load_metrics()
+            if predicate_name in metrics:
+                # Predicate exists but no data at this threshold — allow
+                return True
+            # No metrics at all for this predicate — allow (first adjustment)
+            return True
+        
         # Check if accuracy is acceptable
         if accuracy < ACCURACY_THRESHOLD:
             return False
@@ -125,7 +135,7 @@ class RSIFeedbackLoop:
         # BUG-004: Round threshold to avoid float precision mismatch in str()
         threshold_key = str(round(threshold, 6))
         if threshold_key not in pm["thresholds"]:
-            return False
+            return True  # Allow if no data at this specific threshold
         
         tm = pm["thresholds"][threshold_key]
         if tm["total"] < MIN_SAMPLES:

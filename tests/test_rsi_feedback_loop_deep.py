@@ -176,12 +176,14 @@ class TestValidateThreshold(unittest.TestCase):
         self.assertFalse(feedback._validate_threshold("pred", 0.7))
 
     def test_validate_rejects_missing_threshold(self):
+        """When accuracy is reported but no threshold data exists, allow exploration."""
         feedback = self._make_feedback()
         feedback.metrics.get_accuracy.return_value = 0.9
         feedback.metrics._load_metrics.return_value = {
             "pred": {"thresholds": {}}
         }
-        self.assertFalse(feedback._validate_threshold("pred", 0.7))
+        # New behavior: allow adjustment to explore new thresholds
+        self.assertTrue(feedback._validate_threshold("pred", 0.7))
 
     def test_validate_rejects_insufficient_samples(self):
         feedback = self._make_feedback()
