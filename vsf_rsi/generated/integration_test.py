@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 integration_test — Context-aware predicate
-Generated: 2026-09-03T23:05:10Z
+Generated: 2026-09-04T00:26:12Z
 Purpose: Integration test
 Error class: false_negative
 Base predicate: test
@@ -40,7 +40,7 @@ PREDICATE = {
     "name": "integration_test",
     "function": integration_test,
     "type": "context_aware",
-    "generated": "2026-09-03T23:05:10Z",
+    "generated": "2026-09-04T00:26:12Z",
     "purpose": "Integration test",
     "error_class": "false_negative",
     "avg_threshold": 0.8,

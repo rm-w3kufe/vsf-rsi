@@ -212,6 +212,23 @@ class RSIGeneticAlgorithmV2:
                         parents.append(genome)
                         break
         
+        elif method == "rank":
+            # Rank-based selection: probability proportional to rank, not fitness
+            sorted_forest = sorted(forest, key=lambda g: g.fitness, reverse=True)
+            n = len(sorted_forest)
+            # Rank weights: rank 0 gets weight n, rank n-1 gets weight 1
+            weights = [n - i for i in range(n)]
+            total_weight = sum(weights)
+            
+            for _ in range(len(forest) // 2):
+                pick = random.uniform(0, total_weight)
+                current = 0
+                for i, genome in enumerate(sorted_forest):
+                    current += weights[i]
+                    if current >= pick:
+                        parents.append(genome)
+                        break
+        
         return parents
     
     def crossover(self, parent1: TreeGenome, parent2: TreeGenome) -> Tuple[TreeGenome, TreeGenome]:
@@ -281,6 +298,9 @@ class RSIGeneticAlgorithmV2:
         # Create mutated copy
         mutated_genes = genome.genes.copy()
         
+        # Generate new id for mutated genome to track lineage
+        new_id = f"{genome.id}_mut_{random.randint(0, 9999)}"
+        
         # Choose mutation type
         mutation_type = random.choice(["threshold", "branch", "complexity", "depth", "condition"])
         
@@ -344,7 +364,7 @@ class RSIGeneticAlgorithmV2:
                     mutated_genes["branches"].pop(remove_idx)
         
         return TreeGenome(
-            id=f"{genome.id}_mut",
+            id=new_id,
             name=f"{genome.name}_mut",
             genes=mutated_genes,
             fitness=0.0,  # Needs re-evaluation
@@ -390,8 +410,12 @@ class RSIGeneticAlgorithmV2:
         while len(next_generation) < self.population_size:
             next_generation.append(self._create_random_offspring(predicate_name))
         
-        # Maintain diversity
+        # Maintain diversity (removes duplicates)
         next_generation = self._maintain_diversity(next_generation)
+        
+        # Replenish if diversity maintenance reduced population
+        while len(next_generation) < self.population_size:
+            next_generation.append(self._create_random_offspring(predicate_name))
         
         return next_generation[:self.population_size]
     
@@ -500,6 +524,7 @@ class RSIGeneticAlgorithmV2:
     
     def _save_forest(self, predicate_name: str, forest: List[TreeGenome]) -> None:
         """Save forest to file."""
+        forest_file = Path(self.evolution_dir) / "rsi_forest_v2.json"
         forest_data = {
             "predicate": predicate_name,
             "population_size": len(forest),
@@ -507,14 +532,15 @@ class RSIGeneticAlgorithmV2:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-        with open(FOREST_FILE, 'w') as f:
+        with open(forest_file, 'w') as f:
             json.dump(forest_data, f, indent=2)
     
     def _load_forest(self, predicate_name: str) -> List[TreeGenome]:
         """Load forest from file."""
-        if FOREST_FILE.exists():
+        forest_file = Path(self.evolution_dir) / "rsi_forest_v2.json"
+        if forest_file.exists():
             try:
-                with open(FOREST_FILE, 'r') as f:
+                with open(forest_file, 'r') as f:
                     data = json.load(f)
                     if data.get("predicate") == predicate_name:
                         return [TreeGenome(**t) for t in data.get("trees", [])]
