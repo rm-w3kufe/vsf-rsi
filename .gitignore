@@ -5,3 +5,11 @@ dist/
 build/
 .coverage
 .pytest_cache/
+
+# RSI pipeline runtime state — auto-generated, not repo artifacts
+# Seeds are committed; learned predicates live in state/predicates/ at runtime
+state/predicates/*.json
+
+# RSI pipeline runtime state — auto-generated, not repo artifacts
+# Seeds are committed; learned predicates live in state/predicates/ at runtime
+state/predicates/*.json
