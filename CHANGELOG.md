@@ -1,5 +1,14 @@
 # Changelog — vsf-rsi
 
+## [0.2.12] — 2026-09-05
+
+### Changed
+- **Runtime predicates gitignored** — `state/predicates/*.json` added to `.gitignore`. Seeds remain tracked (git doesn't untrack existing files); prevents accidental staging of RSI pipeline-generated predicates that change on every `learn-pipeline` run.
+- **Predicate backup strategy** — Self-corrected predicates backed up externally in `child/knowledge/rsi-predicates-backup/` before reverting to seeds. Preserves learned adaptations without polluting the repo.
+
+### Rationale
+RSI pipeline auto-generates and auto-corrects predicates in `state/predicates/` on every `session.idle` run. These are runtime state (like cache), not design artifacts. Committing them creates noise and masks the actual seed definitions.
+
 ## [0.2.11] — 2026-09-02
 
 ### Fixed

@@ -14,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.11 — L3 Activation Loop Closure. 858 tests. Rollback feedback loop closed. System monitors activated strategies and auto-confirms or auto-reverts.
+**Status:** v0.2.12 — Runtime predicate management. 858 tests. RSI pipeline-generated predicates gitignored; seeds tracked, learned state backed up externally.
 
 ---
 

@@ -157,6 +157,11 @@
 - [x] Auto-refresh every 30s
 - [x] Dark theme (GitHub-style)
 
+## ✅ v0.2.12 — Runtime Predicate Management (2026-09-05)
+- [x] `.gitignore` for `state/predicates/*.json` — seeds tracked, generated state excluded
+- [x] Predicate backup strategy documented — self-corrected versions in `child/knowledge/rsi-predicates-backup/`
+- [x] Rationale: runtime state ≠ design artifacts
+
 ## 🎯 v0.3.0 — Production
 - [ ] Dashboard for observation (visual metrics + pattern timeline)
 - [ ] Cross-validation (k-fold on error classification)
