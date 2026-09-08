@@ -49,23 +49,35 @@ class RSITreeGenerator:
         """
         Generate a new tree based on gaps.
         
+        P2.2: Now generates both VSL (for display) and JSON (for evaluation).
+        
         Args:
             predicate_name: Name of predicate
             gaps: Detected gaps
             base_tree: Optional base tree to modify
         
         Returns:
-            Path to generated tree
+            Path to generated tree (JSON format for evaluation)
         """
-        # Generate tree content
-        tree_content = self._create_tree_content(predicate_name, gaps, base_tree)
+        # Analyze gaps to determine modifications
+        modifications = self._analyze_gaps(gaps)
+        
+        # Generate JSON tree (for engine evaluation)
+        json_tree = self._create_json_tree(predicate_name, modifications)
         
         # Generate filename
-        filename = f"{predicate_name}_auto.tree.vsm"
+        filename = f"{predicate_name}_auto.json"
         filepath = self.generated_dir / filename
         
-        # Write tree
+        # Write JSON tree
         with open(filepath, 'w') as f:
+            json.dump(json_tree, f, indent=2)
+        
+        # Also generate VSL content for display
+        tree_content = self._create_tree_content(predicate_name, gaps, base_tree)
+        vsm_filename = f"{predicate_name}_auto.tree.vsm"
+        vsm_filepath = self.generated_dir / vsm_filename
+        with open(vsm_filepath, 'w') as f:
             f.write(tree_content)
         
         # Register in manifest
@@ -155,29 +167,78 @@ class RSITreeGenerator:
         return modifications
     
     def _create_branch(self, modification: Dict, index: int) -> str:
-        """Create a branch based on modification."""
+        """Create a branch based on modification.
+        
+        P2.2 FIX: Uses JSON tree format with inject_context: True
+        so ctx_has/ctx_equals/ctx_contains receive _context from engine.
+        """
         if modification["type"] == "adjust_threshold":
             return f"""  // Branch {index + 1}: {modification['reason']}
-  ctx_equals($ctx, "adjustment_needed", TRUE) → {{ home: "adjusted", truth: "threshold adjusted", certified: TRUE }},
+  ctx_has("adjustment_needed") → {{ home: "adjusted", truth: "threshold adjusted", certified: TRUE }},
 """
         
         elif modification["type"] == "add_branch":
             threshold = modification.get("threshold", 0.5)
             return f"""  // Branch {index + 1}: {modification['reason']}
-  ctx_equals($ctx, "threshold", {threshold}) → {{ home: "specific", truth: "threshold {threshold} matched", certified: TRUE }},
+  ctx_equals("value", {threshold}) → {{ home: "specific", truth: "threshold {threshold} matched", certified: TRUE }},
 """
         
         elif modification["type"] == "test_thresholds":
             return f"""  // Branch {index + 1}: {modification['reason']}
-  ctx_has($ctx, "test_mode") → {{ home: "testing", truth: "test mode active", certified: TRUE }},
+  ctx_has("input_value") → {{ home: "testing", truth: "test mode active", certified: TRUE }},
 """
         
         elif modification["type"] == "optimize":
             return f"""  // Branch {index + 1}: {modification['reason']}
-  ctx_equals($ctx, "optimize_mode", TRUE) → {{ home: "optimized", truth: "optimization applied", certified: TRUE }},
+  ctx_has("active") → {{ home: "optimized", truth: "optimization applied", certified: TRUE }},
 """
         
         return ""
+
+    def _create_json_tree(self, predicate_name: str, modifications: List[Dict]) -> Dict:
+        """Create a JSON tree (not VSL) with inject_context: True.
+        
+        P2.2 FIX: JSON trees are evaluated directly by engine.evaluate()
+        without VSL parsing. inject_context ensures _context reaches predicates.
+        """
+        children = []
+        for mod in modifications:
+            if mod["type"] == "adjust_threshold":
+                children.append({
+                    "predicate": "ctx_has",
+                    "args": ["adjustment_needed"],
+                    "inject_context": True,
+                    "result": {"home": "adjusted", "truth": "threshold adjusted"},
+                })
+            elif mod["type"] == "add_branch":
+                threshold = mod.get("threshold", 0.5)
+                children.append({
+                    "predicate": "ctx_equals",
+                    "args": ["value", threshold],
+                    "inject_context": True,
+                    "result": {"home": "specific", "truth": f"threshold {threshold} matched"},
+                })
+            elif mod["type"] == "test_thresholds":
+                children.append({
+                    "predicate": "ctx_has",
+                    "args": ["input_value"],
+                    "inject_context": True,
+                    "result": {"home": "testing", "truth": "test mode active"},
+                })
+            elif mod["type"] == "optimize":
+                children.append({
+                    "predicate": "ctx_has",
+                    "args": ["active"],
+                    "inject_context": True,
+                    "result": {"home": "optimized", "truth": "optimization applied"},
+                })
+
+        return {
+            "op": "OR",
+            "inject_context": True,
+            "children": children,
+            "result": {"home": "default", "truth": "auto-generated default"},
+        }
     
     def _register_tree(self, predicate_name: str, filepath: Path, gaps: Dict) -> None:
         """Register tree in manifest.
