@@ -18,6 +18,8 @@ Usage:
 """
 import json
 import logging
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
@@ -197,5 +199,173 @@ def load_generated_trees(engine, directory: str) -> int:
     for p in d.glob("*.json"):
         if register_rsi_tree_from_file(engine, str(p)):
             count += 1
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P3: GOVERNANCE — Approval Queue
+# ═══════════════════════════════════════════════════════════════════════════════
+
+QUEUE_DIR = Path(os.environ.get(
+    "RSI_QUEUE_DIR",
+    str(Path(__file__).parent.parent.parent / "state" / "queue")
+))
+
+
+def enqueue_predicate(
+    name: str,
+    tree: Dict[str, Any],
+    source: str = "rsi_pipeline",
+    description: str = "",
+) -> Path:
+    """P3.1: Add a predicate to the approval queue instead of activating directly.
+    
+    Predicates in queue/ are NOT registered in the engine.
+    They require human approval via approve_predicate() before activation.
+    
+    Args:
+        name: Predicate name
+        tree: Socratic tree structure
+        source: Where this predicate was generated
+        description: Human-readable description
+    
+    Returns:
+        Path to queue file
+    """
+    QUEUE_DIR.mkdir(parents=True, exist_ok=True)
+    
+    queue_entry = {
+        "name": name,
+        "tree": tree,
+        "source": source,
+        "description": description,
+        "queued_at": datetime.now(timezone.utc).isoformat(),
+        "status": "pending",  # pending → approved → activated | rejected
+    }
+    
+    queue_file = QUEUE_DIR / f"{name}.json"
+    queue_file.write_text(json.dumps(queue_entry, indent=2))
+    
+    logger.info(f"Predicate '{name}' added to approval queue: {queue_file}")
+    return queue_file
+
+
+def approve_predicate(name: str, engine: Any = None) -> bool:
+    """P3.1: Approve a predicate from the queue and activate it.
+    
+    Args:
+        name: Predicate name to approve
+        engine: Optional SocraticEngine to register immediately
+    
+    Returns:
+        True if approved and activated
+    """
+    queue_file = QUEUE_DIR / f"{name}.json"
+    if not queue_file.exists():
+        logger.warning(f"Predicate '{name}' not found in queue")
+        return False
+    
+    entry = json.loads(queue_file.read_text())
+    
+    if entry["status"] != "pending":
+        logger.warning(f"Predicate '{name}' is not pending (status: {entry['status']})")
+        return False
+    
+    # Approve
+    entry["status"] = "approved"
+    entry["approved_at"] = datetime.now(timezone.utc).isoformat()
+    queue_file.write_text(json.dumps(entry, indent=2))
+    
+    # Register in engine if provided
+    if engine is not None:
+        register_rsi_tree(engine, name, entry["tree"])
+        entry["status"] = "activated"
+        entry["activated_at"] = datetime.now(timezone.utc).isoformat()
+        queue_file.write_text(json.dumps(entry, indent=2))
+        logger.info(f"Predicate '{name}' approved and activated")
+    else:
+        logger.info(f"Predicate '{name}' approved (no engine provided)")
+    
+    return True
+
+
+def reject_predicate(name: str, reason: str = "") -> bool:
+    """P3.1: Reject a predicate from the queue."""
+    queue_file = QUEUE_DIR / f"{name}.json"
+    if not queue_file.exists():
+        return False
+    
+    entry = json.loads(queue_file.read_text())
+    entry["status"] = "rejected"
+    entry["rejected_at"] = datetime.now(timezone.utc).isoformat()
+    entry["rejection_reason"] = reason
+    queue_file.write_text(json.dumps(entry, indent=2))
+    
+    logger.info(f"Predicate '{name}' rejected: {reason}")
+    return True
+
+
+def list_queue(status: str = "pending") -> list:
+    """P3.1: List predicates in the approval queue."""
+    if not QUEUE_DIR.exists():
+        return []
+    
+    results = []
+    for p in QUEUE_DIR.glob("*.json"):
+        entry = json.loads(p.read_text())
+        if entry.get("status") == status:
+            results.append(entry)
+    
+    return results
+
+
+def get_queue_stats() -> Dict[str, int]:
+    """P3.1: Get queue statistics."""
+    if not QUEUE_DIR.exists():
+        return {"pending": 0, "approved": 0, "activated": 0, "rejected": 0}
+    
+    stats = {"pending": 0, "approved": 0, "activated": 0, "rejected": 0}
+    for p in QUEUE_DIR.glob("*.json"):
+        entry = json.loads(p.read_text())
+        status = entry.get("status", "pending")
+        if status in stats:
+            stats[status] += 1
+    
+    return stats
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# P3: GOVERNANCE — Diff Review
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def diff_predicate(name: str) -> Optional[Dict[str, Any]]:
+    """P3.2: Show diff between current and proposed predicate.
+    
+    Returns:
+        Dict with current_tree, proposed_tree, and changes
+    """
+    queue_file = QUEUE_DIR / f"{name}.json"
+    if not queue_file.exists():
+        return None
+    
+    entry = json.loads(queue_file.read_text())
+    proposed_tree = entry.get("tree", {})
+    
+    # Try to find current tree in state/predicates/
+    current_tree = None
+    pred_dir = Path(__file__).parent.parent.parent / "state" / "predicates"
+    pred_file = pred_dir / f"{name}.json"
+    if pred_file.exists():
+        current_data = json.loads(pred_file.read_text())
+        current_tree = current_data.get("tree")
+    
+    return {
+        "name": name,
+        "current_tree": current_tree,
+        "proposed_tree": proposed_tree,
+        "source": entry.get("source", ""),
+        "description": entry.get("description", ""),
+        "queued_at": entry.get("queued_at", ""),
+        "has_current": current_tree is not None,
+    }
     
     return count
