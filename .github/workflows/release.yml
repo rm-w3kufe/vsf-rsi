@@ -44,10 +44,15 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/rm-w3kufe/socratic-engine.git ~/socratic-engine
 
+      - name: Clone vos-kernel (dependency)
+        run: |
+          git clone --depth 1 https://github.com/rm-w3kufe/vos-kernel.git ~/vos-kernel
+
       - name: Run full test suite before release
         run: |
           pip install -e ".[dev]"
           pip install pytest-cov build
+          pip install ~/vos-kernel
           python -m pytest tests/ -q --cov=vsf_rsi --cov-report=term-missing --cov-fail-under=25
 
       - name: Build package
