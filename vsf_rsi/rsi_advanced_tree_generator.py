@@ -8,13 +8,23 @@ RSI LEVEL 3: AUTO-GENERATION
 - Create trees with multiple branches
 - Build trees with predicates
 - Register in system
+
+SECURITY: Uses centralized VSM kernel for metadata generation.
+Agents must NEVER hardcode version, timestamp, or footer.
 """
 
 import json
 import os
-from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from pathlib import Path
+
+# Import centralized VSM kernel
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "framework"))
+from vos_kernel.utils.vsm_kernel import (
+    vsm_header, vsm_footer_with_type, get_timestamp, 
+    get_version, get_version_str
+)
 
 # ── Configuration ────────────────────────────────────────────────────
 TREES_DIR = Path(__file__).parent.parent.parent.parent / ".opencode" / "plugins" / "support" / "trees"
@@ -60,8 +70,11 @@ class RSIAdvancedTreeGenerator:
         return str(filepath)
     
     def _create_advanced_tree_content(self, pattern: Dict, base_tree: Optional[str]) -> str:
-        """Create advanced tree content based on pattern."""
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        """Create advanced tree content based on pattern.
+        
+        SECURITY: Uses centralized VSM kernel for metadata generation.
+        """
+        timestamp = get_timestamp()
         tree_name = pattern.get("name", "auto_generated")
         purpose = pattern.get("purpose", "Auto-generated tree")
         
@@ -74,12 +87,19 @@ class RSIAdvancedTreeGenerator:
             return self._create_generic_advanced_tree(tree_name, purpose, timestamp)
     
     def _create_threshold_optimized_tree(self, name: str, purpose: str, timestamp: str, pattern: Dict) -> str:
-        """Create threshold optimized tree."""
-        best_threshold = pattern.get("best_threshold", 0.7)
+        """Create threshold optimized tree.
         
-        return f"""⟦ {name}_advanced | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+        SECURITY: Uses centralized VSM kernel for metadata generation.
+        """
+        best_threshold = pattern.get("best_threshold", 0.7)
+        doc_type = "SOCRATIC-TREE-v1"
+        
+        header = vsm_header(f"{name}_advanced", doc_type, timestamp)
+        footer = vsm_footer_with_type(f"{name}_advanced", doc_type, timestamp)
+        
+        return f"""{header}
 
-@vsm 1.2
+@vsm {get_version()}
 @status active
 
 // ADVANCED TREE: {name}
@@ -107,14 +127,21 @@ class RSIAdvancedTreeGenerator:
   TRUE → {{ home: "default", truth: "outside optimal range", certified: TRUE }}
 )
 
-⟦ /{name}_advanced | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+{footer}
 """
     
     def _create_coverage_tree(self, name: str, purpose: str, timestamp: str, pattern: Dict) -> str:
-        """Create coverage tree."""
-        return f"""⟦ {name}_advanced | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+        """Create coverage tree.
+        
+        SECURITY: Uses centralized VSM kernel for metadata generation.
+        """
+        doc_type = "SOCRATIC-TREE-v1"
+        header = vsm_header(f"{name}_advanced", doc_type, timestamp)
+        footer = vsm_footer_with_type(f"{name}_advanced", doc_type, timestamp)
+        
+        return f"""{header}
 
-@vsm 1.2
+@vsm {get_version()}
 @status active
 
 // ADVANCED TREE: {name}
@@ -150,14 +177,21 @@ class RSIAdvancedTreeGenerator:
   TRUE → {{ home: "default", truth: "value outside expected range", certified: TRUE }}
 )
 
-⟦ /{name}_advanced | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+{footer}
 """
     
     def _create_generic_advanced_tree(self, name: str, purpose: str, timestamp: str) -> str:
-        """Create generic advanced tree."""
-        return f"""⟦ {name}_advanced | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+        """Create generic advanced tree.
+        
+        SECURITY: Uses centralized VSM kernel for metadata generation.
+        """
+        doc_type = "SOCRATIC-TREE-v1"
+        header = vsm_header(f"{name}_advanced", doc_type, timestamp)
+        footer = vsm_footer_with_type(f"{name}_advanced", doc_type, timestamp)
+        
+        return f"""{header}
 
-@vsm 1.2
+@vsm {get_version()}
 @status active
 
 // ADVANCED TREE: {name}
@@ -177,12 +211,15 @@ class RSIAdvancedTreeGenerator:
   TRUE → {{ home: "default", truth: "unknown state", certified: TRUE }}
 )
 
-⟦ /{name}_advanced | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+{footer}
 """
     
     def _register_tree(self, name: str, filepath: Path, pattern: Dict) -> None:
-        """Register tree in manifest."""
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        """Register tree in manifest.
+        
+        SECURITY: Uses centralized VSM kernel for timestamp generation.
+        """
+        timestamp = get_timestamp()
         
         # Load existing manifest
         manifest = self._load_manifest()
@@ -211,9 +248,12 @@ class RSIAdvancedTreeGenerator:
         return {"trees": []}
     
     def _save_manifest(self, manifest: Dict) -> None:
-        """Save manifest to file."""
+        """Save manifest to file.
+        
+        SECURITY: Uses centralized VSM kernel for timestamp generation.
+        """
         from vsf_rsi.rsi_manifest_parser import save_manifest
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = get_timestamp()
         save_manifest(MANIFEST_FILE, "trees", manifest["trees"],
                       "rsi_generated_trees", timestamp)
     

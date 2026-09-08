@@ -1,6 +1,6 @@
 {
   "name": "rsi_bash_grep",
-  "fault_signature": "bash.grep.missing",
+  "fault_signature": "bash.grep",
   "tree": {
     "op": "AND",
     "children": [
@@ -26,19 +26,11 @@
           "grep"
         ],
         "inject_context": true
-      },
-      {
-        "predicate": "ctx_contains",
-        "args": [
-          "command",
-          "missing"
-        ],
-        "inject_context": true
       }
     ],
     "inject_context": true
   },
-  "correction_path": "pipeline:bash:failure",
-  "created_at": "2026-09-04T00:33:11.691593+00:00",
+  "correction_path": "pipeline:bash:success",
+  "created_at": "2026-09-07T14:26:57.396654+00:00",
   "format_version": 2
 }

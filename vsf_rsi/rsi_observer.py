@@ -67,6 +67,13 @@ try:
 except ImportError:
     _HAS_PREDICATE_GENERATOR = False
 
+# Import adaptive weights for self-modification
+try:
+    from vsf_rsi.adaptive_weights import get_drift_step, record_outcome
+    _HAS_ADAPTIVE_WEIGHTS = True
+except ImportError:
+    _HAS_ADAPTIVE_WEIGHTS = False
+
 # Import rsi_genetic_algorithm (optional)
 try:
     from vsf_rsi.rsi_genetic_algorithm import RSIGeneticAlgorithm, TreeGenome
@@ -549,16 +556,25 @@ def _try_parameter_drift(
 ) -> Optional[RSIAction]:
     """
     L1: Adjust threshold in context. Always autonomous.
-    BUG-002: Uses MIN_THRESHOLD and MAX_THRESHOLD constants.
+    Uses adaptive drift step based on accuracy metrics.
     """
     thresholds = ctx.get("_rsi_thresholds", {})
     current = thresholds.get(event.source, event.threshold)
 
-    # BUG-002: Heuristic with bounds (prevent drift to 0 or infinity)
-    if event.input_value > current:
-        new_threshold = min(current + THRESHOLD_STEP, MAX_THRESHOLD)
+    # Get adaptive drift step based on current accuracy
+    if _HAS_ADAPTIVE_WEIGHTS:
+        # Get accuracy for this source
+        metrics = RSIMetrics()
+        accuracy = metrics.get_accuracy(event.source, current)
+        step = get_drift_step(accuracy)
     else:
-        new_threshold = max(current - THRESHOLD_STEP, MIN_THRESHOLD)
+        step = THRESHOLD_STEP
+
+    # Heuristic with bounds (prevent drift to 0 or infinity)
+    if event.input_value > current:
+        new_threshold = min(current + step, MAX_THRESHOLD)
+    else:
+        new_threshold = max(current - step, MIN_THRESHOLD)
 
     if abs(new_threshold - current) < 0.001:
         return None  # Already at boundary
@@ -572,9 +588,9 @@ def _try_parameter_drift(
         event=event,
         level=ActionLevel.L1.value,
         action_type="adjust_threshold",
-        params={"old": current, "new": new_threshold},
+        params={"old": current, "new": new_threshold, "adaptive_step": step},
         autonomous=True,
-        resolution=f"threshold_adjusted:{current:.3f}→{new_threshold:.3f}",
+        resolution=f"threshold_adjusted:{current:.3f}→{new_threshold:.3f} (step={step:.3f})",
     )
 
 

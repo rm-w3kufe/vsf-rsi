@@ -10,6 +10,8 @@ build/
 # Seeds are committed; learned predicates live in state/predicates/ at runtime
 state/predicates/*.json
 
-# RSI pipeline runtime state — auto-generated, not repo artifacts
-# Seeds are committed; learned predicates live in state/predicates/ at runtime
-state/predicates/*.json
+# Agent-specific state (when VOS_AGENT_STATE_DIR is set)
+# These files live outside the repo in ~/.vos/agents/{agent_id}/
+# But if someone runs without the env var, ignore local state
+state/rsi_metrics_history.json
+learning_records/scenarios/*.json

@@ -29,15 +29,26 @@ import json
 import logging
 import os
 import re
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from vsf_rsi.scenario_memory import record, adapt, learn
 
-# Directory for persisted predicates
-PREDICATES_DIR = Path(__file__).parent.parent / "state" / "predicates"
-PREDICATES_DIR.mkdir(parents=True, exist_ok=True)
+# Agent-specific state directory (avoids sharing between agents)
+try:
+    # Try to import from vsf-common (sibling package)
+    import sys
+    _common_path = Path(__file__).parent.parent.parent / "vsf-common"
+    if _common_path.exists() and str(_common_path) not in sys.path:
+        sys.path.insert(0, str(_common_path))
+    from vos_agent_state import get_agent_state_dir
+    PREDICATES_DIR = get_agent_state_dir("vsf-rsi", "predicates")
+except ImportError:
+    # Fallback for backward compatibility
+    PREDICATES_DIR = Path(__file__).parent.parent / "state" / "predicates"
+    PREDICATES_DIR.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger("vsf_rsi.pipeline")
 
@@ -168,10 +179,13 @@ def _persist_predicate(predicate_name: str, fault_signature: str,
     pred_file = PREDICATES_DIR / f"{predicate_name}.json"
     data = {
         "name": predicate_name,
+        "predicate_name": predicate_name,
         "fault_signature": fault_signature,
         "tree": tree,  # NEW: structured tree, not code string
         "correction_path": correction_path,
+        "source": "rsi_pipeline",  # Identify as RSI-generated
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(timezone.utc).timestamp(),
         "format_version": 2,  # v2 = tree-based (safe)
     }
     pred_file.write_text(json.dumps(data, indent=2))
@@ -291,6 +305,78 @@ def _register_predicate(predicate_name: str, fault_signature: str,
     except Exception as e:
         logger.warning(f"Failed to register predicate: {e}")
         return False
+
+
+def _generate_gap_definition(predicate_name: str, pattern: Dict[str, Any], tree: Dict[str, Any]) -> str:
+    """Generate a .gap.json file from an RSI-detected pattern.
+    
+    This connects RSI pattern detection to the gap-resolver framework,
+    enabling dynamic gate registration and execution.
+    """
+    # Get gap definitions directory
+    gap_dir = os.environ.get(
+        "GAP_DEFINITIONS_DIR",
+        "/home/rmw3/vsf/.opencode/plugins/operational/gap-definitions"
+    )
+    os.makedirs(gap_dir, exist_ok=True)
+    
+    # Extract pattern info
+    fault_signature = pattern.get("fault_signature", "")
+    tool = pattern.get("tool", "unknown")
+    command = pattern.get("command", "")
+    quality = pattern.get("quality", 0.0)
+    count = pattern.get("count", 0)
+    
+    # Build gap definition
+    gap_id = f"rsi_{predicate_name}"
+    gap_def = {
+        "id": gap_id,
+        "name": f"RSI Gate: {predicate_name}",
+        "description": f"Auto-generated gate from RSI pattern detection. "
+                      f"Fault signature: {fault_signature}",
+        "trigger": {
+            "type": "tool.execute.after",
+            "tools": [tool],
+            "conditions": {
+                "outcome": "failure"
+            }
+        },
+        "context": {
+            "gatherers": [
+                {
+                    "type": "read-content",
+                    "source": "tool_output"
+                }
+            ]
+        },
+        "evaluation": {
+            "type": "socratic",
+            "tree": tree
+        },
+        "actions": [
+            {
+                "type": "report",
+                "severity": "MEDIUM" if quality < 0.5 else "LOW",
+                "message": f"RSI detected pattern: {fault_signature}. "
+                          f"Quality: {quality:.2f}, Count: {count}"
+            }
+        ],
+        "metadata": {
+            "source": "rsi_pipeline",
+            "predicate_name": predicate_name,
+            "fault_signature": fault_signature,
+            "quality": quality,
+            "count": count,
+            "generated_at": time.time()
+        }
+    }
+    
+    # Write gap definition
+    gap_path = os.path.join(gap_dir, f"{gap_id}.gap.json")
+    with open(gap_path, "w") as f:
+        json.dump(gap_def, f, indent=2)
+    
+    return gap_path
 
 
 # Global engine instance
@@ -490,7 +576,53 @@ def pipeline(
         if registered:
             logger.info(f"Registered: {pred_name}")
 
-            # Phase 5: Evaluate if context provided
+            # Phase 5: Generate .vsm decision tree (L2/L3/L4)
+            try:
+                from vsf_rsi.rsi_tree_generator import RSITreeGenerator
+                from vsf_rsi.rsi_advanced_tree_generator import RSIAdvancedTreeGenerator
+                
+                # L2: Generate basic tree from gaps
+                gaps = {
+                    "gaps": [
+                        {"type": "low_accuracy", "description": f"Pattern {pred_name} needs improvement"},
+                        {"type": "insufficient_thresholds", "description": "Add more threshold branches"}
+                    ]
+                }
+                
+                gen2 = RSITreeGenerator()
+                tree_path_l2 = gen2.generate_tree(pred_name, gaps)
+                result["tree_generated_l2"] = tree_path_l2
+                logger.info(f"L2 tree generated: {tree_path_l2}")
+                
+                # L3: Generate advanced tree with threshold optimization
+                gen3 = RSIAdvancedTreeGenerator()
+                tree_path_l3 = gen3.generate_advanced_tree(
+                    pattern={
+                        "name": f"{pred_name}_advanced",
+                        "type": "threshold_optimized",
+                        "predicate": pred_name,
+                        "threshold": QUALITY_THRESHOLD,
+                        "description": f"Advanced tree for {pred_name}",
+                        "purpose": f"Optimize threshold detection for {pred_name}"
+                    }
+                )
+                result["tree_generated_l3"] = tree_path_l3
+                logger.info(f"L3 tree generated: {tree_path_l3}")
+                
+            except Exception as e:
+                logger.warning(f"Tree generation failed (non-fatal): {e}")
+                result["tree_generation_error"] = str(e)
+
+            # Phase 6: Generate .gap.json for gap-resolver integration
+            try:
+                gap_path = _generate_gap_definition(pred_name, best, pred_tree)
+                result["gap_generated"] = gap_path
+                logger.info(f"Gap definition generated: {gap_path}")
+            except Exception as e:
+                logger.warning(f"Gap generation failed (non-fatal): {e}")
+                result["gap_generation_error"] = str(e)
+
+            # Phase 7: Evaluate if context provided
             if context:
                 eval_result = _evaluate_with_predicate(pred_name, context)
                 result["evaluation"] = eval_result

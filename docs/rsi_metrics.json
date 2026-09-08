@@ -1,0 +1,16 @@
+{
+  "op:AND": {
+    "thresholds": {
+      "0.7": {
+        "total": 2,
+        "correct": 0,
+        "latencies": [
+          0.09130000034929253,
+          0.0749000000723754
+        ]
+      }
+    },
+    "total_classifications": 2,
+    "correct_classifications": 0
+  }
+}

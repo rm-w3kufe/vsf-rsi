@@ -8,13 +8,23 @@ RSI LEVEL 2: AUTO-MODIFICATION
 - Add new branches based on gaps
 - Create variants for testing
 - Register in manifest
+
+SECURITY: Uses centralized VSM kernel for metadata generation.
+Agents must NEVER hardcode version, timestamp, or footer.
 """
 
 import json
 import os
-from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from pathlib import Path
+
+# Import centralized VSM kernel
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "framework"))
+from vos_kernel.utils.vsm_kernel import (
+    vsm_header, vsm_footer_with_type, get_timestamp, 
+    get_version, get_version_str
+)
 
 # ── Configuration ────────────────────────────────────────────────────
 TREES_DIR = Path(__file__).parent.parent.parent.parent / ".opencode" / "plugins" / "support" / "trees"
@@ -60,16 +70,23 @@ class RSITreeGenerator:
         return str(filepath)
     
     def _create_tree_content(self, predicate_name: str, gaps: Dict, base_tree: Optional[str]) -> str:
-        """Create tree content based on gaps."""
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        """Create tree content based on gaps.
+        
+        SECURITY: Uses centralized VSM kernel for metadata generation.
+        """
+        timestamp = get_timestamp()
+        doc_type = "SOCRATIC-TREE-v1"
         
         # Analyze gaps to determine modifications
         modifications = self._analyze_gaps(gaps)
         
-        # Create tree structure
-        tree_content = f"""⟦ {predicate_name}_auto | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+        # Create tree structure using centralized kernel
+        header = vsm_header(f"{predicate_name}_auto", doc_type, timestamp)
+        footer = vsm_footer_with_type(f"{predicate_name}_auto", doc_type, timestamp)
+        
+        tree_content = f"""{header}
 
-@vsm 1.2
+@vsm {get_version()}
 @status active
 
 // AUTO-GENERATED TREE for {predicate_name}
@@ -92,7 +109,7 @@ class RSITreeGenerator:
   TRUE → {{ home: "escalate", truth: "auto-generated default", certified: TRUE }}
 )
 
-⟦ /{predicate_name}_auto | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+{footer}
 """
         
         return tree_content
@@ -159,8 +176,11 @@ class RSITreeGenerator:
         return ""
     
     def _register_tree(self, predicate_name: str, filepath: Path, gaps: Dict) -> None:
-        """Register tree in manifest."""
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        """Register tree in manifest.
+        
+        SECURITY: Uses centralized VSM kernel for timestamp generation.
+        """
+        timestamp = get_timestamp()
         
         # Load existing manifest
         manifest = self._load_manifest()
@@ -188,9 +208,12 @@ class RSITreeGenerator:
         return {"trees": []}
     
     def _save_manifest(self, manifest: Dict) -> None:
-        """Save manifest to file."""
+        """Save manifest to file.
+        
+        SECURITY: Uses centralized VSM kernel for timestamp generation.
+        """
         from vsf_rsi.rsi_manifest_parser import save_manifest
-        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        timestamp = get_timestamp()
         save_manifest(MANIFEST_FILE, "trees", manifest["trees"],
                       "rsi_generated_trees", timestamp)
     

@@ -1,0 +1,2 @@
+{"timestamp": "2026-09-06T19:58:54.985027+00:00", "predicate": "op:AND", "threshold": 0.7, "input_value": 0.9, "expected": false, "actual": true, "correct": false, "latency_ms": 0.09130000034929253}
+{"timestamp": "2026-09-06T20:08:57.344074+00:00", "predicate": "op:AND", "threshold": 0.7, "input_value": 0.9, "expected": false, "actual": true, "correct": false, "latency_ms": 0.0749000000723754}

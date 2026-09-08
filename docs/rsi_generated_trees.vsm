@@ -1,4 +1,4 @@
-⟦ rsi_generated_trees | MANIFEST-v1 | vsm-1.2.1 | 2026-09-04T00:32:46Z ⟧
+⟦ rsi_generated_trees | MANIFEST-v1 | vsm-1.2.1 | 2026-09-08T03:41:26Z ⟧
 
 @vsm 1.2.1
 @status active
@@ -10,6 +10,20 @@ trees = [
   { predicate: "ac_stasis_critical", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/ac_stasis_critical_auto.tree.vsm", generated: "2026-08-31T05:26:44Z", status: "active", 31T05: 26, gaps: 4 },
   { name: "ac_stasis_critical_coverage_gap", path: "/tmp/tmpzmzothmt/adv_trees/ac_stasis_critical_coverage_gap_advanced.tree.vsm", generated: "2026-08-31T19:01:13Z", pattern_type: "unknown", purpose: "Generate predicate for untested thresholds", status: "active", 31T19: 1 },
   { name: "ac_stasis_critical_recurring_misclassification", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/ac_stasis_critical_recurring_misclassification_advanced.tree.vsm", generated: "2026-09-01T03:58:32Z", pattern_type: "unknown", purpose: "Generate new predicate for edge cases", status: "active", 01T03: 58 },
+  { predicate: "test", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/test_auto.tree.vsm", generated: "2026-09-07T01:51:03Z", status: "active", 07T01: 51, gaps: 0 },
+  { name: "agent_state_segmentation", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/agent_state_segmentation_advanced.tree.vsm", generated: "2026-09-07T15:09:51Z", pattern_type: "threshold_optimized", purpose: "Route decisions based on whether agent state directory is configured", status: "active", 07T15: 9 },
+  { predicate: "ctx_equals", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/ctx_equals_auto.tree.vsm", generated: "2026-09-07T15:11:24Z", status: "active", 07T15: 11, gaps: 2 },
+  { predicate: "rsi_bash_grep", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_auto.tree.vsm", generated: "2026-09-07T16:41:04Z", status: "active", 07T16: 41, gaps: 2 },
+  { name: "rsi_bash_grep_advanced", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_advanced_advanced.tree.vsm", generated: "2026-09-07T16:41:04Z", pattern_type: "threshold_optimized", purpose: "Optimize threshold detection for rsi_bash_grep", status: "active", 07T16: 41 },
+  { predicate: "rsi_bash_grep_test_verification", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_test_verification_auto.tree.vsm", generated: "2026-09-07T17:03:23Z", status: "active", 07T17: 3, gaps: 2 },
+  { name: "rsi_bash_grep_test_verification_advanced", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_test_verification_advanced_advanced.tree.vsm", generated: "2026-09-07T17:03:23Z", pattern_type: "threshold_optimized", purpose: "Optimize threshold detection for rsi_bash_grep_test_verification", status: "active", 07T17: 3 },
+  { predicate: "rsi_bash_grep_orchestration_test", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_orchestration_test_auto.tree.vsm", generated: "2026-09-07T17:08:42Z", status: "active", 07T17: 8, gaps: 2 },
+  { name: "rsi_bash_grep_orchestration_test_advanced", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_orchestration_test_advanced_advanced.tree.vsm", generated: "2026-09-07T17:08:42Z", pattern_type: "threshold_optimized", purpose: "Optimize threshold detection for rsi_bash_grep_orchestration_test", status: "active", 07T17: 8 },
+  { predicate: "rsi_bash_grep_fresh_test_1788806819_0", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_fresh_test_1788806819_0_auto.tree.vsm", generated: "2026-09-07T18:46:59Z", status: "active", 07T18: 46, gaps: 2 },
+  { name: "rsi_bash_grep_fresh_test_1788806819_0_advanced", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/rsi_bash_grep_fresh_test_1788806819_0_advanced_advanced.tree.vsm", generated: "2026-09-07T18:46:59Z", pattern_type: "threshold_optimized", purpose: "Optimize threshold detection for rsi_bash_grep_fresh_test_1788806819_0", status: "active", 07T18: 46 },
+  { predicate: "test_predicate", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/test_predicate_auto.tree.vsm", generated: "2026-09-07T19:21:12Z", status: "active", 07T19: 21, gaps: 1 },
+  { predicate: "test_predicate_v2", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/test_predicate_v2_auto.tree.vsm", generated: "2026-09-07T19:22:15Z", status: "active", 07T19: 22, gaps: 1 },
+  { name: "test_advanced_v2", path: "/home/rmw3/packages/.opencode/plugins/support/trees/generated/test_advanced_v2_advanced.tree.vsm", generated: "2026-09-07T19:22:15Z", pattern_type: "unknown", purpose: "Test advanced tree", status: "active", 07T19: 22 },
 ]
 
 ⟦ /rsi_generated_trees ⟧

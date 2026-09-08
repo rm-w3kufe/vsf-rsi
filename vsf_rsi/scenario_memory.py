@@ -19,12 +19,29 @@ import re
 
 # Default store lives under learning_records/scenarios. Overridable via
 # VSI_RSI_STORE environment variable (tests / drills pass a temp dir).
+# Agent-specific state: uses VOS_AGENT_STATE_DIR if set, otherwise falls back to repo path.
 _DEFAULT_STORE = pathlib.Path(__file__).resolve().parents[2] / "learning_records" / "scenarios"
 
 
 def _get_store() -> pathlib.Path:
-    """Get the scenario store path (respects VSI_RSI_STORE env var)."""
-    return pathlib.Path(os.environ.get("VSI_RSI_STORE", _DEFAULT_STORE))
+    """Get the scenario store path (respects VSI_RSI_STORE and VOS_AGENT_STATE_DIR env vars)."""
+    # Priority: VSI_RSI_STORE > VOS_AGENT_STATE_DIR > default
+    explicit = os.environ.get("VSI_RSI_STORE")
+    if explicit:
+        return pathlib.Path(explicit)
+    
+    # Check for agent-specific state directory
+    try:
+        import sys
+        _common_path = pathlib.Path(__file__).resolve().parents[2] / "vsf-common"
+        if _common_path.exists() and str(_common_path) not in sys.path:
+            sys.path.insert(0, str(_common_path))
+        from vos_agent_state import get_agent_state_dir
+        return get_agent_state_dir("vsf-rsi", "scenarios")
+    except ImportError:
+        pass
+    
+    return _DEFAULT_STORE
 
 
 # For backward compatibility

@@ -20,6 +20,7 @@ from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from vsf_rsi.rsi_metrics import RSIMetrics
+from vsf_rsi.adaptive_weights import get_fitness_weights, record_outcome
 
 # ── Configuration ────────────────────────────────────────────────────
 EVOLUTION_DIR = Path(__file__).parent.parent / "docs"
@@ -135,28 +136,35 @@ class RSIGeneticAlgorithm:
         Returns:
             Updated forest with fitness scores
         """
+        # Get adaptive weights from weight manager
+        weights = get_fitness_weights()
+        
         for genome in forest:
             # Calculate fitness based on multiple factors
             fitness = 0.0
             
             # Factor 1: Accuracy (from metrics)
             accuracy = self.metrics.get_accuracy(predicate_name, genome.genes.get("threshold", 0.7))
-            fitness += accuracy * 0.4  # 40% weight
+            fitness += accuracy * weights["accuracy"]
             
             # Factor 2: Complexity penalty (simpler is better)
             complexity = genome.genes.get("complexity", 1)
-            fitness += (1.0 / complexity) * 0.2  # 20% weight
+            fitness += (1.0 / complexity) * weights["complexity"]
             
             # Factor 3: Branch diversity (more diverse is better)
             branch_count = len(genome.genes.get("branches", []))
-            fitness += min(branch_count / 5, 1.0) * 0.2  # 20% weight
+            fitness += min(branch_count / 5, 1.0) * weights["diversity"]
             
             # Factor 4: Threshold appropriateness
             threshold = genome.genes.get("threshold", 0.7)
             if 0.6 <= threshold <= 0.8:  # Optimal range
-                fitness += 0.2  # 20% weight
+                fitness += weights["threshold"]
             
             genome.fitness = fitness
+        
+        # Record outcome for weight learning
+        avg_fitness = sum(g.fitness for g in forest) / len(forest) if forest else 0
+        record_outcome(predicate_name, avg_fitness, metadata={"forest_size": len(forest)})
         
         return forest
     
