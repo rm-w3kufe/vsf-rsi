@@ -164,3 +164,5 @@
 {"generation": 1, "avg_fitness": 0.10600000000000001, "max_fitness": 0.53, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-04T00:32:48.292990+00:00"}
 {"generation": 0, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T03:41:28.546789+00:00"}
 {"generation": 1, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T03:41:28.592448+00:00"}
+{"generation": 0, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T04:06:07.091951+00:00"}
+{"generation": 1, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T04:06:07.107317+00:00"}

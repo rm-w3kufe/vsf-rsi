@@ -1,5 +1,19 @@
 # Changelog — vsf-rsi
 
+## [0.2.13] — 2026-09-08
+
+### Added
+- **Adaptive Weights** (`adaptive_weights.py`) — dynamic weight adjustment based on performance metrics. Adjusts predicate weights based on accuracy, latency, and error patterns.
+- **Gate Registry** (`gate_registry.py`) — central registry for RSI gates. Manages gate configurations, validation rules, and gate execution history.
+- **Auto-generated Code** (`generated/auto_generated.py`) — auto-generated RSI code for common patterns.
+
+### Changed
+- Updated CI to work with vos-kernel dependency
+- Documentation updates for new components
+
+### Tests
+- **858 tests** total, all passing
+
 ## [0.2.12] — 2026-09-05
 
 ### Changed

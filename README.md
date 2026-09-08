@@ -14,7 +14,7 @@
 
 The system is deliberately bounded. It does not try to make the AI "smarter" unboundedly. It gives the system a formal structure in which improvements can be proposed, executed, validated, and rolled back — all within VSM safety constraints.
 
-**Status:** v0.2.12 — Runtime predicate management. 858 tests. RSI pipeline-generated predicates gitignored; seeds tracked, learned state backed up externally.
+**Status:** v0.2.13 — Adaptive weights, gate registry, auto-generated code. 858 tests. RSI pipeline-generated predicates gitignored; seeds tracked, learned state backed up externally.
 
 ---
 
@@ -121,6 +121,8 @@ At its core, vsf-rsi provides:
 **Infrastructure:**
 - **Component Registry** (`rsi_component_registry.py`) — maps package components to their roles and dependencies
 - **Manifest Parser** (`rsi_manifest_parser.py`) — parses RSI manifest files for tree/predicate registration
+- **Adaptive Weights** (`adaptive_weights.py`) — dynamic weight adjustment based on performance metrics
+- **Gate Registry** (`gate_registry.py`) — central registry for RSI gates and validation rules
 - **Demo** (`rsi_demo.py`) — runnable demo: generate → evaluate → evolve → measurable improvement
 - **Error Recovery** — system continues with degraded functionality on failures (never crashes)
 - **Logging** — structured logging via `logging.getLogger("vsf_rsi.observer")`
