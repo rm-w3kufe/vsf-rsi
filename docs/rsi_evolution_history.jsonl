@@ -734,3 +734,12 @@
 {"generation": 0, "avg_fitness": 0.15333598555520248, "max_fitness": 0.7666799277760123, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:06:06.679486+00:00"}
 {"generation": 1, "avg_fitness": 0.15354261997615362, "max_fitness": 0.7677130998807681, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:06:06.700266+00:00"}
 {"generation": 2, "avg_fitness": 0.15374811338516164, "max_fitness": 0.7687405669258083, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:06:06.722804+00:00"}
+{"generation": 0, "avg_fitness": 0.18483591313181452, "max_fitness": 0.9241795656590727, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:40:59.192460+00:00"}
+{"generation": 1, "avg_fitness": 0.18489311634149513, "max_fitness": 0.9244655817074757, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:40:59.265211+00:00"}
+{"generation": 0, "avg_fitness": 0.15326853006975433, "max_fitness": 0.7663426503487717, "best_tree_id": "pred_gen0_1", "timestamp": "2026-09-08T04:40:59.422482+00:00"}
+{"generation": 1, "avg_fitness": 0.18314658884257334, "max_fitness": 0.9157329442128667, "best_tree_id": "pred_random_5344", "timestamp": "2026-09-08T04:40:59.473166+00:00"}
+{"generation": 2, "avg_fitness": 0.1834874284457671, "max_fitness": 0.9174371422288355, "best_tree_id": "pred_random_5344", "timestamp": "2026-09-08T04:40:59.553227+00:00"}
+{"generation": 3, "avg_fitness": 0.17994467378765883, "max_fitness": 0.8997233689382942, "best_tree_id": "pred_random_5344", "timestamp": "2026-09-08T04:40:59.617106+00:00"}
+{"generation": 0, "avg_fitness": 0.15408147953992943, "max_fitness": 0.7704073976996472, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:40:59.633071+00:00"}
+{"generation": 1, "avg_fitness": 0.15426298044596912, "max_fitness": 0.7713149022298456, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:40:59.638861+00:00"}
+{"generation": 2, "avg_fitness": 0.15444188314929427, "max_fitness": 0.7722094157464714, "best_tree_id": "pred_gen0_4", "timestamp": "2026-09-08T04:40:59.648015+00:00"}

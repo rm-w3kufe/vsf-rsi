@@ -166,3 +166,5 @@
 {"generation": 1, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T03:41:28.592448+00:00"}
 {"generation": 0, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T04:06:07.091951+00:00"}
 {"generation": 1, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T04:06:07.107317+00:00"}
+{"generation": 0, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T04:40:59.820070+00:00"}
+{"generation": 1, "avg_fitness": 0.13, "max_fitness": 0.65, "best_tree_id": "test_predicate_gen0_2", "timestamp": "2026-09-08T04:40:59.828912+00:00"}

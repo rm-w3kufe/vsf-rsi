@@ -18,13 +18,17 @@ import os
 from typing import Dict, List, Optional
 from pathlib import Path
 
-# Import centralized VSM kernel
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "framework"))
-from vos_kernel.utils.vsm_kernel import (
-    vsm_header, vsm_footer_with_type, get_timestamp, 
-    get_version, get_version_str
-)
+# Import VSM utilities (local copy or vos-kernel if installed)
+try:
+    from vos_kernel.utils.vsm_kernel import (
+        vsm_header, vsm_footer_with_type, get_timestamp, 
+        get_version, get_version_str
+    )
+except ImportError:
+    from vsf_rsi.vsm_utils import (
+        vsm_header, vsm_footer_with_type, get_timestamp, 
+        get_version, get_version_str
+    )
 
 # ── Configuration ────────────────────────────────────────────────────
 TREES_DIR = Path(__file__).parent.parent.parent.parent / ".opencode" / "plugins" / "support" / "trees"

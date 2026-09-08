@@ -27,6 +27,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+vsm = ["vos-kernel>=0.1.0"]
 
 [tool.setuptools]
 packages = ["vsf_rsi"]
