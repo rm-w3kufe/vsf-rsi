@@ -1,5 +1,13 @@
 # Changelog — vsf-rsi
 
+## [0.2.14] — 2026-09-11
+
+### Fixed
+- **Forest emitter emits vsm-1.2.1** (`rsi_forest_generator.py`) — header, `@vsm`, and footer bumped 1.2 → 1.2.1. The emitter was the only piece left behind: parser already defaults to `vsm_version="1.2.1"` and the validator's `"@vsm 1.2"` substring check also matches `"1.2.1"`, so nothing breaks. (vOSlab patch PATCH-APPLIES-CLEAN.)
+
+### Tests
+- **test_generated_trees_carry_canon_version** — emitted trees must carry `vsm-1.2.1` in header/footer/`@vsm`, and no bare `vsm-1.2`. Suite: 22 passed in `test_rsi_forest_generator.py`.
+
 ## [0.2.13] — 2026-09-08
 
 ### Added
