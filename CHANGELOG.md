@@ -1,6 +1,15 @@
 # Changelog — vsf-rsi
 
-## [0.2.14] — 2026-09-11
+## [0.2.15] — 2026-09-11
+
+### Fixed
+- **Version sync** (`vsf_rsi/__init__.py`) — `__version__` 0.2.13 → 0.2.15. The 0.2.14 release run failed its own gate (`tag ↔ pyproject ↔ __init__` sync) because `__init__` was left behind. Lesson: bump all three together.
+- **Stale tree-generator tests** (`tests/test_rsi_tree_generator.py`, 8 tests) — still asserted the pre-P2.2 contract (VSM-text return path, `test_mode`/`optimize_mode`/`TRUE` markers). Updated to the intentional P2.2 contract: JSON return (`_auto.json`, `op: OR`, `inject_context`), new ctx keys (`input_value`, `optimization applied`), display-VSM sibling carries `@vsm 1.2.1`. No production code changed.
+
+### Tests
+- **859 passed** (full suite, was 851: 8 fixed + 0 new breakage).
+
+## [0.2.14] — 2026-09-11 (release run failed, superseded by 0.2.15)
 
 ### Fixed
 - **Forest emitter emits vsm-1.2.1** (`rsi_forest_generator.py`) — header, `@vsm`, and footer bumped 1.2 → 1.2.1. The emitter was the only piece left behind: parser already defaults to `vsm_version="1.2.1"` and the validator's `"@vsm 1.2"` substring check also matches `"1.2.1"`, so nothing breaks. (vOSlab patch PATCH-APPLIES-CLEAN.)

@@ -63,7 +63,7 @@ class TestGenerateTree(TestCase):
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
     def test_generate_returns_filepath(self, mock_load, mock_save):
-        """generate_tree returns a filepath string."""
+        """generate_tree returns a filepath string (P2.2: JSON for eval)."""
         mock_load.return_value = {"trees": []}
         gaps = {
             "predicate": "test_pred",
@@ -74,7 +74,7 @@ class TestGenerateTree(TestCase):
         }
         result = self.gen.generate_tree("test_pred", gaps)
         self.assertIsInstance(result, str)
-        self.assertTrue(result.endswith("_auto.tree.vsm"))
+        self.assertTrue(result.endswith("_auto.json"))
 
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
@@ -91,13 +91,18 @@ class TestGenerateTree(TestCase):
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
     def test_generate_tree_content_includes_predicate(self, mock_load, mock_save):
-        """Generated tree content contains the predicate name."""
+        """Returned JSON is a valid OR-tree; display VSM names the predicate."""
         mock_load.return_value = {"trees": []}
         gaps = {"predicate": "ac_pred", "gaps": []}
         result = self.gen.generate_tree("ac_pred", gaps)
-        content = Path(result).read_text()
+        tree = json.loads(Path(result).read_text())
+        self.assertEqual(tree["op"], "OR")
+        self.assertTrue(tree["inject_context"])
+        display = Path(result).with_name("ac_pred_auto.tree.vsm")
+        self.assertTrue(display.exists())
+        content = display.read_text()
         self.assertIn("ac_pred_auto", content)
-        self.assertIn("@vsm 1.2", content)
+        self.assertIn("@vsm 1.2.1", content)
 
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
@@ -137,7 +142,7 @@ class TestGenerateTree(TestCase):
         ]}
         result = self.gen.generate_tree("p", gaps)
         content = Path(result).read_text()
-        self.assertIn("test_mode", content)
+        self.assertIn("input_value", content)  # P2.2: test Thresholds ctx key
 
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
@@ -150,7 +155,7 @@ class TestGenerateTree(TestCase):
         ]}
         result = self.gen.generate_tree("p", gaps)
         content = Path(result).read_text()
-        self.assertIn("optimize_mode", content)
+        self.assertIn("optimization applied", content)  # P2.2: optimize truth
 
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
@@ -170,12 +175,13 @@ class TestGenerateTree(TestCase):
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
     def test_generate_tree_with_no_gaps(self, mock_load, mock_save):
-        """generate_tree handles empty gaps list gracefully."""
+        """generate_tree handles empty gaps list gracefully (default result)."""
         mock_load.return_value = {"trees": []}
         gaps = {"predicate": "p", "gaps": []}
         result = self.gen.generate_tree("p", gaps)
-        content = Path(result).read_text()
-        self.assertIn("TRUE", content)  # default branch always present
+        tree = json.loads(Path(result).read_text())
+        self.assertEqual(tree["children"], [])
+        self.assertEqual(tree["result"]["home"], "default")  # default always present
 
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._save_manifest")
     @patch("vsf_rsi.rsi_tree_generator.RSITreeGenerator._load_manifest")
@@ -193,8 +199,8 @@ class TestGenerateTree(TestCase):
         result = self.gen.generate_tree("p", gaps)
         content = Path(result).read_text()
         self.assertIn("adjustment_needed", content)
-        self.assertIn("optimize_mode", content)
-        self.assertIn("test_mode", content)
+        self.assertIn("optimization applied", content)
+        self.assertIn("input_value", content)
 
 
 class TestGetGeneratedTrees(TestCase):
@@ -340,16 +346,16 @@ class TestCreateBranch(TestCase):
         self.assertIn("Branch 3", branch)
 
     def test_create_branch_test_thresholds(self):
-        """_create_branch returns test mode content."""
+        """_create_branch returns test mode content (P2.2 ctx key)."""
         mod = {"type": "test_thresholds", "reason": "Test more"}
         branch = self.gen._create_branch(mod, 1)
-        self.assertIn("test_mode", branch)
+        self.assertIn("input_value", branch)
 
     def test_create_branch_optimize(self):
-        """_create_branch returns optimization content."""
+        """_create_branch returns optimization content (P2.2 ctx key)."""
         mod = {"type": "optimize", "reason": "Optimize logic"}
         branch = self.gen._create_branch(mod, 0)
-        self.assertIn("optimize_mode", branch)
+        self.assertIn("optimization applied", branch)
 
     def test_create_branch_unknown_type(self):
         """_create_branch returns empty string for unknown type."""
