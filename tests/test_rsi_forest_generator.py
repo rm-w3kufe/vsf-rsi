@@ -415,3 +415,17 @@ class TestListForests(TestCase):
         mock_load.return_value = {}
         result = self.gen.list_forests()
         self.assertEqual(result, [])
+
+
+def test_generated_trees_carry_canon_version(tmp_path):
+    """Emitted trees must carry vsm-1.2.1 (header/footer/@vsm)."""
+    import glob
+    import os
+    import re
+    from vsf_rsi.rsi_forest_generator import RSIForestGenerator
+    d = RSIForestGenerator().generate_forest("version_probe", population_size=2)
+    bodies = [open(p).read() for p in glob.glob(os.path.join(d, "*.vsm"))]
+    assert bodies, "no trees generated"
+    for b in bodies:
+        assert "vsm-1.2.1" in b and "@vsm 1.2.1" in b
+        assert re.search(r"vsm-1\.2(?![\d.])", b) is None

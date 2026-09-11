@@ -86,9 +86,9 @@ class RSIForestGenerator:
         # Build tree content from genome
         branches = genome.genes.get("branches", [])
         
-        tree_content = f"""⟦ {genome.name} | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+        tree_content = f"""⟦ {genome.name} | SOCRATIC-TREE-v1 | vsm-1.2.1 | {timestamp} ⟧
 
-@vsm 1.2
+@vsm 1.2.1
 @status active
 
 // FOREST TREE: {genome.name}
@@ -115,7 +115,7 @@ class RSIForestGenerator:
   TRUE → {{ home: "default", truth: "evolved default", certified: TRUE }}
 )
 
-⟦ /{genome.name} | SOCRATIC-TREE-v1 | vsm-1.2 | {timestamp} ⟧
+⟦ /{genome.name} | SOCRATIC-TREE-v1 | vsm-1.2.1 | {timestamp} ⟧
 """
         
         # Write tree file
