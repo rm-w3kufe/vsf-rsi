@@ -91,6 +91,11 @@ class L3StrategySearch:
         self._cycles: Dict[str, L3CycleResult] = {}
         self._load_state()
 
+        # Genome registry: strategy_id -> GenomeV3. Enables generational
+        # evolution (elitism + mutate/crossover of winners). Populated by
+        # _generate_strategies / _evolve_generation.
+        self._genome_registry: Dict[str, Any] = {}
+
     def run_cycle(self, fault: Any = None) -> L3CycleResult:
         """Run one complete L3 cycle.
 
@@ -137,16 +142,41 @@ class L3StrategySearch:
         logger.info(f"Baseline: accuracy={baseline_accuracy:.1%}, "
                     f"latency={baseline_latency:.1f}ms")
 
-        # Step 3: Shadow mode evaluation
+        # Step 3: Shadow mode evaluation with generational evolution.
+        # Gen-0 is random; each subsequent generation breeds from the
+        # shadow-ranked winners (elitism + crossover/mutate). Early-exit
+        # on the first generation that produces a passing strategy.
         passed = []
-        for candidate in candidates:
-            result = self.shadow.evaluate_strategy(
-                candidate, test_cases, baseline_accuracy, baseline_latency,
-            )
-            if result.passed:
-                passed.append((candidate, result))
+        total_generated = 0
+        all_candidates = []
+        for gen in range(MAX_GENERATIONS):
+            gen_passed = []
+            ranked = []
+            for candidate in candidates:
+                result = self.shadow.evaluate_strategy(
+                    candidate, test_cases, baseline_accuracy, baseline_latency,
+                )
+                ranked.append((candidate, result.strategy_accuracy))
+                if result.passed:
+                    gen_passed.append((candidate, result))
 
-        logger.info(f"Shadow: {len(passed)}/{len(candidates)} strategies passed")
+            total_generated += len(candidates)
+            all_candidates.extend(candidates)
+            passed.extend(gen_passed)
+            ranked.sort(key=lambda x: x[1], reverse=True)
+            best_acc = ranked[0][1] if ranked else 0.0
+            logger.info(f"Shadow gen {gen}: {len(gen_passed)}/{len(candidates)} "
+                        f"passed, best={best_acc:.1%}")
+
+            if gen_passed:
+                break  # activation found — best-selection happens in Step 4
+            if gen + 1 < MAX_GENERATIONS:
+                candidates = self._evolve_generation(fault, ranked)
+                if not candidates:
+                    break
+                logger.info(f"Evolved {len(candidates)} candidates for gen {gen + 1}")
+
+        candidates = all_candidates
 
         # Step 4: Activate best strategy (if any passed)
         activated_id = None
@@ -179,7 +209,7 @@ class L3StrategySearch:
         result = L3CycleResult(
             cycle_id=cycle_id,
             fault_id=fault.fault_id,
-            strategies_generated=len(candidates),
+            strategies_generated=total_generated,
             strategies_passed_shadow=len(passed),
             strategy_activated=activated_id,
             status="activated" if activated_id else "no_candidate",
@@ -312,6 +342,7 @@ class L3StrategySearch:
                 # Convert genome to socratic tree
                 tree = self._genome_to_tree(genome)
                 if tree:
+                    self._genome_registry[genome.id] = genome
                     candidates.append(StrategyCandidate(
                         strategy_id=genome.id,
                         fault_id=fault.fault_id,
@@ -344,6 +375,106 @@ class L3StrategySearch:
 
         # Limit to STRATEGIES_PER_FAULT
         return candidates[:STRATEGIES_PER_FAULT]
+
+    def _evolve_generation(
+        self,
+        fault: Any,
+        ranked: list,
+    ) -> list:
+        """Breed the next generation from shadow-ranked candidates.
+
+        Elitism + genome-level operators (the MAX_GENERATIONS loop in
+        run_cycle was dead code — generations never happened; this closes
+        the evolutionary loop the module docstring promises):
+
+          - parents = genomes behind the top-2 ranked candidates
+          - children = crossover(p1, p2) + mutate(p1) + mutate(p2)
+          - refill with fresh random genomes if parents unavailable
+
+        Args:
+            fault: FaultSignature being processed.
+            ranked: [(candidate, accuracy)] sorted best-first from shadow eval.
+
+        Returns:
+            New list of StrategyCandidate (≤ STRATEGIES_PER_FAULT).
+        """
+        from .rsi_shadow_mode import StrategyCandidate
+        from .rsi_genome_v3 import (
+            create_random_genome_v3, crossover_v3, mutate_v3,
+        )
+
+        source = fault.source
+        features = ["input_value", "threshold", "latency_ms"]
+        if "pred" in source:
+            features.append("prediction")
+
+        # Collect parent genomes behind the top-ranked candidates
+        parents = []
+        for cand, _acc in ranked:
+            g = self._genome_registry.get(cand.strategy_id)
+            if g is not None and g not in parents:
+                parents.append(g)
+            if len(parents) >= 2:
+                break
+
+        offspring = []
+        if len(parents) >= 2:
+            p1, p2 = parents[0], parents[1]
+            try:
+                c1, c2 = crossover_v3(p1, p2)
+                offspring.extend([c1, c2])
+            except Exception as e:
+                logger.debug(f"Genome crossover failed: {e}")
+            for p in (p1, p2):
+                try:
+                    m = mutate_v3(p)
+                    m.id = f"{p.id}-m{uuid.uuid4().hex[:4]}"
+                    m.generation = getattr(p, "generation", 0) + 1
+                    m.parent_ids = [p.id]
+                    offspring.append(m)
+                except Exception as e:
+                    logger.debug(f"Genome mutation failed: {e}")
+        elif len(parents) == 1:
+            # Single parent: mutate twice for diversity
+            for _ in range(2):
+                try:
+                    m = mutate_v3(parents[0])
+                    m.id = f"{parents[0].id}-m{uuid.uuid4().hex[:4]}"
+                    m.generation = getattr(parents[0], "generation", 0) + 1
+                    m.parent_ids = [parents[0].id]
+                    offspring.append(m)
+                except Exception as e:
+                    logger.debug(f"Genome mutation failed: {e}")
+
+        # Refill with fresh random genomes up to STRATEGIES_PER_FAULT
+        while len(offspring) < STRATEGIES_PER_FAULT:
+            try:
+                offspring.append(create_random_genome_v3(
+                    genome_id=f"l3-{source}-g-{uuid.uuid4().hex[:4]}",
+                    available_features=features,
+                    n_derived=3,
+                    tree_depth=2,
+                ))
+            except Exception as e:
+                logger.debug(f"Refill genome failed: {e}")
+                break
+
+        candidates = []
+        for genome in offspring[:STRATEGIES_PER_FAULT]:
+            try:
+                tree = self._genome_to_tree(genome)
+                if tree:
+                    self._genome_registry[genome.id] = genome
+                    candidates.append(StrategyCandidate(
+                        strategy_id=genome.id,
+                        fault_id=fault.fault_id,
+                        tree=tree,
+                        source=source,
+                        description=f"Evolved gen {getattr(genome, 'generation', '?')}: {genome.id}",
+                    ))
+            except Exception as e:
+                logger.debug(f"Evolved genome conversion failed: {e}")
+        return candidates
 
     def _genome_to_tree(self, genome: Any) -> Optional[Dict[str, Any]]:
         """Convert a GenomeV3 to a socratic computation node.

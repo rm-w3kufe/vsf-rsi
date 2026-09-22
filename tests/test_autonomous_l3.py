@@ -252,7 +252,8 @@ class TestAutonomousL3(unittest.TestCase):
             self.l3.detector.observe(ev)
 
         result = self.l3.run_cycle()
-        self.assertEqual(result.strategies_generated, 5)
+        # Generational loop: 3 generations x 5 strategies when nothing passes
+        self.assertEqual(result.strategies_generated, 15)
         self.assertIn(result.status, ["activated", "no_candidate"])
 
     def test_process_event_no_fault(self):
