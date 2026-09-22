@@ -103,8 +103,10 @@ class ShadowMode:
             tc = test_cases[i % len(test_cases)]
             t_start = time.monotonic()
             try:
+                # Always use the passed tree (baseline or strategy), NOT tc["tree"].
+                # Test cases provide ctx + expected, the tree is what we're evaluating.
                 result = self.engine.evaluate(
-                    tc.get("tree", tree),
+                    tree,
                     tc.get("ctx", {}),
                     enforce_limits=True,
                 )
@@ -159,7 +161,13 @@ class ShadowMode:
                     enforce_limits=True,
                 )
                 is_true = getattr(result, "is_true", False)
-            except Exception:
+            except ValueError as e:
+                # Unregistered predicate or non-numeric field — log, don't swallow
+                logger.debug("Shadow eval error (strategy %s, tc %d): %s",
+                             candidate.strategy_id, i, e)
+                is_true = False
+            except Exception as e:
+                logger.warning("Shadow eval unexpected error: %s", e)
                 is_true = False
 
             latency = (time.monotonic() - t_start) * 1000.0
