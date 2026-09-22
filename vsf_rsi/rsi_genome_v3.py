@@ -364,6 +364,56 @@ def genome_to_predicate_v3(genome: GenomeV3) -> Callable[[Dict], bool]:
     return pred
 
 
+# ── Genome → Computation Node (engine-native, zero loss) ───────────
+
+def _tree_to_dict(node: Optional[TreeNodeV3]) -> Any:
+    """Serialize TreeNodeV3 to engine-compatible dict."""
+    if node is None:
+        return None
+    if node.is_leaf:
+        return {"result": node.result}
+    return {
+        "condition": node.condition,
+        "threshold": node.threshold,
+        "operator": node.operator,
+        "left": _tree_to_dict(node.left),
+        "right": _tree_to_dict(node.right),
+    }
+
+
+def genome_to_computation_node(genome: GenomeV3) -> dict:
+    """Convert GenomeV3 to a computation node for the socratic engine.
+
+    Zero information loss: the feature chain and decision tree are preserved
+    exactly. The engine evaluates the computation graph natively.
+
+    Returns dict in format:
+    {
+      "computation": {
+        "features": [...],
+        "tree": {...}
+      }
+    }
+    """
+    features_data = []
+    for feat in genome.features:
+        features_data.append({
+            "op": feat.op,
+            "args": list(feat.args),
+            "output_name": feat.output_name,
+            "constant_value": feat.constant_value,
+        })
+
+    tree_data = _tree_to_dict(genome.tree)
+
+    return {
+        "computation": {
+            "features": features_data,
+            "tree": tree_data,
+        }
+    }
+
+
 # ── Genetic Operators ────────────────────────────────────────────────
 
 def crossover_v3(

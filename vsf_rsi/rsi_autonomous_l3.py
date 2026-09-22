@@ -346,136 +346,69 @@ class L3StrategySearch:
         return candidates[:STRATEGIES_PER_FAULT]
 
     def _genome_to_tree(self, genome: Any) -> Optional[Dict[str, Any]]:
-        """Convert a GenomeV3 to a socratic tree for evaluation.
+        """Convert a GenomeV3 to a socratic computation node.
 
-        The genome's features are converted to comparison predicates.
-        Each feature becomes a comparison node (gt, lt, eq) with thresholds
-        derived from the genome's feature chain (GAP-02 fix).
-        
-        GAP-02: Resolves derived features (d0, d1, d2) via evaluate_features_v3
-        to get numeric thresholds. The chain d0=add(x,y) → d1=mul(d0,z) is
-        evaluated with a sample context to produce concrete threshold values.
-        
-        Composition: even feature count → OR, odd → AND (GAP-01 fix).
-        Single feature → bare predicate (no wrapper).
-        
-        Uses socratic-engine format: "predicate" (not "op"), "args" (not "kwargs"),
-        and "inject_context": True.
+        GAP-03 full fix: evaluates the genome's feature chain at runtime,
+        then builds a genome-style decision tree that the engine's
+        _eval_genome_tree can evaluate natively.
+
+        The computation node's tree uses genome format:
+        {"condition": "d0", "threshold": 0.3, "operator": "gt", "left": true, "right": false}
+
+        NOT socratic predicate format:
+        {"predicate": "gt", "args": ["d0", 0.3]}
+
+        This ensures the engine's _evaluate_computation → _eval_genome_tree
+        pipeline works correctly.
         """
         if not genome.features:
             return None
 
-        # Map genome operations to comparison predicates
-        op_map = {
-            'add': 'gt',      # Addition → check if sum > threshold
-            'sub': 'lt',      # Subtraction → check if diff < threshold
-            'mul': 'gt',      # Multiplication → check if product > threshold
-            'max': 'gt',      # Max → check if max > threshold
-            'min': 'lt',      # Min → check if min < threshold
-            'mean': 'gt',     # Mean → check if mean > threshold
-            'sign': 'gt',     # Sign → check if positive
-            'parity': 'eq',   # Parity → check if even (0) or odd (1)
-            'count_neg': 'lt', # Count negatives → check if count < threshold
-            'xor2': 'eq',     # XOR → check if equal to expected
-        }
-
-        # Valid fields that exist in context
-        valid_fields = {'input_value', 'threshold', 'latency_ms'}
-
-        # GAP-02 fix: resolve derived features to get numeric thresholds
-        # Use a representative sample context to evaluate the feature chain
-        sample_ctx = {'input_value': 0.5, 'threshold': 0.5, 'latency_ms': 0.1}
-        try:
-            from .rsi_genome_v3 import evaluate_features_v3
-            resolved = evaluate_features_v3(genome.features, sample_ctx)
-        except Exception:
-            # Fallback: use raw context only
-            resolved = dict(sample_ctx)
-
-        # Diverse thresholds the GA can discover (GAP-04 fix)
-        _THRESHOLDS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-
-        # Build tree from genome features
-        children = []
-        used_fields = {}  # field -> (predicate, threshold) for contradiction detection
-        
-        for i, feature in enumerate(genome.features[:4]):  # Limit to 4 features
-            op = feature.op if hasattr(feature, 'op') else 'ctx_has'
-            args = feature.args if hasattr(feature, 'args') else []
-
-            # Map to comparison predicate
-            pred = op_map.get(op, 'gt')
-            
-            # GAP-02 fix: resolve field name from args
-            # If arg is a derived feature (d0, d1), use a raw field instead
-            # Prioritize fields that exist in test context (input_value, threshold)
-            field_name = args[0] if args else 'input_value'
-            if field_name not in valid_fields:
-                # Derived feature reference — find a raw field that's in context
-                # Prefer input_value (most common in test cases), then threshold
-                preferred = ['input_value', 'threshold', 'latency_ms']
-                for raw in preferred:
-                    if raw in args:
-                        field_name = raw
-                        break
-                else:
-                    # No preferred field in args — use first valid from all args
-                    for raw in args:
-                        if raw in valid_fields:
-                            field_name = raw
-                            break
-                    else:
-                        field_name = 'input_value'  # fallback
-            
-            # GAP-02 fix: use resolved value to determine which field to compare
-            # The feature chain (d0, d1, d2) determines the field, not just the first arg
-            raw_val = resolved.get(field_name, 0.5)
-            
-            # GAP-04 fix: derive threshold from genome (constant_value + position)
-            # Keep this logic intact — GAP-02 only affects field selection
-            const_val = getattr(feature, 'constant_value', 0.0)
-            combined = (abs(const_val) + i * 0.13) % 1.0
-            threshold = _THRESHOLDS[int(combined * len(_THRESHOLDS)) % len(_THRESHOLDS)]
-            
-            # Check for contradictions
-            if field_name in used_fields:
-                existing_pred, existing_threshold = used_fields[field_name]
-                if (pred == 'gt' and existing_pred == 'lt') or \
-                   (pred == 'lt' and existing_pred == 'gt'):
-                    if threshold == existing_threshold:
-                        continue
-                if (pred == 'gt' and existing_pred == 'lte') or \
-                   (pred == 'lt' and existing_pred == 'gte'):
-                    if threshold == existing_threshold:
-                        continue
-                if pred == 'eq' or existing_pred == 'eq':
-                    continue
-            
-            used_fields[field_name] = (pred, threshold)
-            
-            # Create predicate node
-            children.append({
-                "predicate": pred,
-                "args": [field_name, threshold],
-                "inject_context": True,
+        # Serialize feature chain for runtime evaluation
+        features_data = []
+        for feat in genome.features:
+            features_data.append({
+                "op": feat.op,
+                "args": list(feat.args),
+                "output_name": feat.output_name,
+                "constant_value": feat.constant_value,
             })
 
-        if not children:
-            return None
+        # Determine threshold from genome's feature chain
+        feat = genome.features[0]
+        const_val = getattr(feat, 'constant_value', 0.0)
 
-        # Single predicate: return bare (no wrapper)
-        if len(children) == 1:
-            return children[0]
-        
-        # GAP-01 fix: use OR for even feature count, AND for odd
-        # This gives the GA access to both composition modes
-        use_or = (len(genome.features) % 2 == 0)
-        op = "OR" if use_or else "AND"
-        
+        # Map genome operations to thresholds that discriminate
+        _THRESHOLDS = [0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8]
+        idx = int(abs(const_val * 10 + len(genome.features)) % len(_THRESHOLDS))
+        threshold = _THRESHOLDS[idx]
+
+        # Determine predicate from genome's primary operation
+        if feat.op in ('add', 'mul', 'max', 'mean', 'sign'):
+            operator = 'gt'
+        elif feat.op in ('sub', 'min', 'count_neg'):
+            operator = 'lt'
+        else:
+            operator = 'gt'
+
+        # Use the FIRST derived feature name as the condition
+        # This ensures the tree checks the feature chain's output
+        condition = feat.output_name if feat.output_name else 'input_value'
+
+        # Build genome-style decision tree
+        tree_node = {
+            "condition": condition,
+            "threshold": threshold,
+            "operator": operator,
+            "left": True,   # condition met → True
+            "right": False,  # condition not met → False
+        }
+
         return {
-            "op": op,
-            "children": children,
-            "inject_context": True,
+            "computation": {
+                "features": features_data,
+                "tree": tree_node,
+            }
         }
 
     def _crossover_trees(self, tree1: Dict, tree2: Dict) -> Optional[Dict[str, Any]]:
