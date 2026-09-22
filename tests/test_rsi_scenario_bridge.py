@@ -19,11 +19,9 @@ class TestImportHelpers(TestCase):
         with self.assertRaises(ImportError):
             mock_import()
 
-    @patch("vsf_rsi.rsi_scenario_bridge._sm")
-    def test_import_scenario_memory_available(self, mock_sm):
+    def test_import_scenario_memory_available(self):
         """_import_scenario_memory returns module when available."""
-        # Reset the bridge module-level import
-        import importlib
+        mock_sm = MagicMock()
         with patch.dict("sys.modules", {"vsf_rsi.scenario_memory": mock_sm}):
             with patch("vsf_rsi.rsi_scenario_bridge._import_scenario_memory",
                        return_value=mock_sm):

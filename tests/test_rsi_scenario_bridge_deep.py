@@ -59,21 +59,24 @@ def _teardown_import_block(blocked_name, finder, saved_mod, parent, saved_attr, 
 
 
 class TestModuleLevelFallbackImport(TestCase):
-    """Lines 20-22: When scenario_memory is unavailable at module level."""
+    """Module uses lazy imports (GAP-17): no stale module-level _sm global."""
 
-    def test_has_scenario_memory_flag_set_false(self):
-        """When ImportError occurs, _HAS_SCENARIO_MEMORY is False."""
-        with patch.object(bridge, "_sm", None), \
-             patch.object(bridge, "_HAS_SCENARIO_MEMORY", False):
-            self.assertFalse(bridge._HAS_SCENARIO_MEMORY)
-            self.assertIsNone(bridge._sm)
+    def test_no_stale_module_level_sm(self):
+        """GAP-17 cleanup holds: bridge has no module-level _sm attribute."""
+        self.assertFalse(hasattr(bridge, "_sm"),
+                         "stale _sm global resurrected — GAP-17 regression")
+
+    def test_no_stale_has_flag(self):
+        """GAP-17 cleanup holds: no _HAS_SCENARIO_MEMORY flag (lazy funcs instead)."""
+        self.assertFalse(hasattr(bridge, "_HAS_SCENARIO_MEMORY"),
+                         "stale _HAS_SCENARIO_MEMORY resurrected — GAP-17 regression")
 
     def test_module_has_import_error_handler(self):
-        """Verify the module has the try/except import structure."""
+        """Verify the module has lazy import functions with ImportError handling."""
         import inspect
         source = inspect.getsource(bridge)
         self.assertIn("ImportError", source)
-        self.assertIn("_HAS_SCENARIO_MEMORY", source)
+        self.assertIn("_import_scenario_memory", source)
 
 
 class TestImportScenarioMemory(TestCase):
