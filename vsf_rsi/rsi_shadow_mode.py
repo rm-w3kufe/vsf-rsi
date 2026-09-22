@@ -110,7 +110,14 @@ class ShadowMode:
                     tc.get("ctx", {}),
                     enforce_limits=True,
                 )
-                is_true = getattr(result, "is_true", False)
+                # GAP-05 fix: check truth directly, not is_true
+                # UNKNOWN (missing fields) should NOT count as error
+                from socratic_engine.engine import Truth
+                truth = getattr(result, 'truth', Truth.UNKNOWN)
+                if truth == Truth.UNKNOWN:
+                    is_true = None  # Signal: don't count this test case
+                else:
+                    is_true = getattr(result, "is_true", False)
             except Exception:
                 is_true = False
 
@@ -118,7 +125,7 @@ class ShadowMode:
             total_latency += latency
 
             expected = tc.get("expected", False)
-            if is_true == expected:
+            if is_true is not None and is_true == expected:
                 correct += 1
 
         accuracy = correct / count if count > 0 else 0.0
@@ -160,7 +167,14 @@ class ShadowMode:
                     tc.get("ctx", {}),
                     enforce_limits=True,
                 )
-                is_true = getattr(result, "is_true", False)
+                # GAP-05 fix: check truth directly, not is_true
+                # UNKNOWN (missing fields) should NOT count as error
+                from socratic_engine.engine import Truth
+                truth = getattr(result, 'truth', Truth.UNKNOWN)
+                if truth == Truth.UNKNOWN:
+                    is_true = None  # Signal: don't count this test case
+                else:
+                    is_true = getattr(result, "is_true", False)
             except ValueError as e:
                 # Unregistered predicate or non-numeric field — log, don't swallow
                 logger.debug("Shadow eval error (strategy %s, tc %d): %s",
@@ -174,7 +188,7 @@ class ShadowMode:
             strategy_latency += latency
 
             expected = tc.get("expected", False)
-            if is_true == expected:
+            if is_true is not None and is_true == expected:
                 strategy_correct += 1
 
         strategy_accuracy = strategy_correct / count if count > 0 else 0.0

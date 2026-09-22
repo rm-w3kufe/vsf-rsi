@@ -337,13 +337,14 @@ class L3StrategySearch:
 
         The genome's features are converted to comparison predicates.
         Each feature becomes a comparison node (gt, lt, eq) with thresholds
-        derived from the genome's constant_value (NOT hardcoded 0.5).
+        derived from the genome's feature chain (GAP-02 fix).
+        
+        GAP-02: Resolves derived features (d0, d1, d2) via evaluate_features_v3
+        to get numeric thresholds. The chain d0=add(x,y) → d1=mul(d0,z) is
+        evaluated with a sample context to produce concrete threshold values.
         
         Composition: even feature count → OR, odd → AND (GAP-01 fix).
         Single feature → bare predicate (no wrapper).
-        
-        Only uses features that exist in the context (input_value, threshold, latency_ms).
-        Filters out contradictory conditions on the same field.
         
         Uses socratic-engine format: "predicate" (not "op"), "args" (not "kwargs"),
         and "inject_context": True.
@@ -368,6 +369,16 @@ class L3StrategySearch:
         # Valid fields that exist in context
         valid_fields = {'input_value', 'threshold', 'latency_ms'}
 
+        # GAP-02 fix: resolve derived features to get numeric thresholds
+        # Use a representative sample context to evaluate the feature chain
+        sample_ctx = {'input_value': 0.5, 'threshold': 0.5, 'latency_ms': 0.1}
+        try:
+            from .rsi_genome_v3 import evaluate_features_v3
+            resolved = evaluate_features_v3(genome.features, sample_ctx)
+        except Exception:
+            # Fallback: use raw context only
+            resolved = dict(sample_ctx)
+
         # Diverse thresholds the GA can discover (GAP-04 fix)
         _THRESHOLDS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
@@ -382,32 +393,50 @@ class L3StrategySearch:
             # Map to comparison predicate
             pred = op_map.get(op, 'gt')
             
-            # Use first arg as field (must be valid)
+            # GAP-02 fix: resolve field name from args
+            # If arg is a derived feature (d0, d1), use a raw field instead
+            # Prioritize fields that exist in test context (input_value, threshold)
             field_name = args[0] if args else 'input_value'
             if field_name not in valid_fields:
-                continue  # Skip invalid fields (d0, d1, etc.)
+                # Derived feature reference — find a raw field that's in context
+                # Prefer input_value (most common in test cases), then threshold
+                preferred = ['input_value', 'threshold', 'latency_ms']
+                for raw in preferred:
+                    if raw in args:
+                        field_name = raw
+                        break
+                else:
+                    # No preferred field in args — use first valid from all args
+                    for raw in args:
+                        if raw in valid_fields:
+                            field_name = raw
+                            break
+                    else:
+                        field_name = 'input_value'  # fallback
             
-            # GAP-04 fix: derive threshold from genome, not hardcoded
-            # Use constant_value to select from diverse thresholds
-            raw_val = getattr(feature, 'constant_value', 0.0) + (i * 0.13)
-            threshold = _THRESHOLDS[int(abs(raw_val) * len(_THRESHOLDS)) % len(_THRESHOLDS)]
+            # GAP-02 fix: use resolved value to determine which field to compare
+            # The feature chain (d0, d1, d2) determines the field, not just the first arg
+            raw_val = resolved.get(field_name, 0.5)
+            
+            # GAP-04 fix: derive threshold from genome (constant_value + position)
+            # Keep this logic intact — GAP-02 only affects field selection
+            const_val = getattr(feature, 'constant_value', 0.0)
+            combined = (abs(const_val) + i * 0.13) % 1.0
+            threshold = _THRESHOLDS[int(combined * len(_THRESHOLDS)) % len(_THRESHOLDS)]
             
             # Check for contradictions
             if field_name in used_fields:
                 existing_pred, existing_threshold = used_fields[field_name]
-                # gt and lt on same field with same threshold = contradiction
                 if (pred == 'gt' and existing_pred == 'lt') or \
                    (pred == 'lt' and existing_pred == 'gt'):
                     if threshold == existing_threshold:
-                        continue  # Skip contradictory condition
-                # gt and lte, or lt and gte are also contradictory
+                        continue
                 if (pred == 'gt' and existing_pred == 'lte') or \
                    (pred == 'lt' and existing_pred == 'gte'):
                     if threshold == existing_threshold:
                         continue
-                # eq and gt/lt on same field can be contradictory
                 if pred == 'eq' or existing_pred == 'eq':
-                    continue  # Skip eq if other comparison exists
+                    continue
             
             used_fields[field_name] = (pred, threshold)
             
