@@ -29,6 +29,7 @@ FAULT_DIR = Path(os.environ.get(
     str(Path(__file__).parent.parent.parent / "state" / "faults")
 ))
 FAULT_FILE = FAULT_DIR / "detected_faults.json"
+WINDOWS_FILE = FAULT_DIR / "fault_windows.json"
 
 # Complexity thresholds
 MIN_REPEATS = 3          # Same error ≥3 times in window
@@ -102,6 +103,7 @@ class FaultDetector:
         self._windows: Dict[str, FaultWindow] = {}
         self._faults: Dict[str, FaultSignature] = {}
         self._load_faults()
+        self._load_windows()  # GAP-14: restore sliding windows from disk
 
     def observe(self, event: Any) -> Optional[FaultSignature]:
         """Process an evaluation event. Returns a FaultSignature if a
@@ -128,6 +130,7 @@ class FaultDetector:
             self._windows[source] = FaultWindow(source=source)
 
         self._windows[source].add(ev)
+        self._save_windows()  # GAP-14: persist window across subprocesses
 
         # Check complexity criteria
         return self._check_complexity(source)
@@ -222,6 +225,31 @@ class FaultDetector:
                 )
         except Exception as e:
             logger.error(f"Failed to save faults: {e}")
+
+    def _load_windows(self):
+        """GAP-14: Load sliding windows from disk for cross-subprocess persistence."""
+        try:
+            if WINDOWS_FILE.exists():
+                with open(WINDOWS_FILE) as f:
+                    data = json.load(f)
+                for source, wdata in data.items():
+                    w = FaultWindow(source=source)
+                    w.events = wdata.get("events", [])[-WINDOW_SIZE:]
+                    self._windows[source] = w
+        except Exception as e:
+            logger.debug(f"Failed to load windows: {e}")
+
+    def _save_windows(self):
+        """GAP-14: Persist sliding windows to disk."""
+        try:
+            FAULT_DIR.mkdir(parents=True, exist_ok=True)
+            with open(WINDOWS_FILE, "w") as f:
+                json.dump(
+                    {source: {"events": w.events} for source, w in self._windows.items()},
+                    f, indent=2
+                )
+        except Exception as e:
+            logger.debug(f"Failed to save windows: {e}")
 
 
 # ── CLI ────────────────────────────────────────────────────────────

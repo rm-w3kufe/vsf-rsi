@@ -13,14 +13,6 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 
-# scenario-memory is optional (may not be installed)
-try:
-    import scenario_memory as _sm
-    _HAS_SCENARIO_MEMORY = True
-except ImportError:
-    _sm = None
-    _HAS_SCENARIO_MEMORY = False
-
 
 def _import_scenario_memory():
     """Import scenario_memory from vsf-rsi package."""
