@@ -1,6 +1,22 @@
 # Changelog — vsf-rsi
 
-## [0.2.15] — 2026-09-11
+## [0.2.16] — 2026-09-22
+
+### Added
+- **Generational GA loop** (`rsi_autonomous_l3.py`) — `MAX_GENERATIONS=3` was defined but never used (5 random genomes, one shot). Now: gen-0 random, later generations breed from shadow-ranked winners via genome-level `crossover_v3`/`mutate_v3` (previously dead code), elitism, early-exit on first passing generation. Genome registry (`strategy_id → GenomeV3`) + tree registry (every candidate's tree, any kind) for audit. Activation 10% → ~50–70% on BLOCKING drill.
+- **Cross-cycle retention** — winners persist to scenario memory with their full tree (`tree={...}` in the decision record); next cycles re-seed from recorded winners via `ast.literal_eval` reload (default tree as fallback). Fixes spike-then-lose trajectories.
+- **Genome → computation node** (`genome_to_computation_node` in `rsi_genome_v3.py`, `_genome_to_tree` rewrite) — zero-loss serialization of 15-op feature chains + decision tree; engine evaluates natively, verified identical to `genome_to_predicate_v3`.
+
+### Changed
+- **Runtime outputs untracked** — `docs/rsi_evolution_history*.jsonl`, `docs/rsi_forest*.json/vsm`, `docs/rsi_generated_*.vsm`, `docs/rsi_metrics*`, `vsf_rsi/generated/` are pipeline exhaust (`.gitignore` policy: never committed; files stay on disk). Root cause: `EVOLUTION_DIR` points at `docs/`, so every run dirtied the tree.
+- **`strategies_generated`** in `L3CycleResult` now counts across generations (no-pass cycle = 3×5 = 15).
+
+### Fixed
+- **Stale bridge tests** — `TestModuleLevelFallbackImport` asserted the pre-GAP-17 module structure (`_sm`, `_HAS_SCENARIO_MEMORY`); rewritten to pin the lazy-import design (fail if `_sm` resurrects). `test_import_scenario_memory_available` patches the real importer.
+
+### Tests
+- **860/860 pass** (includes rewritten bridge/GAP-17 tests and the
+  generational-counting contract update).
 
 ### Fixed
 - **Version sync** (`vsf_rsi/__init__.py`) — `__version__` 0.2.13 → 0.2.15. The 0.2.14 release run failed its own gate (`tag ↔ pyproject ↔ __init__` sync) because `__init__` was left behind. Lesson: bump all three together.

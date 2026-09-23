@@ -163,6 +163,25 @@ flowchart TD
 | **L3** | Detect faults → generate strategies → shadow validate → activate → monitor | ✓ Yes | Shadow mode (10 evals) + auto-rollback |
 | **L4** | Evolve predicate populations | ✗ No | Human approval required |
 
+### L3 generational loop (v0.2.16+)
+
+Each cycle runs up to `MAX_GENERATIONS` (3) × `STRATEGIES_PER_FAULT` (5):
+gen-0 is random; later generations breed from shadow-ranked winners
+(elitism + genome-level `crossover_v3`/`mutate_v3`), early-exit on first
+passing generation. Winners persist to scenario memory **with their full
+tree**, and the next cycle re-seeds from recorded winners (cross-cycle
+retention) — gold found in cycle N survives to N+1. Every candidate's
+tree is recoverable from the strategy registry for audit.
+
+Genomes convert to socratic **computation nodes** (zero information
+loss: 15-op feature chains with `d0 → d1 → d2` chaining + native
+decision tree), evaluated by the engine without translation.
+
+Measured (benchmarks battery, `benchmarks/` in vOSlab): ~50–70%
+activation on BLOCKING faults (was ~10% random-shot), slope ≥ 0 across
+cycles, holdout generalization without regression, 3/3 ablation wins
+vs equal-budget random search.
+
 ### state-canon-mcp integration
 
 The `rsi_bridge` module provides functions to integrate with the state canon:
