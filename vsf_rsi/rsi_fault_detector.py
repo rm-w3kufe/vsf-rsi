@@ -102,6 +102,7 @@ class FaultDetector:
     def __init__(self):
         self._windows: Dict[str, FaultWindow] = {}
         self._faults: Dict[str, FaultSignature] = {}
+        self._dir_ready = False  # mkdir once (H3: per-call mkdir was ~ms)
         self._load_faults()
         self._load_windows()  # GAP-14: restore sliding windows from disk
 
@@ -240,13 +241,21 @@ class FaultDetector:
             logger.debug(f"Failed to load windows: {e}")
 
     def _save_windows(self):
-        """GAP-14: Persist sliding windows to disk."""
+        """GAP-14: Persist sliding windows to disk.
+
+        H3: compact separators + mkdir-once. Every observe() call lands
+        here, so pretty-printing and per-call mkdir showed up as ~90ms.
+        Semantics unchanged: full state, every call (cross-process fault
+        accumulation depends on it — see H3 analysis).
+        """
         try:
-            FAULT_DIR.mkdir(parents=True, exist_ok=True)
+            if not self._dir_ready:
+                FAULT_DIR.mkdir(parents=True, exist_ok=True)
+                self._dir_ready = True
             with open(WINDOWS_FILE, "w") as f:
                 json.dump(
                     {source: {"events": w.events} for source, w in self._windows.items()},
-                    f, indent=2
+                    f, separators=(",", ":"),
                 )
         except Exception as e:
             logger.debug(f"Failed to save windows: {e}")
