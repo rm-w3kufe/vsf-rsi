@@ -95,6 +95,9 @@ class L3StrategySearch:
         # evolution (elitism + mutate/crossover of winners). Populated by
         # _generate_strategies / _evolve_generation.
         self._genome_registry: Dict[str, Any] = {}
+        # Tree registry: strategy_id -> tree for EVERY candidate (genome,
+        # prior, crossover). Audit trail: always recover what was activated.
+        self._tree_registry: Dict[str, Any] = {}
 
     def run_cycle(self, fault: Any = None) -> L3CycleResult:
         """Run one complete L3 cycle.
@@ -301,9 +304,23 @@ class L3StrategySearch:
                 prior_source = source  # default to same source
                 if ":source=" in correction_path:
                     prior_source = correction_path.split(":source=", 1)[1]
-                
-                # Build a tree from the prior knowledge
+
+                # Retention: reload the recorded WINNING TREE, not just the
+                # source. _record_scenario persists tree={...} in the decision
+                # string; the default tree loses everything learned.
                 prior_tree = self._build_default_tree(fault)
+                try:
+                    import ast
+                    from .scenario_memory import _load_all
+                    for rec in _load_all():
+                        if rec.get("id") == scenario_id:
+                            dec = rec.get("decision", "")
+                            if "tree=" in dec:
+                                prior_tree = ast.literal_eval(
+                                    dec.split("tree=", 1)[1])
+                            break
+                except Exception as e:
+                    logger.debug(f"Prior tree reload failed: {e}")
                 candidates.append(StrategyCandidate(
                     strategy_id=f"prior-{scenario_id}",
                     fault_id=fault.fault_id,
@@ -374,7 +391,10 @@ class L3StrategySearch:
                     logger.debug(f"Crossover failed: {e}")
 
         # Limit to STRATEGIES_PER_FAULT
-        return candidates[:STRATEGIES_PER_FAULT]
+        candidates = candidates[:STRATEGIES_PER_FAULT]
+        for c in candidates:
+            self._tree_registry[c.strategy_id] = c.tree
+        return candidates
 
     def _evolve_generation(
         self,
@@ -474,6 +494,8 @@ class L3StrategySearch:
                     ))
             except Exception as e:
                 logger.debug(f"Evolved genome conversion failed: {e}")
+        for c in candidates:
+            self._tree_registry[c.strategy_id] = c.tree
         return candidates
 
     def _genome_to_tree(self, genome: Any) -> Optional[Dict[str, Any]]:
